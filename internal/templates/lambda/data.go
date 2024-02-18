@@ -4,17 +4,6 @@ import (
 	_ "embed"
 )
 
-var (
-	//go:embed tmpls/lambda.tf.tmpl
-	lambdaTFTmpl []byte
-
-	//go:embed tmpls/lambda.go.tmpl
-	lambdaGoTmpl []byte
-
-	//go:embed tmpls/main.go.tmpl
-	mainGoTmpl []byte
-)
-
 type SQSTrigger struct {
 	SourceARN string
 }

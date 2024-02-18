@@ -13,9 +13,13 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+output/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
 # Go workspace file
 go.work
+
+# Configuration files for executable
+config.yaml

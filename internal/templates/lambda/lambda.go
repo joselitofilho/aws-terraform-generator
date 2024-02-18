@@ -91,43 +91,12 @@ func (l *Lambda) Build() error {
 		fmt.Println(err)
 	}
 
-	tmplName = "lambda-go-template"
-
 	output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 	_ = os.MkdirAll(output, os.ModePerm)
 
-	outputFile = fmt.Sprintf("%s/main.go", output)
-
-	tmpl = string(mainGoTmpl)
-	if len(codeConf["main"].Tmpl) > 0 {
-		tmpl = codeConf["main"].Tmpl
-	}
-
-	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
+	err = generateGoFiles(output, codeConf, data)
 	if err != nil {
 		return fmt.Errorf("%w", err)
-	}
-
-	err = utils.GoFormat(outputFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	outputFile = fmt.Sprintf("%s/lambda.go", output)
-
-	tmpl = string(lambdaGoTmpl)
-	if len(codeConf["lambda"].Tmpl) > 0 {
-		tmpl = codeConf["lambda"].Tmpl
-	}
-
-	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	err = utils.GoFormat(outputFile)
-	if err != nil {
-		fmt.Println(err)
 	}
 
 	fmt.Println("Lambda has been generated successfully")
