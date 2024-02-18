@@ -8,31 +8,36 @@ import (
 	"github.com/ettle/strcase"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 //go:embed tmpls/sqs.tf.tmpl
 var sqsTFTmpl []byte
 
 type Data struct {
-	Name          string
-	NameWithSpace string
-	NameSnakeCase string
+	Name            string
+	NameWithSpace   string
+	NameSnakeCase   string
+	MaxReceiveCount int32
 }
 
 type SQS struct {
-	name   string
-	output string
+	name            string
+	maxReceiveCount int32
+	output          string
 }
 
-func NewSQS(name, output string) *SQS {
-	return &SQS{name: name, output: output}
+func NewSQS(name string, maxReceiveCount int32, output string) *SQS {
+	return &SQS{name: name, maxReceiveCount: maxReceiveCount, output: output}
 }
 
 func (s *SQS) Build() error {
+	fmt.Println(s.maxReceiveCount)
 	data := Data{
-		Name:          s.name,
-		NameWithSpace: strings.ReplaceAll(s.name, "-", " "),
-		NameSnakeCase: strcase.ToSnake(s.name),
+		Name:            s.name,
+		NameWithSpace:   strings.ReplaceAll(s.name, "-", " "),
+		NameSnakeCase:   strcase.ToSnake(s.name),
+		MaxReceiveCount: s.maxReceiveCount,
 	}
 
 	tmplName := "sqs-tf-template"
@@ -52,6 +57,11 @@ func (s *SQS) Build() error {
 	err := templates.BuildFile(data, tmplName, string(sqsTFTmpl), s.output)
 	if err != nil {
 		return fmt.Errorf("%w", err)
+	}
+
+	err = utils.TerraformFormat(s.output)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	fmt.Println("SQS has been generated successfully")
