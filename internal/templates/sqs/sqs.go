@@ -8,6 +8,7 @@ import (
 	"github.com/ettle/strcase"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
+	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
@@ -22,48 +23,56 @@ type Data struct {
 }
 
 type SQS struct {
-	name            string
-	maxReceiveCount int32
-	output          string
+	input  string
+	output string
 }
 
-func NewSQS(name string, maxReceiveCount int32, output string) *SQS {
-	return &SQS{name: name, maxReceiveCount: maxReceiveCount, output: output}
+func NewSQS(input, output string) *SQS {
+	return &SQS{input: input, output: output}
 }
 
 func (s *SQS) Build() error {
-	data := Data{
-		Name:            s.name,
-		NameWithSpace:   strings.ReplaceAll(s.name, "-", " "),
-		NameSnakeCase:   strcase.ToSnake(s.name),
-		MaxReceiveCount: s.maxReceiveCount,
+	yamlParser := config.NewYAML(s.input)
+
+	yamlConfig, err := yamlParser.Parse()
+	if err != nil {
+		return fmt.Errorf("%w", err)
 	}
 
 	tmplName := "sqs-tf-template"
+	result := ""
 
-	if s.output == "" {
+	for i := range yamlConfig.SQS {
+		conf := yamlConfig.SQS[i]
+
+		data := Data{
+			Name:            conf.Name,
+			NameWithSpace:   strings.ReplaceAll(conf.Name, "-", " "),
+			NameSnakeCase:   strcase.ToSnake(conf.Name),
+			MaxReceiveCount: conf.MaxReceiveCount,
+		}
+
 		output, err := templates.Build(data, tmplName, string(sqsTFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Println("SQS output:")
-		fmt.Println(output)
-
-		return nil
+		result = fmt.Sprintf("%s\n%s", result, output)
 	}
 
-	err := templates.BuildFile(data, tmplName, string(sqsTFTmpl), s.output)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
+	if result != "" {
+		err = templates.BuildFile(Data{}, tmplName, result, s.output)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
 
-	err = utils.TerraformFormat(s.output)
-	if err != nil {
-		fmt.Println(err)
-	}
+		err = utils.TerraformFormat(s.output)
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	fmt.Println("SQS has been generated successfully")
+		fmt.Println("SQS has been generated successfully")
+	}
 
 	return nil
 }

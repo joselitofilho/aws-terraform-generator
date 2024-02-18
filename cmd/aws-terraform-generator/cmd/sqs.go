@@ -10,12 +10,7 @@ var sqsCmd = &cobra.Command{
 	Use:   "sqs",
 	Short: "Manage SQS",
 	Run: func(cmd *cobra.Command, args []string) {
-		name, err := cmd.Flags().GetString("name")
-		if err != nil {
-			panic(err)
-		}
-
-		maxReceiveCount, err := cmd.Flags().GetInt32("maxReceiveCount")
+		input, err := cmd.Flags().GetString("input")
 		if err != nil {
 			panic(err)
 		}
@@ -25,7 +20,7 @@ var sqsCmd = &cobra.Command{
 			panic(err)
 		}
 
-		sqsTmpl := sqs.NewSQS(name, maxReceiveCount, output)
+		sqsTmpl := sqs.NewSQS(input, output)
 
 		err = sqsTmpl.Build()
 		if err != nil {
@@ -37,9 +32,9 @@ var sqsCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(sqsCmd)
 
-	sqsCmd.Flags().StringP("name", "n", "", "Name of the SQS")
-	sqsCmd.Flags().Int32P("maxReceiveCount", "c", 10, "The number of times a message is delivered to the source queue before being moved to the dead-letter queue")
-	sqsCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: output/sqs.tf")
+	sqsCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	sqsCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/sqs.tf")
 
-	sqsCmd.MarkFlagRequired("name")
+	sqsCmd.MarkFlagRequired("input")
+	sqsCmd.MarkFlagRequired("output")
 }
