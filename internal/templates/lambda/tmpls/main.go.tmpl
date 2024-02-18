@@ -1,0 +1,12 @@
+// Package main lambda body
+package main
+
+import (
+	"github.com/aws/aws-lambda-go/lambda"
+)
+
+func main() {
+	{{$.Name}}Lambda := new{{$.NamePascalCase}}()
+
+	lambda.Start({{$.Name}}Lambda.run)
+}

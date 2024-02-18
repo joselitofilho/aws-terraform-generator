@@ -1,0 +1,57 @@
+module "{{$.NameSnakeCase}}_lambda" {
+  source = "git@github.com:xiatechs/sdv-terraform-aws-lambda?ref=runtime_al2"
+
+  stack_name                               = local.stack_name
+  lambda_function_description              = "{{$.Description}}"
+  lambda_function_throttles_alarm_disabled = true
+  lambda_function_name                     = "{{$.Name}}"
+  lambda_function_kms_key_arn              = var.lambda_function_kms_key_arn
+  lambda_function_sns_topic_monitoring_arn = var.alerting_sns_topic_arn
+  lambda_function_source_base_path         = var.lambda_function_source_base_path
+  lambda_function_existing_execute_role    = "arn:aws:iam::${var.account_id}:role/execute_lambda"
+  lambda_function_vpc_config               = var.lambda_function_vpc_config
+
+  lambda_function_env_vars = {
+    TRACE          = "1"
+    TRACE_ENTITIES = "Y"
+    TIME_LOCATION  = "UTC"
+    {{ range $key, $value := .Envars }}{{$key}} = {{$value}}
+    {{end}}
+  }
+
+  client      = var.client
+  environment = var.environment
+  region      = var.region
+  account_id  = var.account_id
+}
+{{ $length := len $.SQSTriggers}}{{ if gt $length 0 }}{{ range $i, $sqs := $.SQSTriggers }}
+// {{$.Name}} SQS trigger rule for lambda
+resource "aws_lambda_event_source_mapping" "{{$.NameSnakeCase}}_lambda_sqs_trigger" {
+  event_source_arn = {{.SourceARN}}
+  function_name    = module.{{$.NameSnakeCase}}_lambda.function_arn
+  batch_size       = 1
+  enabled          = true
+}
+{{end}}{{end}}{{ $length := len $.Crons}}{{ if gt $length 0 }}
+  {{ range $i, $sqs := $.Crons }}
+// Trigger alarm for starting the {{$.Name}} lambda
+resource "aws_cloudwatch_event_rule" "{{$.NameSnakeCase}}_cron" {
+  name                = "run{{$.NamePascalCase}}"
+  description         = "Trigger alarm for starting the {{$.Name}} lambda"
+  schedule_expression = "{{.ScheduleExpression}}"
+  is_enabled          = {{.IsEnabled}}
+}
+
+resource "aws_cloudwatch_event_target" "{{$.NameSnakeCase}}_cron_target" {
+  rule = aws_cloudwatch_event_rule.{{$.NameSnakeCase}}_cron.name
+  arn  = module.{{$.NameSnakeCase}}_lambda.function_arn
+}
+
+resource "aws_lambda_permission" "{{$.NameSnakeCase}}_allow_cron" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = module.{{$.NameSnakeCase}}_lambda.function_arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.{{$.NameSnakeCase}}_cron.arn
+}
+{{end}}{{end}}

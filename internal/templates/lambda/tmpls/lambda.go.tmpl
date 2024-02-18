@@ -1,0 +1,22 @@
+package main
+
+import (
+	"context"
+
+	{{ range $i, $value := $.Code.Lambda.Imports }}"{{$value}}"
+	{{end}}
+)
+
+type {{$.Name}}Lambda struct {}
+
+func new{{$.Name}}Lambda() *{{$.Name}}Lambda {
+	return &{{$.Name}}Lambda{}
+}
+
+func (l *{{$.Name}}Lambda) run(ctx context.Context) error {
+	logging.Info.Println("running {{$.Name}}")
+
+	// TODO: Implement
+
+	return nil
+}

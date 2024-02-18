@@ -11,7 +11,7 @@ import (
 )
 
 //go:embed tmpls/sqs.tf.tmpl
-var templateContent []byte
+var sqsTFTmpl []byte
 
 type Data struct {
 	Name          string
@@ -35,8 +35,10 @@ func (s *SQS) Build() error {
 		NameSnakeCase: strcase.ToSnake(s.name),
 	}
 
+	tmplName := "sqs-tf-template"
+
 	if s.output == "" {
-		output, err := templates.Build(data, string(templateContent))
+		output, err := templates.Build(data, tmplName, string(sqsTFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -47,7 +49,7 @@ func (s *SQS) Build() error {
 		return nil
 	}
 
-	err := templates.BuildFile(data, string(templateContent), s.output)
+	err := templates.BuildFile(data, tmplName, string(sqsTFTmpl), s.output)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

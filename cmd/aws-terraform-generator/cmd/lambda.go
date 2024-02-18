@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+
+	"github.com/joselitofilho/aws-terraform-generator/internal/templates/lambda"
 )
 
 // lambdaCmd represents the lambda command
@@ -11,15 +11,31 @@ var lambdaCmd = &cobra.Command{
 	Use:   "lambda",
 	Short: "Manage Lambda",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("lambda called")
+		input, err := cmd.Flags().GetString("input")
+		if err != nil {
+			panic(err)
+		}
+
+		output, err := cmd.Flags().GetString("output")
+		if err != nil {
+			panic(err)
+		}
+
+		lambdaTmpl := lambda.NewLambda(input, output)
+
+		err = lambdaTmpl.Build()
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(lambdaCmd)
 
-	lambdaCmd.Flags().StringP("name", "n", "", "Name of the Lambda")
-	lambdaCmd.Flags().StringP("description", "d", "", "Description of the Lambda")
+	lambdaCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	lambdaCmd.Flags().StringP("output", "o", "", "Path to the output folder. For example: ./output")
 
-	lambdaCmd.MarkFlagRequired("name")
+	lambdaCmd.MarkFlagRequired("input")
+	lambdaCmd.MarkFlagRequired("output")
 }

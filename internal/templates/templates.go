@@ -7,9 +7,9 @@ import (
 	"text/template"
 )
 
-func Build(data any, templateContent string) (string, error) {
+func Build(data any, templateName, templateContent string) (string, error) {
 	// Create a new template and parse the template content
-	tmpl, err := template.New("template").Parse(string(templateContent))
+	tmpl, err := template.New(templateName).Parse(string(templateContent))
 	if err != nil {
 		return "", fmt.Errorf("%w", err)
 	}
@@ -25,9 +25,9 @@ func Build(data any, templateContent string) (string, error) {
 	return output.String(), nil
 }
 
-func BuildFile(data any, templateContent, path string) error {
+func BuildFile(data any, templateName, templateContent, path string) error {
 	// Create a new template and parse the template content
-	tmpl, err := template.New("template").Parse(string(templateContent))
+	tmpl, err := template.New(templateName).Parse(string(templateContent))
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
