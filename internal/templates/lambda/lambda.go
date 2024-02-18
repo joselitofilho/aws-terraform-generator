@@ -29,76 +29,78 @@ func (l *Lambda) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	lambdaConf := yamlConfig.Lambdas[0] // TODO: Loop
+	for i := range yamlConfig.Lambdas {
+		lambdaConf := yamlConfig.Lambdas[i]
 
-	envars := map[string]string{}
-	for i := range lambdaConf.Envars {
-		envars = lambdaConf.Envars[i]
-	}
-
-	sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
-	for i := range lambdaConf.SQSTriggers {
-		sqsTriggers[i] = SQSTrigger{
-			SourceARN: lambdaConf.SQSTriggers[i].SourceARN,
+		envars := map[string]string{}
+		for i := range lambdaConf.Envars {
+			envars = lambdaConf.Envars[i]
 		}
-	}
 
-	crons := make([]Cron, len(lambdaConf.Cron))
-	for i := range lambdaConf.Cron {
-		crons[i] = Cron{
-			ScheduleExpression: lambdaConf.Cron[i].ScheduleExpression,
-			IsEnabled:          lambdaConf.Cron[i].IsEnabled,
+		sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
+		for i := range lambdaConf.SQSTriggers {
+			sqsTriggers[i] = SQSTrigger{
+				SourceARN: lambdaConf.SQSTriggers[i].SourceARN,
+			}
 		}
-	}
 
-	codeConf := map[string]templates.Code{}
-	for i := range lambdaConf.Code {
-		codeConf[lambdaConf.Code[i].Key] = templates.Code{
-			Tmpl:    lambdaConf.Code[i].Tmpl,
-			Imports: lambdaConf.Code[i].Imports,
+		crons := make([]Cron, len(lambdaConf.Cron))
+		for i := range lambdaConf.Cron {
+			crons[i] = Cron{
+				ScheduleExpression: lambdaConf.Cron[i].ScheduleExpression,
+				IsEnabled:          lambdaConf.Cron[i].IsEnabled,
+			}
 		}
+
+		codeConf := map[string]templates.Code{}
+		for i := range lambdaConf.Code {
+			codeConf[lambdaConf.Code[i].Key] = templates.Code{
+				Tmpl:    lambdaConf.Code[i].Tmpl,
+				Imports: lambdaConf.Code[i].Imports,
+			}
+		}
+
+		data := Data{
+			Name:           lambdaConf.Name,
+			NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
+			NamePascalCase: strcase.ToPascal(lambdaConf.Name),
+			Description:    lambdaConf.Description,
+			Envars:         envars,
+			SQSTriggers:    sqsTriggers,
+			Crons:          crons,
+			Code:           codeConf,
+		}
+
+		output := fmt.Sprintf("%s/mod", l.output)
+		_ = os.MkdirAll(output, os.ModePerm)
+
+		outputFile := fmt.Sprintf("%s/%s.tf", output, lambdaConf.Name)
+
+		tmplName := "lambda-tf-template"
+		tmpl := string(lambdaTFTmpl)
+
+		err = templates.BuildFile(data, tmplName, tmpl, outputFile)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		err = utils.TerraformFormat(output)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println("Terraform has been generated successfully")
+
+		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
+		_ = os.MkdirAll(output, os.ModePerm)
+
+		err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, data)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		fmt.Printf("Lambda '%s' has been generated successfully", lambdaConf.Name)
 	}
-
-	data := Data{
-		Name:           lambdaConf.Name,
-		NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
-		NamePascalCase: strcase.ToPascal(lambdaConf.Name),
-		Description:    lambdaConf.Description,
-		Envars:         envars,
-		SQSTriggers:    sqsTriggers,
-		Crons:          crons,
-		Code:           codeConf,
-	}
-
-	output := fmt.Sprintf("%s/mod", l.output)
-	_ = os.MkdirAll(output, os.ModePerm)
-
-	outputFile := fmt.Sprintf("%s/%s.tf", output, lambdaConf.Name)
-
-	tmplName := "lambda-tf-template"
-	tmpl := string(lambdaTFTmpl)
-
-	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	err = utils.TerraformFormat(output)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("Terraform has been generated successfully")
-
-	output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
-	_ = os.MkdirAll(output, os.ModePerm)
-
-	err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, data)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	fmt.Println("Lambda has been generated successfully")
 
 	return nil
 }

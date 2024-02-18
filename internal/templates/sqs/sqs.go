@@ -32,7 +32,6 @@ func NewSQS(name string, maxReceiveCount int32, output string) *SQS {
 }
 
 func (s *SQS) Build() error {
-	fmt.Println(s.maxReceiveCount)
 	data := Data{
 		Name:            s.name,
 		NameWithSpace:   strings.ReplaceAll(s.name, "-", " "),

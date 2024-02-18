@@ -29,70 +29,74 @@ func (a *APIGateway) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	apiConf := yamlConfig.APIGateways[0] // TODO: Loop
+	for i := range yamlConfig.APIGateways {
+		apiConf := yamlConfig.APIGateways[i]
 
-	if apiConf.APIG {
-		data := Data{
-			StackName: apiConf.StackName,
-			APIDomain: apiConf.APIDomain,
+		if apiConf.APIG {
+			data := Data{
+				StackName: apiConf.StackName,
+				APIDomain: apiConf.APIDomain,
+			}
+
+			output := fmt.Sprintf("%s/mod", a.output)
+			_ = os.MkdirAll(output, os.ModePerm)
+
+			outputFile := fmt.Sprintf("%s/apig.tf", output)
+
+			tmplName := "apig-tf-template"
+			tmpl := string(apigTFTmpl)
+
+			err = templates.BuildFile(data, tmplName, tmpl, outputFile)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			err = utils.TerraformFormat(output)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Println("Terraform has been generated successfully")
 		}
 
-		output := fmt.Sprintf("%s/mod", a.output)
-		_ = os.MkdirAll(output, os.ModePerm)
+		for j := range apiConf.Lambdas {
+			lambdaConf := apiConf.Lambdas[j]
 
-		outputFile := fmt.Sprintf("%s/apig.tf", output)
+			envars := map[string]string{}
+			for i := range lambdaConf.Envars {
+				envars = lambdaConf.Envars[i]
+			}
 
-		tmplName := "apig-tf-template"
-		tmpl := string(apigTFTmpl)
+			codeConf := map[string]templates.Code{}
+			for i := range lambdaConf.Code {
+				codeConf[lambdaConf.Code[i].Key] = templates.Code{
+					Tmpl:    lambdaConf.Code[i].Tmpl,
+					Imports: lambdaConf.Code[i].Imports,
+				}
+			}
 
-		err = templates.BuildFile(data, tmplName, tmpl, outputFile)
-		if err != nil {
-			return fmt.Errorf("%w", err)
+			lambdaData := LambdaData{
+				Name:           lambdaConf.Name,
+				NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
+				NamePascalCase: strcase.ToPascal(lambdaConf.Name),
+				Description:    lambdaConf.Description,
+				Envars:         envars,
+				Verb:           lambdaConf.Verb,
+				Path:           lambdaConf.Path,
+				Code:           codeConf,
+			}
+
+			output := fmt.Sprintf("%s/lambda/%s", a.output, lambdaConf.Name)
+			_ = os.MkdirAll(output, os.ModePerm)
+
+			err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, lambdaData)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
 		}
-
-		err = utils.TerraformFormat(output)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println("Terraform has been generated successfully")
 	}
-
-	lambdaConf := apiConf.Lambdas[0] // TODO: Loop
-
-	envars := map[string]string{}
-	for i := range lambdaConf.Envars {
-		envars = lambdaConf.Envars[i]
-	}
-
-	codeConf := map[string]templates.Code{}
-	for i := range lambdaConf.Code {
-		codeConf[lambdaConf.Code[i].Key] = templates.Code{
-			Tmpl:    lambdaConf.Code[i].Tmpl,
-			Imports: lambdaConf.Code[i].Imports,
-		}
-	}
-
-	lambdaData := LambdaData{
-		Name:           lambdaConf.Name,
-		NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
-		NamePascalCase: strcase.ToPascal(lambdaConf.Name),
-		Description:    lambdaConf.Description,
-		Envars:         envars,
-		Verb:           lambdaConf.Verb,
-		Path:           lambdaConf.Path,
-		Code:           codeConf,
-	}
-
-	output := fmt.Sprintf("%s/lambda/%s", a.output, lambdaConf.Name)
-	_ = os.MkdirAll(output, os.ModePerm)
-
-	err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, lambdaData)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	fmt.Println("Lambda has been generated successfully")
 
 	return nil
 }
