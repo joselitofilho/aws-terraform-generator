@@ -2,15 +2,58 @@ package templates
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
+var ErrUnsupportedFileType = errors.New("unsupported file type")
+
 type TemplateMapValue struct {
 	TemplateName string
 	Template     []byte
+}
+
+func GenerateFiles(
+	defaultTemplatesMap map[string]string, fileName, fileTmpl string, data any, outputFile string,
+) error {
+	var (
+		tmpl     string
+		tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", ""))
+	)
+
+	if fileTmpl == "" {
+		tmpl = defaultTemplatesMap[fileName]
+	} else {
+		tmpl = fileTmpl
+	}
+
+	err := BuildFile(data, tmplName, tmpl, outputFile)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	ext := strings.Split(fileName, ".")[1]
+
+	switch ext {
+	case "go":
+		err = utils.GoFormat(outputFile)
+	case "tf":
+		err = utils.TerraformFormat(outputFile)
+	case "hcl":
+		err = nil
+	default:
+		err = ErrUnsupportedFileType
+	}
+
+	if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
+		fmt.Println(err)
+		err = nil
+	}
+
+	return err
 }
 
 func GenerateGoFiles(

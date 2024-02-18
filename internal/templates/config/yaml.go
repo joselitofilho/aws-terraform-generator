@@ -7,51 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Lambda struct {
-	Name        string              `yaml:"name"`
-	Description string              `yaml:"description"`
-	Envars      []map[string]string `yaml:"envars"`
-	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers"`
-	Cron        []Cron              `yaml:"crons"`
-	Code        []Code              `yaml:"code"`
-}
-
-type SQSTrigger struct {
-	SourceARN string `yaml:"source_arn"`
-}
-
-type Cron struct {
-	ScheduleExpression string `yaml:"schedule_expression"`
-	IsEnabled          string `yaml:"is_enabled"`
-}
-
-type Code struct {
-	Key     string   `yaml:"key"`
-	Tmpl    string   `yaml:"tmpl"`
-	Imports []string `yaml:"imports"`
-}
-
-type APIGatewayLambda struct {
-	Name        string              `yaml:"name"`
-	Description string              `yaml:"description"`
-	Envars      []map[string]string `yaml:"envars"`
-	Verb        string              `yaml:"verb"`
-	Path        string              `yaml:"path"`
-	Code        []Code              `yaml:"code"`
-}
-
-type APIGateway struct {
-	StackName string             `yaml:"stack_name"`
-	APIDomain string             `yaml:"api_domain"`
-	APIG      bool               `yaml:"apig"`
-	Lambdas   []APIGatewayLambda `yaml:"lambdas"`
-}
-
-type Config struct {
-	Lambdas     []Lambda     `yaml:"lambdas"`
-	APIGateways []APIGateway `yaml:"apigateways"`
-}
-
 type YAML struct {
 	fileName string
 }
