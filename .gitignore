@@ -22,4 +22,8 @@ output/
 go.work
 
 # Configuration files for executable
-config.yaml
+*.yaml
+*.xml
+
+# VSCode
+.vscode

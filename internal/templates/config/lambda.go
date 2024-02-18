@@ -3,10 +3,10 @@ package config
 type Lambda struct {
 	Name        string              `yaml:"name"`
 	Description string              `yaml:"description"`
-	Envars      []map[string]string `yaml:"envars"`
-	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers"`
-	Cron        []Cron              `yaml:"crons"`
-	Code        []Code              `yaml:"code"`
+	Envars      []map[string]string `yaml:"envars,omitempty"`
+	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers,omitempty"`
+	Crons       []Cron              `yaml:"crons,omitempty"`
+	Code        []Code              `yaml:"code,omitempty"`
 }
 
 type SQSTrigger struct {

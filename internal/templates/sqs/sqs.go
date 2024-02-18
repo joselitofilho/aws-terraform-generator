@@ -42,8 +42,8 @@ func (s *SQS) Build() error {
 	tmplName := "sqs-tf-template"
 	result := ""
 
-	for i := range yamlConfig.SQS {
-		conf := yamlConfig.SQS[i]
+	for i := range yamlConfig.SQSs {
+		conf := yamlConfig.SQSs[i]
 
 		data := Data{
 			Name:            conf.Name,

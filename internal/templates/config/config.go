@@ -1,8 +1,8 @@
 package config
 
 type Config struct {
-	Structure   Structure    `yaml:"structure"`
-	Lambdas     []Lambda     `yaml:"lambdas"`
-	APIGateways []APIGateway `yaml:"apigateways"`
-	SQS         []SQS        `yaml:"sqs"`
+	Structure   Structure    `yaml:"structure,omitempty"`
+	Lambdas     []Lambda     `yaml:"lambdas,omitempty"`
+	APIGateways []APIGateway `yaml:"apigateways,omitempty"`
+	SQSs        []SQS        `yaml:"sqs,omitempty"`
 }

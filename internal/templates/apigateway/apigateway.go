@@ -38,7 +38,7 @@ func (a *APIGateway) Build() error {
 				APIDomain: apiConf.APIDomain,
 			}
 
-			output := fmt.Sprintf("%s/mod", a.output)
+			output := fmt.Sprintf("%s/%s/mod", a.output, apiConf.StackName)
 			_ = os.MkdirAll(output, os.ModePerm)
 
 			outputFile := fmt.Sprintf("%s/apig.tf", output)
@@ -86,7 +86,7 @@ func (a *APIGateway) Build() error {
 				Code:           codeConf,
 			}
 
-			output := fmt.Sprintf("%s/lambda/%s", a.output, lambdaConf.Name)
+			output := fmt.Sprintf("%s/%s/lambda/%s", a.output, apiConf.StackName, lambdaConf.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
 			err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, lambdaData)

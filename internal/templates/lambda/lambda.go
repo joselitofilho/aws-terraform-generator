@@ -44,11 +44,11 @@ func (l *Lambda) Build() error {
 			}
 		}
 
-		crons := make([]Cron, len(lambdaConf.Cron))
-		for i := range lambdaConf.Cron {
+		crons := make([]Cron, len(lambdaConf.Crons))
+		for i := range lambdaConf.Crons {
 			crons[i] = Cron{
-				ScheduleExpression: lambdaConf.Cron[i].ScheduleExpression,
-				IsEnabled:          lambdaConf.Cron[i].IsEnabled,
+				ScheduleExpression: lambdaConf.Crons[i].ScheduleExpression,
+				IsEnabled:          lambdaConf.Crons[i].IsEnabled,
 			}
 		}
 
@@ -89,7 +89,7 @@ func (l *Lambda) Build() error {
 			fmt.Println(err)
 		}
 
-		fmt.Println("Terraform has been generated successfully")
+		fmt.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
 
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
