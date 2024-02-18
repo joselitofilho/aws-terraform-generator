@@ -21,9 +21,7 @@ var lambdaCmd = &cobra.Command{
 			panic(err)
 		}
 
-		lambdaTmpl := lambda.NewLambda(input, output)
-
-		err = lambdaTmpl.Build()
+		err = lambda.NewLambda(input, output).Build()
 		if err != nil {
 			panic(err)
 		}

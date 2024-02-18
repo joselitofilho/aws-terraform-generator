@@ -51,9 +51,9 @@ func (l *Lambda) Build() error {
 		}
 	}
 
-	codeConf := map[string]Code{}
+	codeConf := map[string]templates.Code{}
 	for i := range lambdaConf.Code {
-		codeConf[lambdaConf.Code[i].Key] = Code{
+		codeConf[lambdaConf.Code[i].Key] = templates.Code{
 			Tmpl:    lambdaConf.Code[i].Tmpl,
 			Imports: lambdaConf.Code[i].Imports,
 		}
@@ -70,13 +70,12 @@ func (l *Lambda) Build() error {
 		Code:           codeConf,
 	}
 
-	tmplName := "lambda-tf-template"
-
 	output := fmt.Sprintf("%s/mod", l.output)
 	_ = os.MkdirAll(output, os.ModePerm)
 
 	outputFile := fmt.Sprintf("%s/%s.tf", output, lambdaConf.Name)
 
+	tmplName := "lambda-tf-template"
 	tmpl := string(lambdaTFTmpl)
 
 	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
@@ -84,17 +83,17 @@ func (l *Lambda) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	fmt.Println("Terraform has been generated successfully")
-
 	err = utils.TerraformFormat(output)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	fmt.Println("Terraform has been generated successfully")
+
 	output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 	_ = os.MkdirAll(output, os.ModePerm)
 
-	err = generateGoFiles(output, codeConf, data)
+	err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, data)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

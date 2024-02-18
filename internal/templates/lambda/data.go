@@ -2,6 +2,8 @@ package lambda
 
 import (
 	_ "embed"
+
+	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
 )
 
 type SQSTrigger struct {
@@ -13,11 +15,6 @@ type Cron struct {
 	IsEnabled          string
 }
 
-type Code struct {
-	Tmpl    string
-	Imports []string
-}
-
 type Data struct {
 	Name           string
 	NameSnakeCase  string
@@ -26,5 +23,5 @@ type Data struct {
 	Envars         map[string]string
 	SQSTriggers    []SQSTrigger
 	Crons          []Cron
-	Code           map[string]Code
+	Code           map[string]templates.Code
 }

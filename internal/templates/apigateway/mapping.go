@@ -1,4 +1,4 @@
-package lambda
+package apigateway
 
 import (
 	_ "embed"
@@ -6,14 +6,9 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
 )
 
-type templateMapValue struct {
-	templateName string
-	template     []byte
-}
-
 var (
-	//go:embed tmpls/lambda.tf.tmpl
-	lambdaTFTmpl []byte
+	//go:embed tmpls/apig.tf.tmpl
+	apigTFTmpl []byte
 
 	//go:embed tmpls/lambda.go.tmpl
 	lambdaGoTmpl []byte

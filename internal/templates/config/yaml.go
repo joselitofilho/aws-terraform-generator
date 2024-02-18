@@ -16,13 +16,6 @@ type Lambda struct {
 	Code        []Code              `yaml:"code"`
 }
 
-type APILambda struct {
-	Name        string              `yaml:"name"`
-	Description string              `yaml:"description"`
-	Envars      []map[string]string `yaml:"envars"`
-	Code        []Code              `yaml:"code"`
-}
-
 type SQSTrigger struct {
 	SourceARN string `yaml:"source_arn"`
 }
@@ -38,8 +31,25 @@ type Code struct {
 	Imports []string `yaml:"imports"`
 }
 
+type APIGatewayLambda struct {
+	Name        string              `yaml:"name"`
+	Description string              `yaml:"description"`
+	Envars      []map[string]string `yaml:"envars"`
+	Verb        string              `yaml:"verb"`
+	Path        string              `yaml:"path"`
+	Code        []Code              `yaml:"code"`
+}
+
+type APIGateway struct {
+	StackName string             `yaml:"stack_name"`
+	APIDomain string             `yaml:"api_domain"`
+	APIG      bool               `yaml:"apig"`
+	Lambdas   []APIGatewayLambda `yaml:"lambdas"`
+}
+
 type Config struct {
-	Lambdas []Lambda `yaml:"lambdas"`
+	Lambdas     []Lambda     `yaml:"lambdas"`
+	APIGateways []APIGateway `yaml:"apigateways"`
 }
 
 type YAML struct {

@@ -15,7 +15,7 @@ module "{{$.NameSnakeCase}}_lambda" {
     TRACE          = "1"
     TRACE_ENTITIES = "Y"
     TIME_LOCATION  = "UTC"
-    {{ range $key, $value := .Envars }}{{$key}} = {{$value}}
+    {{ range $key, $value := $.Envars }}{{$key}} = {{$value}}
     {{end}}
   }
 
