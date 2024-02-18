@@ -1,4 +1,4 @@
-package yaml
+package config
 
 import (
 	"fmt"
@@ -13,7 +13,14 @@ type Lambda struct {
 	Envars      []map[string]string `yaml:"envars"`
 	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers"`
 	Cron        []Cron              `yaml:"crons"`
-	Code        Code                `yaml:"code"`
+	Code        []Code              `yaml:"code"`
+}
+
+type APILambda struct {
+	Name        string              `yaml:"name"`
+	Description string              `yaml:"description"`
+	Envars      []map[string]string `yaml:"envars"`
+	Code        []Code              `yaml:"code"`
 }
 
 type SQSTrigger struct {
@@ -26,10 +33,8 @@ type Cron struct {
 }
 
 type Code struct {
-	Lambda LambdaCode `yaml:"lambda"`
-}
-
-type LambdaCode struct {
+	Key     string   `yaml:"key"`
+	Tmpl    string   `yaml:"tmpl"`
 	Imports []string `yaml:"imports"`
 }
 

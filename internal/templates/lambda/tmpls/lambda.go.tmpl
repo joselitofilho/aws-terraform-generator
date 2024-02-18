@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	{{ range $i, $value := $.Code.Lambda.Imports }}"{{$value}}"
+	{{ range $.Code.lambda.Imports }}"{{.}}"
 	{{end}}
 )
 

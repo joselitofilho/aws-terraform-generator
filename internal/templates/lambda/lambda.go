@@ -7,8 +7,8 @@ import (
 
 	"github.com/ettle/strcase"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/inputs/yaml"
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
+	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
@@ -22,7 +22,7 @@ func NewLambda(input, output string) *Lambda {
 }
 
 func (l *Lambda) Build() error {
-	yamlParser := yaml.NewYAML(l.input)
+	yamlParser := config.NewYAML(l.input)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
@@ -51,6 +51,14 @@ func (l *Lambda) Build() error {
 		}
 	}
 
+	codeConf := map[string]Code{}
+	for i := range lambdaConf.Code {
+		codeConf[lambdaConf.Code[i].Key] = Code{
+			Tmpl:    lambdaConf.Code[i].Tmpl,
+			Imports: lambdaConf.Code[i].Imports,
+		}
+	}
+
 	data := Data{
 		Name:           lambdaConf.Name,
 		NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
@@ -59,7 +67,7 @@ func (l *Lambda) Build() error {
 		Envars:         envars,
 		SQSTriggers:    sqsTriggers,
 		Crons:          crons,
-		Code:           Code{Lambda: LambdaCode{Imports: lambdaConf.Code.Lambda.Imports}},
+		Code:           codeConf,
 	}
 
 	tmplName := "lambda-tf-template"
@@ -69,7 +77,9 @@ func (l *Lambda) Build() error {
 
 	outputFile := fmt.Sprintf("%s/%s.tf", output, lambdaConf.Name)
 
-	err = templates.BuildFile(data, tmplName, string(lambdaTFTmpl), outputFile)
+	tmpl := string(lambdaTFTmpl)
+
+	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -88,7 +98,12 @@ func (l *Lambda) Build() error {
 
 	outputFile = fmt.Sprintf("%s/main.go", output)
 
-	err = templates.BuildFile(data, tmplName, string(mainGoTmpl), outputFile)
+	tmpl = string(mainGoTmpl)
+	if len(codeConf["main"].Tmpl) > 0 {
+		tmpl = codeConf["main"].Tmpl
+	}
+
+	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -100,7 +115,12 @@ func (l *Lambda) Build() error {
 
 	outputFile = fmt.Sprintf("%s/lambda.go", output)
 
-	err = templates.BuildFile(data, tmplName, string(lambdaGoTmpl), outputFile)
+	tmpl = string(lambdaGoTmpl)
+	if len(codeConf["lambda"].Tmpl) > 0 {
+		tmpl = codeConf["lambda"].Tmpl
+	}
+
+	err = templates.BuildFile(data, tmplName, tmpl, outputFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

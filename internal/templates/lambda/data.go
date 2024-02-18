@@ -25,10 +25,7 @@ type Cron struct {
 }
 
 type Code struct {
-	Lambda LambdaCode
-}
-
-type LambdaCode struct {
+	Tmpl    string
 	Imports []string
 }
 
@@ -40,5 +37,5 @@ type Data struct {
 	Envars         map[string]string
 	SQSTriggers    []SQSTrigger
 	Crons          []Cron
-	Code           Code
+	Code           map[string]Code
 }
