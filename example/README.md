@@ -1,4 +1,4 @@
-# examples
+# example
 
 <div style="text-align:center"><img src="example.drawio.png" /></div>
 

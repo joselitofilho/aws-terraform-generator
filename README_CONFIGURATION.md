@@ -53,134 +53,134 @@ RESTful API configurations include API names.
 [template.yaml](template.yaml)
 
 ```yaml
-# Structure for Terraform stacks with multiple environments
+# Structure for stacks with multiple environments
+structure:
+  # Stacks section
+  stacks:
+    # Stack for mystack service
+    - stack_name: mystack
+      # Folders for different environments
+      folders:
+        # Development environment
+        - name: dev
+          files:
+            # Terraform configuration files for dev environment
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        # User Acceptance Testing environment
+        - name: uat
+          files:
+            # Terraform configuration files for uat environment
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        # Production environment
+        - name: prd
+          files:
+            # Terraform configuration files for prd environment
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        # Common module
+        - name: mod
+          files:
+            # Terraform configuration files for module
+            - name: main.tf
+              # Template for generating stack_name based on environment
+              tmpl: |-
+                locals {
+                  stack_name = "{{$.StackName}}-${var.environment}"
+                }
+            - name: vars.tf
+        # Lambda functions
+        - name: lambda
 
-# Stacks section
-stacks:
-  # Stack for mystack service
-  - stack_name: mystack
-    # Folders for different environments
-    folders:
-      # Development environment
-      - name: dev
-        files:
-          # Terraform configuration files for dev environment
-          - name: main.tf
-          - name: terragrunt.hcl
-          - name: vars.tf
-      # User Acceptance Testing environment
-      - name: uat
-        files:
-          # Terraform configuration files for uat environment
-          - name: main.tf
-          - name: terragrunt.hcl
-          - name: vars.tf
-      # Production environment
-      - name: prd
-        files:
-          # Terraform configuration files for prd environment
-          - name: main.tf
-          - name: terragrunt.hcl
-          - name: vars.tf
-      # Common module
-      - name: mod
-        files:
-          # Terraform configuration files for module
-          - name: main.tf
-            # Template for generating stack_name based on environment
-            tmpl: |-
-              locals {
-                stack_name = "{{$.StackName}}-${var.environment}"
-              }
-          - name: vars.tf
-      # Lambda functions
-      - name: lambda
-
-# Default templates section
-default_templates:
-  # Default Terraform template files
-  - main.tf: |-
-      # Terraform backend and required providers configuration
-      terraform {
-        backend "s3" {
-        }
-        required_providers {
-          aws = {
-            source  = "hashicorp/aws"
-            version = "~> 3.71"
+  # Default templates section
+  default_templates:
+    # Default Terraform template files
+    - main.tf: |-
+        # Terraform backend and required providers configuration
+        terraform {
+          backend "s3" {
+          }
+          required_providers {
+            aws = {
+              source  = "hashicorp/aws"
+              version = "~> 3.71"
+            }
           }
         }
-      }
 
-      # AWS provider configuration
-      provider "aws" {
-        region  = var.region
-        profile = "${var.client}-sdv-${var.environment}"
+        # AWS provider configuration
+        provider "aws" {
+          region  = var.region
+          profile = "${var.client}-sdv-${var.environment}"
 
-        allowed_account_ids = [var.account_id]
-      }
+          allowed_account_ids = [var.account_id]
+        }
 
-      # Module instantiation
-      module "{{$.StackName}}" {
-        source = "../mod"
+        # Module instantiation
+        module "{{$.StackName}}" {
+          source = "../mod"
 
-        client      = var.client
-        environment = var.environment
-        region      = var.region
-        account_id  = var.account_id
+          client      = var.client
+          environment = var.environment
+          region      = var.region
+          account_id  = var.account_id
 
-        // Variables from global
+          // Variables from global
 
-        dns_zone_id                      = var.zone_id
-        alerting_sns_topic_arn           = var.alerting_sns_topic_arn
-        lambda_function_source_base_path = var.lambda_function_source_base_path
-        lambda_function_vpc_config       = var.lambda_function_vpc_config
-        lambda_function_kms_key_arn      = var.lambda_function_kms_key_arn
-      }
+          dns_zone_id                      = var.zone_id
+          alerting_sns_topic_arn           = var.alerting_sns_topic_arn
+          lambda_function_source_base_path = var.lambda_function_source_base_path
+          lambda_function_vpc_config       = var.lambda_function_vpc_config
+          lambda_function_kms_key_arn      = var.lambda_function_kms_key_arn
+        }
 
-    terragrunt.hcl: |-
-      # Terragrunt configuration
-      include {
-        path = find_in_parent_folders()
-      }
+      terragrunt.hcl: |-
+        # Terragrunt configuration
+        include {
+          path = find_in_parent_folders()
+        }
 
-    vars.tf: |-
-      # Variables definition
-      variable "client" {
-        type = string
-      }
+      vars.tf: |-
+        # Variables definition
+        variable "client" {
+          type = string
+        }
 
-      variable "environment" {
-        type = string
-      }
+        variable "environment" {
+          type = string
+        }
 
-      variable "region" {
-        type = string
-      }
+        variable "region" {
+          type = string
+        }
 
-      variable "account_id" {
-        type = string
-      }
+        variable "account_id" {
+          type = string
+        }
 
-      variable "zone_id" {
-        type = string
-      }
+        variable "zone_id" {
+          type = string
+        }
 
-      variable "alerting_sns_topic_arn" {
-        type = string
-      }
+        variable "alerting_sns_topic_arn" {
+          type = string
+        }
 
-      variable "lambda_function_source_base_path" {
-        type = string
-      }
+        variable "lambda_function_source_base_path" {
+          type = string
+        }
 
-      variable "lambda_function_vpc_config" {
-        type = map(list(string))
-      }
+        variable "lambda_function_vpc_config" {
+          type = map(list(string))
+        }
 
-      variable "lambda_function_kms_key_arn" {
-        type = string
-      }
+        variable "lambda_function_kms_key_arn" {
+          type = string
+        }
 
 # Lambdas configuration section
 lambdas:

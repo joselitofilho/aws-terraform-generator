@@ -8,6 +8,7 @@ type Data struct {
 }
 
 type LambdaData struct {
+	StackName      string
 	Name           string
 	NameSnakeCase  string
 	NamePascalCase string

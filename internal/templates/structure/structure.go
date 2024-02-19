@@ -45,7 +45,7 @@ func (s *Structure) Build() error {
 			for _, file := range folder.Files {
 				outputFile := fmt.Sprintf("%s/%s", output, file.Name)
 
-				err = templates.GenerateFiles(defaultTemplatesMap, file.Name, file.Tmpl, data, outputFile)
+				err = templates.GenerateFile(defaultTemplatesMap, file.Name, file.Tmpl, outputFile, data)
 				if err != nil {
 					return fmt.Errorf("%w", err)
 				}

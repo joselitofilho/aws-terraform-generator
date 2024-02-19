@@ -10,6 +10,9 @@ var (
 	//go:embed tmpls/apig.tf.tmpl
 	apigTFTmpl []byte
 
+	//go:embed tmpls/lambda.tf.tmpl
+	lambdaTFTmpl []byte
+
 	//go:embed tmpls/lambda.go.tmpl
 	lambdaGoTmpl []byte
 

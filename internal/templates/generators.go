@@ -16,12 +16,12 @@ type TemplateMapValue struct {
 	Template     []byte
 }
 
-func GenerateFiles(
-	defaultTemplatesMap map[string]string, fileName, fileTmpl string, data any, outputFile string,
+func GenerateFile(
+	defaultTemplatesMap map[string]string, fileName, fileTmpl, outputFile string, data any,
 ) error {
 	var (
 		tmpl     string
-		tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", ""))
+		tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", "-"))
 	)
 
 	if fileTmpl == "" {
@@ -65,13 +65,13 @@ func GenerateGoFiles(
 		}
 	}
 
-	for tmplContext, tmplCode := range codeConf {
+	for tmplKey, tmplCode := range codeConf {
 		var (
 			tmplName string
 			tmpl     string
 		)
 
-		tmplMapValue, ok := defaultTemplatesMap[tmplContext]
+		tmplMapValue, ok := defaultTemplatesMap[tmplKey]
 		if ok {
 			tmplName = tmplMapValue.TemplateName
 			tmpl = string(tmplMapValue.Template)
@@ -80,11 +80,11 @@ func GenerateGoFiles(
 				tmpl = tmplCode.Tmpl
 			}
 		} else {
-			tmplName = fmt.Sprintf("%s-go-template", tmplContext)
+			tmplName = fmt.Sprintf("%s-go-template", tmplKey)
 			tmpl = tmplCode.Tmpl
 		}
 
-		outputFile := fmt.Sprintf("%s/%s.go", output, strings.ToLower(tmplContext))
+		outputFile := fmt.Sprintf("%s/%s.go", output, strings.ToLower(tmplKey))
 
 		err := BuildFile(data, tmplName, tmpl, outputFile)
 		if err != nil {

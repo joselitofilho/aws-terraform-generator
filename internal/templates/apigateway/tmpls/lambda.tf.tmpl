@@ -30,17 +30,17 @@ resource "aws_lambda_permission" "apigw_permission_{{$.NameSnakeCase}}" {
   action        = "lambda:InvokeFunction"
   function_name = module.{{$.NameSnakeCase}}_lambda.function_arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.location_api.execution_arn}/*"
+  source_arn    = "${aws_apigatewayv2_api.{{$.StackName}}_api.execution_arn}/*"
 }
 
 resource "aws_apigatewayv2_route" "apigw_route_{{$.NameSnakeCase}}" {
-  api_id    = aws_apigatewayv2_api.location_api.id
+  api_id    = aws_apigatewayv2_api.{{$.StackName}}_api.id
   route_key = "${{$.Verb}} {{$.Path}}"
   target    = "integrations/${aws_apigatewayv2_integration.{{$.NameSnakeCase}}.id}"
 }
 
 resource "aws_apigatewayv2_integration" "{{$.NameSnakeCase}}" {
-  api_id             = aws_apigatewayv2_api.location_api.id
+  api_id             = aws_apigatewayv2_api.{{$.StackName}}_api.id
   integration_type   = "AWS_PROXY"
   connection_type    = "INTERNET"
   integration_method = "POST"

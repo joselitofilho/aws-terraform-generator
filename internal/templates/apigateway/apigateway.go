@@ -9,7 +9,6 @@ import (
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type APIGateway struct {
@@ -29,34 +28,33 @@ func (a *APIGateway) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
+	defaultTmplsMap := map[string]string{
+		"apig.tf":   string(apigTFTmpl),
+		"lambda.tf": string(lambdaTFTmpl),
+	}
+
 	for i := range yamlConfig.APIGateways {
 		apiConf := yamlConfig.APIGateways[i]
 
+		output := fmt.Sprintf("%s/%s/mod", a.output, apiConf.StackName)
+		_ = os.MkdirAll(output, os.ModePerm)
+
 		if apiConf.APIG {
+			fileName := "apig.tf"
+			tmpl := string(apigTFTmpl)
+			outputFile := fmt.Sprintf("%s/%s", output, fileName)
+
 			data := Data{
 				StackName: apiConf.StackName,
 				APIDomain: apiConf.APIDomain,
 			}
 
-			output := fmt.Sprintf("%s/%s/mod", a.output, apiConf.StackName)
-			_ = os.MkdirAll(output, os.ModePerm)
-
-			outputFile := fmt.Sprintf("%s/apig.tf", output)
-
-			tmplName := "apig-tf-template"
-			tmpl := string(apigTFTmpl)
-
-			err = templates.BuildFile(data, tmplName, tmpl, outputFile)
+			err = templates.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
-			err = utils.TerraformFormat(output)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			fmt.Println("Terraform has been generated successfully")
+			fmt.Printf("Terraform '%s' has been generated successfully\n", fileName)
 		}
 
 		for j := range apiConf.Lambdas {
@@ -76,6 +74,7 @@ func (a *APIGateway) Build() error {
 			}
 
 			lambdaData := LambdaData{
+				StackName:      apiConf.StackName,
 				Name:           lambdaConf.Name,
 				NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
 				NamePascalCase: strcase.ToPascal(lambdaConf.Name),
@@ -85,6 +84,17 @@ func (a *APIGateway) Build() error {
 				Path:           lambdaConf.Path,
 				Code:           codeConf,
 			}
+
+			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
+			tmpl := string(lambdaTFTmpl)
+			outputFile := fmt.Sprintf("%s/%s", output, fileName)
+
+			err = templates.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, lambdaData)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("Terraform '%s' has been generated successfully\n", fileName)
 
 			output := fmt.Sprintf("%s/%s/lambda/%s", a.output, apiConf.StackName, lambdaConf.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
