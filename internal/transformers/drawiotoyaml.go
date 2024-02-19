@@ -1,6 +1,7 @@
 package transformers
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
@@ -49,7 +50,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 					apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
 						Name:        lambda.Value(),
-						Description: lambda.Description(),
+						Description: fmt.Sprintf("%s lambda", lambda.Value()),
 						Verb:        strings.Split(rel.Source.Value(), " ")[0],
 						Path:        strings.Split(rel.Source.Value(), " ")[1],
 						Code:        defaultCodes,
@@ -73,7 +74,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 			lambdas = append(lambdas, config.Lambda{
 				Name:        lambda.Value(),
-				Description: lambda.Description(),
+				Description: fmt.Sprintf("%s lambda", lambda.Value()),
 				Code:        defaultCodes,
 				Crons:       crons,
 			})

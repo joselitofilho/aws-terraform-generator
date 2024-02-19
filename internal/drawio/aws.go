@@ -8,92 +8,91 @@ import (
 type Resource interface {
 	ID() string
 	Value() string
-	Description() string
 }
 
-// Lambda represents Lambda resources: mxgraph.aws3.lambda
+// Lambda represents Lambda resource: mxgraph.aws3.lambda
 type Lambda struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewLambda(id, name, description string) Lambda {
-	return Lambda{id: id, value: name, description: description}
+func NewLambda(id, name string) Lambda {
+	return Lambda{id: id, value: name}
 }
-func (l Lambda) ID() string          { return l.id }
-func (l Lambda) Value() string       { return l.value }
-func (l Lambda) Description() string { return l.description }
+func (l Lambda) ID() string    { return l.id }
+func (l Lambda) Value() string { return l.value }
 
-// SQS represents SQS resources: mxgraph.aws3.sqs
+// SQS represents SQS resource: mxgraph.aws3.sqs
 type SQS struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewSQS(id, name, description string) SQS {
-	return SQS{id: id, value: name, description: description}
+func NewSQS(id, name string) SQS {
+	return SQS{id: id, value: name}
 }
-func (s SQS) ID() string          { return s.id }
-func (s SQS) Value() string       { return s.value }
-func (s SQS) Description() string { return s.description }
+func (s SQS) ID() string    { return s.id }
+func (s SQS) Value() string { return s.value }
 
-// Cron represents Cron resources: mxgraph.aws4.event_time_based
+// Cron represents Cron resource: mxgraph.aws4.event_time_based
 type Cron struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewCron(id, name, description string) Cron {
-	return Cron{id: id, value: name, description: description}
+func NewCron(id, name string) Cron {
+	return Cron{id: id, value: name}
 }
-func (c Cron) ID() string          { return c.id }
-func (c Cron) Value() string       { return c.value }
-func (c Cron) Description() string { return c.description }
+func (c Cron) ID() string    { return c.id }
+func (c Cron) Value() string { return c.value }
 
-// APIGateway represents APIGateway resources: mxgraph.aws3.api_gateway
+// APIGateway represents APIGateway resource: mxgraph.aws3.api_gateway
 type APIGateway struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewAPIGateway(id, name, description string) APIGateway {
-	return APIGateway{id: id, value: name, description: description}
+func NewAPIGateway(id, name string) APIGateway {
+	return APIGateway{id: id, value: name}
 }
-func (a APIGateway) ID() string          { return a.id }
-func (a APIGateway) Value() string       { return a.value }
-func (a APIGateway) Description() string { return a.description }
+func (a APIGateway) ID() string    { return a.id }
+func (a APIGateway) Value() string { return a.value }
 
-// Endpoint represents Endpoint resources: mxgraph.aws4.endpoint
+// Endpoint represents Endpoint resource: mxgraph.aws4.endpoint
 type Endpoint struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewEndpoint(id, name, description string) Endpoint {
-	return Endpoint{id: id, value: name, description: description}
+func NewEndpoint(id, name string) Endpoint {
+	return Endpoint{id: id, value: name}
 }
-func (e Endpoint) ID() string          { return e.id }
-func (e Endpoint) Value() string       { return e.value }
-func (e Endpoint) Description() string { return e.description }
+func (e Endpoint) ID() string    { return e.id }
+func (e Endpoint) Value() string { return e.value }
 
-// Database represents Database resources: mxgraph.flowchart.database
+// S3 represents S3 resource: mxgraph.aws3.s3
+type S3 struct {
+	id    string
+	value string
+}
+
+func NewS3(id, name string) S3 {
+	return S3{id: id, value: name}
+}
+func (s S3) ID() string    { return s.id }
+func (s S3) Value() string { return s.value }
+
+// Database represents Database resource: mxgraph.flowchart.database
 type Database struct {
-	id          string
-	value       string
-	description string
+	id    string
+	value string
 }
 
-func NewDatabase(id, name, description string) Database {
-	return Database{id: id, value: name, description: description}
+func NewDatabase(id, name string) Database {
+	return Database{id: id, value: name}
 }
-func (d Database) ID() string          { return d.id }
-func (d Database) Value() string       { return d.value }
-func (d Database) Description() string { return d.description }
+func (d Database) ID() string    { return d.id }
+func (d Database) Value() string { return d.value }
 
 // Relationship struct representing the relationship between resources
 type Relationship struct {
@@ -107,6 +106,7 @@ type ResourceCollection struct {
 	Crons         []Cron
 	APIGateways   []APIGateway
 	Endpoints     []Endpoint
+	Storages      []S3
 	Databases     []Database
 	Relationships []Relationship
 }
@@ -117,22 +117,25 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 	for _, cell := range mxFile.Diagram.MxGraphModel.Root.MxCells {
 		switch {
 		case strings.Contains(cell.Style, "mxgraph.aws3.lambda"):
-			lambda := NewLambda(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			lambda := NewLambda(cell.Id, cell.Value)
 			resources.Lambdas = append(resources.Lambdas, lambda)
 		case strings.Contains(cell.Style, "mxgraph.aws3.sqs"):
-			sqs := NewSQS(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			sqs := NewSQS(cell.Id, cell.Value)
 			resources.SQSs = append(resources.SQSs, sqs)
 		case strings.Contains(cell.Style, "mxgraph.aws4.event_time_based"):
-			cron := NewCron(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			cron := NewCron(cell.Id, cell.Value)
 			resources.Crons = append(resources.Crons, cron)
 		case strings.Contains(cell.Style, "mxgraph.aws3.api_gateway"):
-			apiGateway := NewAPIGateway(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			apiGateway := NewAPIGateway(cell.Id, cell.Value)
 			resources.APIGateways = append(resources.APIGateways, apiGateway)
 		case strings.Contains(cell.Style, "mxgraph.aws4.endpoint"):
-			endpoint := NewEndpoint(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			endpoint := NewEndpoint(cell.Id, cell.Value)
 			resources.Endpoints = append(resources.Endpoints, endpoint)
+		case strings.Contains(cell.Style, "mxgraph.aws3.s3"):
+			storage := NewS3(cell.Id, cell.Value)
+			resources.Storages = append(resources.Storages, storage)
 		case strings.Contains(cell.Style, "mxgraph.flowchart.database"):
-			database := NewDatabase(cell.Id, cell.Value, "") // You can parse description if it's available in the diagram
+			database := NewDatabase(cell.Id, cell.Value)
 			resources.Databases = append(resources.Databases, database)
 		}
 	}
@@ -174,6 +177,11 @@ func findResourceByID(resources *ResourceCollection, id string) Resource {
 	for _, endpoint := range resources.Endpoints {
 		if endpoint.ID() == id {
 			return endpoint
+		}
+	}
+	for _, storage := range resources.Storages {
+		if storage.ID() == id {
+			return storage
 		}
 	}
 	for _, database := range resources.Databases {
