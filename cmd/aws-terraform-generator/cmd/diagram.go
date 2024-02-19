@@ -16,6 +16,11 @@ var diagramCmd = &cobra.Command{
 	Use:   "diagram",
 	Short: "Manage Diagram",
 	Run: func(cmd *cobra.Command, args []string) {
+		stackName, err := cmd.Flags().GetString("stack")
+		if err != nil {
+			panic(err)
+		}
+
 		input, err := cmd.Flags().GetString("input")
 		if err != nil {
 			panic(err)
@@ -36,7 +41,7 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		yamlConfig, err := transformers.TransformDrawIOToYAML("location", resources)
+		yamlConfig, err := transformers.TransformDrawIOToYAML(stackName, resources)
 		if err != nil {
 			panic(err)
 		}
@@ -58,9 +63,11 @@ var diagramCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(diagramCmd)
 
+	diagramCmd.Flags().StringP("stack", "s", "", "Stack name")
 	diagramCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: diagram.xml")
 	diagramCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./diagram.yaml")
 
+	diagramCmd.MarkFlagRequired("stack")
 	diagramCmd.MarkFlagRequired("input")
 	diagramCmd.MarkFlagRequired("output")
 }

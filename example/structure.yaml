@@ -1,0 +1,112 @@
+structure:
+  stacks:
+    - stack_name: location
+      folders:
+        - name: dev
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: sit
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: uat
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: prod
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: mod
+          files:
+            - name: main.tf
+              tmpl: |-
+                locals {
+                  stack_name = "{{$.StackName}}-${var.environment}"
+                }
+            - name: vars.tf
+        - name: lambda
+  default_templates:
+    - main.tf: |-
+        terraform {
+          backend "s3" {
+          }
+          required_providers {
+            aws = {
+              source  = "hashicorp/aws"
+              version = "~> 3.71"
+            }
+          }
+        }
+
+        provider "aws" {
+          region  = var.region
+          profile = "${var.client}-sdv-${var.environment}"
+
+          allowed_account_ids = [var.account_id]
+        }
+
+
+        module "{{$.StackName}}" {
+          source = "../mod"
+
+          client      = var.client
+          environment = var.environment
+          region      = var.region
+          account_id  = var.account_id
+
+          // comes from global
+
+          dns_zone_id                      = var.zone_id
+          alerting_sns_topic_arn           = var.alerting_sns_topic_arn
+          lambda_function_source_base_path = var.lambda_function_source_base_path
+          lambda_function_vpc_config       = var.lambda_function_vpc_config
+          lambda_function_kms_key_arn      = var.lambda_function_kms_key_arn
+        }
+
+      terragrunt.hcl: |-
+        include {
+          path = find_in_parent_folders()
+        }
+
+      vars.tf: |-
+        variable "client" {
+          type = string
+        }
+
+        variable "environment" {
+          type = string
+        }
+
+        variable "region" {
+          type = string
+        }
+
+        variable "account_id" {
+          type = string
+        }
+
+        variable "zone_id" {
+          type = string
+        }
+
+        variable "alerting_sns_topic_arn" {
+          type = string
+        }
+
+        variable "lambda_function_source_base_path" {
+          type = string
+        }
+
+        variable "lambda_function_vpc_config" {
+          type = map(list(string))
+        }
+
+        variable "lambda_function_kms_key_arn" {
+          type = string
+        }
