@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+
+	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
 // diagramCmd represents the structure command

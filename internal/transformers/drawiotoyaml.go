@@ -142,9 +142,16 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
 	}
 
+	buckets := []config.S3{}
+
+	for _, bucket := range resources.Buckets {
+		buckets = append(buckets, config.S3{Name: bucket.Value()})
+	}
+
 	return &config.Config{
 		Lambdas:     lambdas,
 		APIGateways: apiGateways,
 		SQSs:        sqss,
+		Buckets:     buckets,
 	}, nil
 }

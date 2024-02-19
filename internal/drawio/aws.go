@@ -106,7 +106,7 @@ type ResourceCollection struct {
 	Crons         []Cron
 	APIGateways   []APIGateway
 	Endpoints     []Endpoint
-	Storages      []S3
+	Buckets       []S3
 	Databases     []Database
 	Relationships []Relationship
 }
@@ -133,7 +133,7 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 			resources.Endpoints = append(resources.Endpoints, endpoint)
 		case strings.Contains(cell.Style, "mxgraph.aws3.s3"):
 			storage := NewS3(cell.Id, cell.Value)
-			resources.Storages = append(resources.Storages, storage)
+			resources.Buckets = append(resources.Buckets, storage)
 		case strings.Contains(cell.Style, "mxgraph.flowchart.database"):
 			database := NewDatabase(cell.Id, cell.Value)
 			resources.Databases = append(resources.Databases, database)
@@ -179,7 +179,7 @@ func findResourceByID(resources *ResourceCollection, id string) Resource {
 			return endpoint
 		}
 	}
-	for _, storage := range resources.Storages {
+	for _, storage := range resources.Buckets {
 		if storage.ID() == id {
 			return storage
 		}
