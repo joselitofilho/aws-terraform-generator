@@ -6,4 +6,5 @@ type Config struct {
 	APIGateways []APIGateway `yaml:"apigateways,omitempty"`
 	SQSs        []SQS        `yaml:"sqs,omitempty"`
 	Buckets     []S3         `yaml:"buckets,omitempty"`
+	RestfulAPIs []RestfulAPI `yaml:"restfulapis,omitempty"`
 }

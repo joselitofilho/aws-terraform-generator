@@ -94,6 +94,18 @@ func NewDatabase(id, name string) Database {
 func (d Database) ID() string    { return d.id }
 func (d Database) Value() string { return d.value }
 
+// RestfulAPI represents RestfulAPI resource: mxgraph.veeam2.restful_api
+type RestfulAPI struct {
+	id    string
+	value string
+}
+
+func NewRestfulAPI(id, name string) RestfulAPI {
+	return RestfulAPI{id: id, value: name}
+}
+func (r RestfulAPI) ID() string    { return r.id }
+func (r RestfulAPI) Value() string { return r.value }
+
 // Relationship struct representing the relationship between resources
 type Relationship struct {
 	Source Resource
@@ -108,6 +120,7 @@ type ResourceCollection struct {
 	Endpoints     []Endpoint
 	Buckets       []S3
 	Databases     []Database
+	RestfulAPIs   []RestfulAPI
 	Relationships []Relationship
 }
 
@@ -137,6 +150,9 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 		case strings.Contains(cell.Style, "mxgraph.flowchart.database"):
 			database := NewDatabase(cell.Id, cell.Value)
 			resources.Databases = append(resources.Databases, database)
+		case strings.Contains(cell.Style, "mxgraph.veeam2.restful_api"):
+			restfulAPI := NewRestfulAPI(cell.Id, cell.Value)
+			resources.RestfulAPIs = append(resources.RestfulAPIs, restfulAPI)
 		}
 	}
 
@@ -187,6 +203,11 @@ func findResourceByID(resources *ResourceCollection, id string) Resource {
 	for _, database := range resources.Databases {
 		if database.ID() == id {
 			return database
+		}
+	}
+	for _, restfulAPI := range resources.RestfulAPIs {
+		if restfulAPI.ID() == id {
+			return restfulAPI
 		}
 	}
 	return nil

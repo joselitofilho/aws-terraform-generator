@@ -13,8 +13,8 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	apiGatewaysByID := map[string]drawio.Resource{}
 	cronsByLambdaID := map[string]drawio.Resource{}
-	envars := map[string]map[string]string{}
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
+	envars := map[string]map[string]string{}
 
 	for _, rel := range resources.Relationships {
 		switch rel.Target.(type) {
@@ -51,6 +51,22 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 				envars[rel.Source.ID()]["DOCDB_HOST"] = "var.docdb_host"
 				envars[rel.Source.ID()]["DOCDB_USER"] = "var.docdb_user"
 				envars[rel.Source.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
+			}
+		case drawio.RestfulAPI:
+			switch rel.Source.(type) {
+			case drawio.Lambda:
+				if _, ok := envars[rel.Source.ID()]; !ok {
+					envars[rel.Source.ID()] = map[string]string{}
+				}
+
+				restfulAPIName := strings.ToLower(rel.Target.Value())
+
+				envars[rel.Source.ID()][fmt.Sprintf("%s_API_BASE_URL", strcase.ToSNAKE(restfulAPIName))] =
+					fmt.Sprintf("var.%s_api_base_url", strcase.ToSnake(restfulAPIName))
+				envars[rel.Source.ID()][fmt.Sprintf("%s_HOST", strcase.ToSNAKE(restfulAPIName))] =
+					fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
+				envars[rel.Source.ID()][fmt.Sprintf("%s_USER", strcase.ToSNAKE(restfulAPIName))] =
+					fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
 			}
 		}
 	}
@@ -148,10 +164,22 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		buckets = append(buckets, config.S3{Name: bucket.Value()})
 	}
 
+	restfulAPIs := []config.RestfulAPI{}
+	restfulAPINames := map[string]struct{}{}
+
+	for _, restfulAPI := range resources.RestfulAPIs {
+		name := restfulAPI.Value()
+		if _, ok := restfulAPINames[name]; !ok {
+			restfulAPIs = append(restfulAPIs, config.RestfulAPI{Name: name})
+			restfulAPINames[name] = struct{}{}
+		}
+	}
+
 	return &config.Config{
 		Lambdas:     lambdas,
 		APIGateways: apiGateways,
 		SQSs:        sqss,
 		Buckets:     buckets,
+		RestfulAPIs: restfulAPIs,
 	}, nil
 }
