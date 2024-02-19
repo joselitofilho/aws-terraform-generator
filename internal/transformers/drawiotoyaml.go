@@ -4,26 +4,54 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ettle/strcase"
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
 )
 
 func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollection) (*config.Config, error) {
-	endpointsPerAPIGateway := map[string]drawio.Endpoint{}
-	apiGatewaysMap := map[string]drawio.APIGateway{}
-	cronsMap := map[string]drawio.Cron{}
+	endpointsByAPIGatewayID := map[string]drawio.Resource{}
+	apiGatewaysByID := map[string]drawio.Resource{}
+	cronsByLambdaID := map[string]drawio.Resource{}
+	envars := map[string]map[string]string{}
+	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
 
 	for _, rel := range resources.Relationships {
 		switch rel.Target.(type) {
 		case drawio.Lambda:
+			lambdaID := rel.Target.ID()
+
 			switch rel.Source.(type) {
 			case drawio.Cron:
-				cronsMap[rel.Target.ID()] = rel.Source.(drawio.Cron)
+				cronsByLambdaID[lambdaID] = rel.Source
+			case drawio.SQS:
+				sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], rel.Source)
 			}
 		case drawio.APIGateway:
 			apiGatewayID := rel.Target.ID()
-			apiGatewaysMap[apiGatewayID] = rel.Target.(drawio.APIGateway)
-			endpointsPerAPIGateway[apiGatewayID] = rel.Source.(drawio.Endpoint)
+			apiGatewaysByID[apiGatewayID] = rel.Target
+			endpointsByAPIGatewayID[apiGatewayID] = rel.Source
+		case drawio.SQS:
+			switch rel.Source.(type) {
+			case drawio.Lambda:
+				if _, ok := envars[rel.Source.ID()]; !ok {
+					envars[rel.Source.ID()] = map[string]string{}
+				}
+
+				envars[rel.Source.ID()]["SQS_QUEUE_URL"] =
+					fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(rel.Target.Value()))
+			}
+		case drawio.Database:
+			switch rel.Source.(type) {
+			case drawio.Lambda:
+				if _, ok := envars[rel.Source.ID()]; !ok {
+					envars[rel.Source.ID()] = map[string]string{}
+				}
+
+				envars[rel.Source.ID()]["DOCDB_HOST"] = "var.docdb_host"
+				envars[rel.Source.ID()]["DOCDB_USER"] = "var.docdb_user"
+				envars[rel.Source.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
+			}
 		}
 	}
 
@@ -44,13 +72,15 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 					apiGatewayID := rel.Source.ID()
 
-					if _, ok := apiGatewayLambdas[apiGatewayID]; !ok {
-						apiGatewayLambdas[apiGatewayID] = []config.APIGatewayLambda{}
+					envarsList := []map[string]string{}
+					for key, value := range envars[lambda.ID()] {
+						envarsList = append(envarsList, map[string]string{key: value})
 					}
 
 					apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
 						Name:        lambda.Value(),
 						Description: fmt.Sprintf("%s lambda", lambda.Value()),
+						Envars:      envarsList,
 						Verb:        strings.Split(rel.Source.Value(), " ")[0],
 						Path:        strings.Split(rel.Source.Value(), " ")[1],
 						Code:        defaultCodes,
@@ -65,16 +95,30 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 		if !isAPIGatewayLambda {
 			crons := []config.Cron{}
-			if cron, ok := cronsMap[lambda.ID()]; ok {
+			if cron, ok := cronsByLambdaID[lambda.ID()]; ok {
 				crons = append(crons, config.Cron{
 					ScheduleExpression: cron.Value(),
 					IsEnabled:          "true",
 				})
 			}
 
+			envarsList := []map[string]string{}
+			for key, value := range envars[lambda.ID()] {
+				envarsList = append(envarsList, map[string]string{key: value})
+			}
+
+			sqsTriggers := []config.SQSTrigger{}
+			for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
+				sqsTriggers = append(sqsTriggers, config.SQSTrigger{
+					SourceARN: fmt.Sprintf("aws_sqs_queue.%s_sqs.arn", strcase.ToSnake(sqsTrigger.Value())),
+				})
+			}
+
 			lambdas = append(lambdas, config.Lambda{
 				Name:        lambda.Value(),
 				Description: fmt.Sprintf("%s lambda", lambda.Value()),
+				Envars:      envarsList,
+				SQSTriggers: sqsTriggers,
 				Code:        defaultCodes,
 				Crons:       crons,
 			})
@@ -83,10 +127,10 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 	apiGateways := []config.APIGateway{}
 
-	for id := range apiGatewaysMap {
+	for id := range apiGatewaysByID {
 		apiGateways = append(apiGateways, config.APIGateway{
 			StackName: stackName,
-			APIDomain: endpointsPerAPIGateway[id].Value(),
+			APIDomain: endpointsByAPIGatewayID[id].Value(),
 			APIG:      true,
 			Lambdas:   apiGatewayLambdas[id],
 		})
