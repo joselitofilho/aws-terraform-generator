@@ -16,6 +16,12 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
 	envars := map[string]map[string]string{}
 
+	initEnvarsIfNecessaryByKey := func(target map[string]map[string]string, key string) {
+		if _, ok := target[key]; !ok {
+			target[key] = map[string]string{}
+		}
+	}
+
 	for _, rel := range resources.Relationships {
 		switch rel.Target.(type) {
 		case drawio.Lambda:
@@ -34,9 +40,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		case drawio.SQS:
 			switch rel.Source.(type) {
 			case drawio.Lambda:
-				if _, ok := envars[rel.Source.ID()]; !ok {
-					envars[rel.Source.ID()] = map[string]string{}
-				}
+				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				envars[rel.Source.ID()]["SQS_QUEUE_URL"] =
 					fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(rel.Target.Value()))
@@ -44,9 +48,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		case drawio.Database:
 			switch rel.Source.(type) {
 			case drawio.Lambda:
-				if _, ok := envars[rel.Source.ID()]; !ok {
-					envars[rel.Source.ID()] = map[string]string{}
-				}
+				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				envars[rel.Source.ID()]["DOCDB_HOST"] = "var.docdb_host"
 				envars[rel.Source.ID()]["DOCDB_USER"] = "var.docdb_user"
@@ -55,9 +57,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		case drawio.RestfulAPI:
 			switch rel.Source.(type) {
 			case drawio.Lambda:
-				if _, ok := envars[rel.Source.ID()]; !ok {
-					envars[rel.Source.ID()] = map[string]string{}
-				}
+				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				restfulAPIName := strings.ToLower(rel.Target.Value())
 
@@ -67,6 +67,16 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 					fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
 				envars[rel.Source.ID()][fmt.Sprintf("%s_USER", strcase.ToSNAKE(restfulAPIName))] =
 					fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
+			}
+		case drawio.S3:
+			switch rel.Source.(type) {
+			case drawio.Lambda:
+				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
+
+				bucketName := strings.ToLower(rel.Target.Value())
+
+				envars[rel.Source.ID()][fmt.Sprintf("%s_BUCKET", strcase.ToSNAKE(bucketName))] =
+					fmt.Sprintf("var.%s_bucket", strcase.ToSnake(bucketName))
 			}
 		}
 	}
