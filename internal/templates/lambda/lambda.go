@@ -13,16 +13,16 @@ import (
 )
 
 type Lambda struct {
-	input  string
+	config string
 	output string
 }
 
-func NewLambda(input, output string) *Lambda {
-	return &Lambda{input: input, output: output}
+func NewLambda(config, output string) *Lambda {
+	return &Lambda{config: config, output: output}
 }
 
 func (l *Lambda) Build() error {
-	yamlParser := config.NewYAML(l.input)
+	yamlParser := config.NewYAML(l.config)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
@@ -89,7 +89,7 @@ func (l *Lambda) Build() error {
 
 		err = utils.TerraformFormat(output)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("%s: %s\n", lambdaConf.Name, err)
 		}
 
 		fmt.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
@@ -102,7 +102,7 @@ func (l *Lambda) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Printf("Lambda '%s' has been generated successfully", lambdaConf.Name)
+		fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaConf.Name)
 	}
 
 	return nil

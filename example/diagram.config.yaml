@@ -1,0 +1,3 @@
+diagram:
+  modules:
+    lambda: git@github.com:username/terraform-aws-lambda?ref=reference

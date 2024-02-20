@@ -54,20 +54,22 @@ var diagramCmd = &cobra.Command{
 
 		//
 
-		yamlParser := config.NewYAML(configFile)
+		if configFile != "" {
+			yamlParser := config.NewYAML(configFile)
 
-		yamlConfig, err := yamlParser.Parse()
-		if err != nil {
-			panic(err)
-		}
+			yamlConfig, err := yamlParser.Parse()
+			if err != nil {
+				panic(err)
+			}
 
-		for i := range yamlConfigOut.Lambdas {
-			yamlConfigOut.Lambdas[i].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
-		}
+			for i := range yamlConfigOut.Lambdas {
+				yamlConfigOut.Lambdas[i].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
+			}
 
-		for i, g := range yamlConfigOut.APIGateways {
-			for j := range g.Lambdas {
-				yamlConfigOut.APIGateways[i].Lambdas[j].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
+			for i, g := range yamlConfigOut.APIGateways {
+				for j := range g.Lambdas {
+					yamlConfigOut.APIGateways[i].Lambdas[j].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
+				}
 			}
 		}
 

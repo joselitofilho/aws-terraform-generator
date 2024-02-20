@@ -22,16 +22,16 @@ type Data struct {
 }
 
 type S3 struct {
-	input  string
+	config string
 	output string
 }
 
-func NewS3(input, output string) *S3 {
-	return &S3{input: input, output: output}
+func NewS3(config, output string) *S3 {
+	return &S3{config: config, output: output}
 }
 
 func (s *S3) Build() error {
-	yamlParser := config.NewYAML(s.input)
+	yamlParser := config.NewYAML(s.config)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

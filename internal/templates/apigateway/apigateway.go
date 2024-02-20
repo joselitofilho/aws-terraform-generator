@@ -12,16 +12,16 @@ import (
 )
 
 type APIGateway struct {
-	input  string
+	config string
 	output string
 }
 
-func NewAPIGateway(input, output string) *APIGateway {
-	return &APIGateway{input: input, output: output}
+func NewAPIGateway(config, output string) *APIGateway {
+	return &APIGateway{config: config, output: output}
 }
 
 func (a *APIGateway) Build() error {
-	yamlParser := config.NewYAML(a.input)
+	yamlParser := config.NewYAML(a.config)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

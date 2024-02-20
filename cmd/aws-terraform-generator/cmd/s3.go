@@ -11,7 +11,7 @@ var s3Cmd = &cobra.Command{
 	Use:   "s3",
 	Short: "Manage S3",
 	Run: func(cmd *cobra.Command, args []string) {
-		input, err := cmd.Flags().GetString("input")
+		config, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -21,7 +21,7 @@ var s3Cmd = &cobra.Command{
 			panic(err)
 		}
 
-		s3Tmpl := s3.NewS3(input, output)
+		s3Tmpl := s3.NewS3(config, output)
 
 		err = s3Tmpl.Build()
 		if err != nil {
@@ -33,9 +33,9 @@ var s3Cmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(s3Cmd)
 
-	s3Cmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	s3Cmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./s3.config.yaml")
 	s3Cmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/s3.tf")
 
-	s3Cmd.MarkFlagRequired("input")
+	s3Cmd.MarkFlagRequired("config")
 	s3Cmd.MarkFlagRequired("output")
 }

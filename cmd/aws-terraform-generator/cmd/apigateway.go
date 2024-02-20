@@ -11,7 +11,7 @@ var apigatewayCmd = &cobra.Command{
 	Use:   "apigateway",
 	Short: "Manage APIGateway",
 	Run: func(cmd *cobra.Command, args []string) {
-		input, err := cmd.Flags().GetString("input")
+		config, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -21,7 +21,7 @@ var apigatewayCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = apigateway.NewAPIGateway(input, output).Build()
+		err = apigateway.NewAPIGateway(config, output).Build()
 		if err != nil {
 			panic(err)
 		}
@@ -31,9 +31,9 @@ var apigatewayCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(apigatewayCmd)
 
-	apigatewayCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	apigatewayCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./apigateway.config.yaml")
 	apigatewayCmd.Flags().StringP("output", "o", "", "Path to the output folder. For example: ./output")
 
-	apigatewayCmd.MarkFlagRequired("input")
+	apigatewayCmd.MarkFlagRequired("config")
 	apigatewayCmd.MarkFlagRequired("output")
 }

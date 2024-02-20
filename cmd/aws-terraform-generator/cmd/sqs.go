@@ -10,7 +10,7 @@ var sqsCmd = &cobra.Command{
 	Use:   "sqs",
 	Short: "Manage SQS",
 	Run: func(cmd *cobra.Command, args []string) {
-		input, err := cmd.Flags().GetString("input")
+		config, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -20,7 +20,7 @@ var sqsCmd = &cobra.Command{
 			panic(err)
 		}
 
-		sqsTmpl := sqs.NewSQS(input, output)
+		sqsTmpl := sqs.NewSQS(config, output)
 
 		err = sqsTmpl.Build()
 		if err != nil {
@@ -32,9 +32,9 @@ var sqsCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(sqsCmd)
 
-	sqsCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	sqsCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./sqs.config.yaml")
 	sqsCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/sqs.tf")
 
-	sqsCmd.MarkFlagRequired("input")
+	sqsCmd.MarkFlagRequired("config")
 	sqsCmd.MarkFlagRequired("output")
 }

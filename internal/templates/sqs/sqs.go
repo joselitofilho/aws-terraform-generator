@@ -23,16 +23,16 @@ type Data struct {
 }
 
 type SQS struct {
-	input  string
+	config string
 	output string
 }
 
-func NewSQS(input, output string) *SQS {
-	return &SQS{input: input, output: output}
+func NewSQS(config, output string) *SQS {
+	return &SQS{config: config, output: output}
 }
 
 func (s *SQS) Build() error {
-	yamlParser := config.NewYAML(s.input)
+	yamlParser := config.NewYAML(s.config)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

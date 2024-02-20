@@ -53,12 +53,12 @@ To use these configurations:
 2. Customize the Terraform files (`main.tf`, `vars.tf`, etc.) according to your requirements.
 3. Run commands to manage the infrastructure.
 ```bash
-$ aws-terraform-generator diagram -s mystack -i examples/diagram.drawio.xml -o examples/mystack.yaml
-$ aws-terraform-generator structure -i examples/structure.yaml -o ./output
-$ aws-terraform-generator apigateway -i examples/mystack.yaml -o ./output
-$ aws-terraform-generator lambda -i examples/mystack.yaml -o ./output/mystack
-$ aws-terraform-generator sqs -i examples/mystack.yaml -o output/mystack/mod/sqs.tf
-$ aws-terraform-generator s3 -i examples/mystack.yaml -o output/mystack/mod/s3.tf
+$ aws-terraform-generator diagram -s mystack -c examples/diagram.config.yaml -d examples/diagram.drawio.xml -o examples/mystack.yaml
+$ aws-terraform-generator structure -c examples/structure.yaml -o ./output
+$ aws-terraform-generator apigateway -c examples/mystack.yaml -o ./output
+$ aws-terraform-generator lambda -c examples/mystack.yaml -o ./output/mystack
+$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack/mod/sqs.tf
+$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack/mod/s3.tf
 ```
 
 ## Contributing

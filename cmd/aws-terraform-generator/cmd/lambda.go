@@ -11,7 +11,7 @@ var lambdaCmd = &cobra.Command{
 	Use:   "lambda",
 	Short: "Manage Lambda",
 	Run: func(cmd *cobra.Command, args []string) {
-		input, err := cmd.Flags().GetString("input")
+		config, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -21,7 +21,7 @@ var lambdaCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = lambda.NewLambda(input, output).Build()
+		err = lambda.NewLambda(config, output).Build()
 		if err != nil {
 			panic(err)
 		}
@@ -31,9 +31,9 @@ var lambdaCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(lambdaCmd)
 
-	lambdaCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	lambdaCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./lambda.config.yaml")
 	lambdaCmd.Flags().StringP("output", "o", "", "Path to the output folder. For example: ./output")
 
-	lambdaCmd.MarkFlagRequired("input")
+	lambdaCmd.MarkFlagRequired("config")
 	lambdaCmd.MarkFlagRequired("output")
 }

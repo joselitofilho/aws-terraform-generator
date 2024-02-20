@@ -11,7 +11,7 @@ var structureCmd = &cobra.Command{
 	Use:   "structure",
 	Short: "Manage Structure",
 	Run: func(cmd *cobra.Command, args []string) {
-		input, err := cmd.Flags().GetString("input")
+		config, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -21,7 +21,7 @@ var structureCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = structure.NewStructure(input, output).Build()
+		err = structure.NewStructure(config, output).Build()
 		if err != nil {
 			panic(err)
 		}
@@ -31,9 +31,9 @@ var structureCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(structureCmd)
 
-	structureCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: lambdas.yaml")
+	structureCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./structure.config.yaml")
 	structureCmd.Flags().StringP("output", "o", "", "Path to the output folder. For example: ./output")
 
-	structureCmd.MarkFlagRequired("input")
+	structureCmd.MarkFlagRequired("config")
 	structureCmd.MarkFlagRequired("output")
 }
