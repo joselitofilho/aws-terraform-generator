@@ -4,19 +4,27 @@
 
 The configuration is organized into the following sections:
 
-- **Stacks**: Configuration for different stacks.
-- **Default Templates**: Default Terraform templates for creating stacks.
+- **Diagram**: Configuration for diagram.
+- **Structure**:
+  - **Stacks**: Configuration for different stacks.
+  - **Default Templates**: Default Terraform templates for creating stacks.
 - **Lambdas**: Configuration for lambda functions.
 - **API Gateways**: Configuration for API Gateways.
 - **SQS**: Configuration for SQS queues.
 - **Buckets**: Configuration for S3 buckets.
 - **RESTful APIs**: Configuration for RESTful APIs.
 
-## Stacks
+## Diagram
+
+Diagram configurations include modules to specify the URL pointing to the GitHub repository for the resources module.
+
+## Structure
+
+### Stacks
 
 Each stack configuration includes folders for different environments (`dev`, `uat`, `prd`, etc.), default templates, and specific configurations for lambdas, API gateways, SQS, buckets, and RESTful APIs.
 
-### Folder Structure
+#### Folder Structure
 
 Each environment folder contains the following Terraform files:
 
@@ -53,6 +61,11 @@ RESTful API configurations include API names.
 [template.yaml](template.yaml)
 
 ```yaml
+# Diagram configuration section
+diagram:
+  modules:
+    lambda: git@github.com:username/terraform-aws-lambda?ref=reference
+
 # Structure for stacks with multiple environments
 structure:
   # Stacks section

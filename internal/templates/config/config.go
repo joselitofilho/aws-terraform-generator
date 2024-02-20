@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	Diagram     Diagram      `yaml:"diagram,omitempty"`
 	Structure   Structure    `yaml:"structure,omitempty"`
 	Lambdas     []Lambda     `yaml:"lambdas,omitempty"`
 	APIGateways []APIGateway `yaml:"apigateways,omitempty"`

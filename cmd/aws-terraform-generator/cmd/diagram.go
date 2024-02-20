@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
@@ -21,7 +22,12 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		input, err := cmd.Flags().GetString("input")
+		diagram, err := cmd.Flags().GetString("diagram")
+		if err != nil {
+			panic(err)
+		}
+
+		configFile, err := cmd.Flags().GetString("config")
 		if err != nil {
 			panic(err)
 		}
@@ -31,7 +37,7 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		root, err := drawio.Parse(input)
+		root, err := drawio.Parse(diagram)
 		if err != nil {
 			panic(err)
 		}
@@ -41,12 +47,33 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		yamlConfig, err := transformers.TransformDrawIOToYAML(stackName, resources)
+		yamlConfigOut, err := transformers.TransformDrawIOToYAML(stackName, resources)
 		if err != nil {
 			panic(err)
 		}
 
-		data, err := yaml.Marshal(yamlConfig)
+		//
+
+		yamlParser := config.NewYAML(configFile)
+
+		yamlConfig, err := yamlParser.Parse()
+		if err != nil {
+			panic(err)
+		}
+
+		for i := range yamlConfigOut.Lambdas {
+			yamlConfigOut.Lambdas[i].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
+		}
+
+		for i, g := range yamlConfigOut.APIGateways {
+			for j := range g.Lambdas {
+				yamlConfigOut.APIGateways[i].Lambdas[j].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
+			}
+		}
+
+		//
+
+		data, err := yaml.Marshal(yamlConfigOut)
 		if err != nil {
 			panic(err)
 		}
@@ -64,10 +91,11 @@ func init() {
 	rootCmd.AddCommand(diagramCmd)
 
 	diagramCmd.Flags().StringP("stack", "s", "", "Stack name")
-	diagramCmd.Flags().StringP("input", "i", "", "Path to the yaml file. For example: diagram.xml")
+	diagramCmd.Flags().StringP("diagram", "d", "", "Path to the xml file. For example: ./diagram.xml")
+	diagramCmd.Flags().StringP("config", "c", "", "Path to the YAML config file. For example: ./diagram.config.yaml")
 	diagramCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./diagram.yaml")
 
 	diagramCmd.MarkFlagRequired("stack")
-	diagramCmd.MarkFlagRequired("input")
+	diagramCmd.MarkFlagRequired("diagram")
 	diagramCmd.MarkFlagRequired("output")
 }
