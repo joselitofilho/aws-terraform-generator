@@ -15,11 +15,10 @@ import (
 var s3TFTmpl []byte
 
 type Data struct {
-	Name          string
-	NameWithSpace string
-	NameSnakeCase string
-	Key           string
-	Source        string
+	Name           string
+	NameWithSpace  string
+	NameSnakeCase  string
+	ExpirationDays int
 }
 
 type S3 struct {
@@ -39,18 +38,17 @@ func (s *S3) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	tmplName := "sqs-tf-template"
+	tmplName := "s3-tf-template"
 	result := ""
 
 	for i := range yamlConfig.Buckets {
 		conf := yamlConfig.Buckets[i]
 
 		data := Data{
-			Name:          conf.Name,
-			NameWithSpace: strings.ReplaceAll(conf.Name, "-", " "),
-			NameSnakeCase: strcase.ToSnake(conf.Name),
-			Key:           conf.Key,
-			Source:        conf.Source,
+			Name:           conf.Name,
+			NameWithSpace:  strings.ReplaceAll(conf.Name, "-", " "),
+			NameSnakeCase:  strcase.ToSnake(conf.Name),
+			ExpirationDays: conf.ExpirationDays,
 		}
 
 		output, err := templates.Build(data, tmplName, string(s3TFTmpl))

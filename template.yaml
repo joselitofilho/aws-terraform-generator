@@ -200,8 +200,7 @@ sqs:
 buckets:
   # Configuration for the my-bucket S3 bucket
   - name: my-bucket
-    key: "new_object_key"
-    source: "path/to/file"
+    expiration-days: 90
 
 # Restfulapis configuration section
 restfulapis:

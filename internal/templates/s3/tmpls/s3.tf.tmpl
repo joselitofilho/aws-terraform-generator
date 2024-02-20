@@ -1,5 +1,12 @@
-resource "aws_s3_object" "s3_bucket_{{$.NameSnakeCase}}" {
+resource "aws_s3_bucket" "{{$.NameSnakeCase}}_bucket" {
   bucket = "${var.client}-${var.environment}-{{$.Name}}"
-  key    = "{{$.Key}}"
-  source = "{{$.Source}}"
+  acl    = "private"
+
+  {{ if gt $.ExpirationDays 0 }}lifecycle_rule {
+    id      = "{{$.Name}}-expiry"
+    enabled = true
+    expiration {
+      days = {{$.ExpirationDays}}
+    }
+  }{{end}}
 }
