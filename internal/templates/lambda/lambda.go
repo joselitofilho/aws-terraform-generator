@@ -34,7 +34,9 @@ func (l *Lambda) Build() error {
 
 		envars := map[string]string{}
 		for i := range lambdaConf.Envars {
-			envars = lambdaConf.Envars[i]
+			for key, value := range lambdaConf.Envars[i] {
+				envars[key] = value
+			}
 		}
 
 		sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
