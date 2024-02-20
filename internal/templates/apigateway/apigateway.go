@@ -74,15 +74,16 @@ func (a *APIGateway) Build() error {
 			}
 
 			lambdaData := LambdaData{
-				StackName:      apiConf.StackName,
-				Name:           lambdaConf.Name,
-				NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
-				NamePascalCase: strcase.ToPascal(lambdaConf.Name),
-				Description:    lambdaConf.Description,
-				Envars:         envars,
-				Verb:           lambdaConf.Verb,
-				Path:           lambdaConf.Path,
-				Code:           codeConf,
+				ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
+				StackName:          apiConf.StackName,
+				Name:               lambdaConf.Name,
+				NameSnakeCase:      strcase.ToSnake(lambdaConf.Name),
+				NamePascalCase:     strcase.ToPascal(lambdaConf.Name),
+				Description:        lambdaConf.Description,
+				Envars:             envars,
+				Verb:               lambdaConf.Verb,
+				Path:               lambdaConf.Path,
+				Code:               codeConf,
 			}
 
 			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)

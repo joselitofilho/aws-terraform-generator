@@ -130,7 +130,8 @@ structure:
 # Lambdas configuration section
 lambdas:
   # Configuration for the coexampleceiver lambda function
-  - name: exampleReceiver
+  - source: git@github.com:username/terraform-aws-lambda?ref=reference
+    name: exampleReceiver
     description: "Trigger on schedule and initiate the execution of example receiver"
     envars:
       # Environment variables
@@ -162,7 +163,8 @@ apigateways:
     apig: true
     # Lambdas associated with the mystack API Gateway
     lambdas:
-      - name: exampleAPIReceiver
+      - source: git@github.com:username/terraform-aws-lambda?ref=reference
+        name: exampleAPIReceiver
         description: Trigger the example API receiver via API Gateway
         verb: POST
         path: /v1/mystacks

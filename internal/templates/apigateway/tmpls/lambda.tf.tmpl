@@ -1,5 +1,5 @@
 module "{{$.NameSnakeCase}}_lambda" {
-  source = "git@github.com:xiatechs/sdv-terraform-aws-lambda?ref=runtime_al2"
+  source = "{{$.ModuleLambdaSource}}"
 
   stack_name                               = local.stack_name
   lambda_function_description              = "{{$.Description}}"

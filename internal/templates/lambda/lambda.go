@@ -61,14 +61,15 @@ func (l *Lambda) Build() error {
 		}
 
 		data := Data{
-			Name:           lambdaConf.Name,
-			NameSnakeCase:  strcase.ToSnake(lambdaConf.Name),
-			NamePascalCase: strcase.ToPascal(lambdaConf.Name),
-			Description:    lambdaConf.Description,
-			Envars:         envars,
-			SQSTriggers:    sqsTriggers,
-			Crons:          crons,
-			Code:           codeConf,
+			ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
+			Name:               lambdaConf.Name,
+			NameSnakeCase:      strcase.ToSnake(lambdaConf.Name),
+			NamePascalCase:     strcase.ToPascal(lambdaConf.Name),
+			Description:        lambdaConf.Description,
+			Envars:             envars,
+			SQSTriggers:        sqsTriggers,
+			Crons:              crons,
+			Code:               codeConf,
 		}
 
 		output := fmt.Sprintf("%s/mod", l.output)

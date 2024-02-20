@@ -19,6 +19,10 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 
 [Spec](README_CONFIGURATION.md)
 
+## How it works
+
+// TODO: 
+
 ## Usage
 
 To use these configurations:

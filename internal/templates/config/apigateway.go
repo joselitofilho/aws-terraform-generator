@@ -1,12 +1,13 @@
 package config
 
 type APIGatewayLambda struct {
-	Name        string              `yaml:"name"`
-	Description string              `yaml:"description"`
-	Envars      []map[string]string `yaml:"envars,omitempty"`
-	Verb        string              `yaml:"verb"`
-	Path        string              `yaml:"path"`
-	Code        []Code              `yaml:"code,omitempty"`
+	ModuleLambdaSource string              `yaml:"source"`
+	Name               string              `yaml:"name"`
+	Description        string              `yaml:"description"`
+	Envars             []map[string]string `yaml:"envars,omitempty"`
+	Verb               string              `yaml:"verb"`
+	Path               string              `yaml:"path"`
+	Code               []Code              `yaml:"code,omitempty"`
 }
 
 type APIGateway struct {

@@ -8,13 +8,14 @@ type Data struct {
 }
 
 type LambdaData struct {
-	StackName      string
-	Name           string
-	NameSnakeCase  string
-	NamePascalCase string
-	Description    string
-	Envars         map[string]string
-	Verb           string
-	Path           string
-	Code           map[string]templates.Code
+	ModuleLambdaSource string
+	StackName          string
+	Name               string
+	NameSnakeCase      string
+	NamePascalCase     string
+	Description        string
+	Envars             map[string]string
+	Verb               string
+	Path               string
+	Code               map[string]templates.Code
 }

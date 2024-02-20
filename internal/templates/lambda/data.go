@@ -16,12 +16,13 @@ type Cron struct {
 }
 
 type Data struct {
-	Name           string
-	NameSnakeCase  string
-	NamePascalCase string
-	Description    string
-	Envars         map[string]string
-	SQSTriggers    []SQSTrigger
-	Crons          []Cron
-	Code           map[string]templates.Code
+	ModuleLambdaSource string
+	Name               string
+	NameSnakeCase      string
+	NamePascalCase     string
+	Description        string
+	Envars             map[string]string
+	SQSTriggers        []SQSTrigger
+	Crons              []Cron
+	Code               map[string]templates.Code
 }
