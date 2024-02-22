@@ -75,8 +75,10 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 				bucketName := strings.ToLower(rel.Target.Value())
 
-				envars[rel.Source.ID()][fmt.Sprintf("%s_BUCKET", strcase.ToSNAKE(bucketName))] =
-					fmt.Sprintf("var.%s_bucket", strcase.ToSnake(bucketName))
+				envars[rel.Source.ID()][fmt.Sprintf("%s_S3_BUCKET", strcase.ToSNAKE(bucketName))] =
+					fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
+				envars[rel.Source.ID()][fmt.Sprintf("%s_S3_DIRECTORY", strcase.ToSNAKE(bucketName))] =
+					fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(rel.Target.Value())))
 			}
 		}
 	}
