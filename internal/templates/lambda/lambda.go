@@ -54,13 +54,7 @@ func (l *Lambda) Build() error {
 			}
 		}
 
-		codeConf := map[string]templates.Code{}
-		for i := range lambdaConf.Code {
-			codeConf[lambdaConf.Code[i].Key] = templates.Code{
-				Tmpl:    lambdaConf.Code[i].Tmpl,
-				Imports: lambdaConf.Code[i].Imports,
-			}
-		}
+		filesConf := templates.CreateFilesMap(lambdaConf.Files)
 
 		data := Data{
 			ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
@@ -71,7 +65,7 @@ func (l *Lambda) Build() error {
 			Envars:             envars,
 			SQSTriggers:        sqsTriggers,
 			Crons:              crons,
-			Code:               codeConf,
+			Files:              filesConf,
 		}
 
 		output := fmt.Sprintf("%s/mod", l.output)
@@ -97,7 +91,7 @@ func (l *Lambda) Build() error {
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, data)
+		err = templates.GenerateFiles(defaultTemplatesMap, filesConf, output, data)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

@@ -17,5 +17,5 @@ type LambdaData struct {
 	Envars             map[string]string
 	Verb               string
 	Path               string
-	Code               map[string]templates.Code
+	Files              map[string]templates.File
 }

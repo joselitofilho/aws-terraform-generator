@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
@@ -35,19 +36,7 @@ func GenerateFile(
 		return fmt.Errorf("%w", err)
 	}
 
-	ext := strings.Split(fileName, ".")[1]
-
-	switch ext {
-	case "go":
-		err = utils.GoFormat(outputFile)
-	case "tf":
-		err = utils.TerraformFormat(outputFile)
-	case "hcl":
-		err = nil
-	default:
-		err = ErrUnsupportedFileType
-	}
-
+	err = formatFileBasedOnExt(fileName, outputFile)
 	if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
 		fmt.Println(err)
 		err = nil
@@ -56,46 +45,52 @@ func GenerateFile(
 	return err
 }
 
-func GenerateGoFiles(
-	defaultTemplatesMap map[string]TemplateMapValue, output string, codeConf map[string]Code, data any,
-) error {
-	for tmplContext, tmplMapValue := range defaultTemplatesMap {
-		if _, ok := codeConf[tmplContext]; !ok {
-			codeConf[tmplContext] = Code{Tmpl: string(tmplMapValue.Template)}
-		}
-	}
-
-	for tmplKey, tmplCode := range codeConf {
+func GenerateFiles(templatesMap map[string]TemplateMapValue, filesMap map[string]File, output string, data any) error {
+	for fileName, file := range filesMap {
 		var (
 			tmplName string
 			tmpl     string
 		)
 
-		tmplMapValue, ok := defaultTemplatesMap[tmplKey]
-		if ok {
-			tmplName = tmplMapValue.TemplateName
-			tmpl = string(tmplMapValue.Template)
-
-			if len(tmplCode.Tmpl) > 0 {
-				tmpl = tmplCode.Tmpl
+		if file.Tmpl == "" {
+			if tmplMaplValue, hasValue := templatesMap[fileName]; hasValue {
+				tmplName = tmplMaplValue.TemplateName
+				tmpl = string(tmplMaplValue.Template)
 			}
 		} else {
-			tmplName = fmt.Sprintf("%s-go-template", tmplKey)
-			tmpl = tmplCode.Tmpl
+			tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", "-"))
+			tmpl = file.Tmpl
 		}
 
-		outputFile := fmt.Sprintf("%s/%s.go", output, strings.ToLower(tmplKey))
+		outputFile := fmt.Sprintf("%s/%s", output, fileName)
 
 		err := BuildFile(data, tmplName, tmpl, outputFile)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.GoFormat(outputFile)
-		if err != nil {
+		err = formatFileBasedOnExt(fileName, outputFile)
+		if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
 			fmt.Println(err)
 		}
 	}
 
 	return nil
+}
+
+func formatFileBasedOnExt(fileName string, outputFile string) error {
+	var err error
+
+	ext := path.Ext(fileName)
+
+	switch ext {
+	case ".go":
+		err = utils.GoFormat(outputFile)
+	case ".tf":
+		err = utils.TerraformFormat(outputFile)
+	default:
+		err = nil
+	}
+
+	return err
 }

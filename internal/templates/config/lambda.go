@@ -7,7 +7,7 @@ type Lambda struct {
 	Envars             []map[string]string `yaml:"envars,omitempty"`
 	SQSTriggers        []SQSTrigger        `yaml:"sqs-triggers,omitempty"`
 	Crons              []Cron              `yaml:"crons,omitempty"`
-	Code               []Code              `yaml:"code,omitempty"`
+	Files              []File              `yaml:"files,omitempty"`
 }
 
 type SQSTrigger struct {

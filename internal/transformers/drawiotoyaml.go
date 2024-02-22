@@ -81,7 +81,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		}
 	}
 
-	defaultCodes := []config.Code{{Key: "lambda"}, {Key: "main"}}
+	defaultFiles := []config.File{{Name: "lambda.go"}, {Name: "main.go"}}
 	lambdas := []config.Lambda{}
 	apiGatewayLambdas := map[string][]config.APIGatewayLambda{}
 
@@ -109,7 +109,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 						Envars:      envarsList,
 						Verb:        strings.Split(rel.Source.Value(), " ")[0],
 						Path:        strings.Split(rel.Source.Value(), " ")[1],
-						Code:        defaultCodes,
+						Files:       defaultFiles,
 					})
 				}
 			}
@@ -145,7 +145,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 				Description: fmt.Sprintf("%s lambda", lambda.Value()),
 				Envars:      envarsList,
 				SQSTriggers: sqsTriggers,
-				Code:        defaultCodes,
+				Files:       defaultFiles,
 				Crons:       crons,
 			})
 		}

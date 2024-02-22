@@ -7,7 +7,7 @@ type APIGatewayLambda struct {
 	Envars             []map[string]string `yaml:"envars,omitempty"`
 	Verb               string              `yaml:"verb"`
 	Path               string              `yaml:"path"`
-	Code               []Code              `yaml:"code,omitempty"`
+	Files              []File              `yaml:"files,omitempty"`
 }
 
 type APIGateway struct {

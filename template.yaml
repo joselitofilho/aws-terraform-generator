@@ -149,11 +149,14 @@ lambdas:
     crons:
       - schedule_expression: cron(0 1 * * ? *)
         is_enabled: var.trigger_enabled
-    # Code configuration for lambda function
-    code:
-      - key: lambda
+    # File configuration for lambda function
+    files:
+      - name: lambda.go
         imports: # Optional. We can specify what imports we want to add in the output GoLang file.
           - "github.com/mylogging/logging"
+        tmpl:
+          |- # Optional. We can specify the template for the output GoLang file.
+          package main
 
 # API Gateways configuration section
 apigateways:
@@ -168,12 +171,12 @@ apigateways:
         description: Trigger the example API receiver via API Gateway
         verb: POST
         path: /v1/mystacks
-        # Code configuration for the lambda associated with the API Gateway
-        code:
-          - key: lambda
+        # File configuration for the lambda associated with the API Gateway
+        files:
+          - name: lambda.go
             imports: # Optional. We have the option to specify the imports to include in the resulting GoLang file.
               - "github.com/logging"
-          - key: main
+          - name: main.go
             tmpl:
               |- # Optional. We can specify the template for the output GoLang file.
               package main

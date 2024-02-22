@@ -24,5 +24,5 @@ type Data struct {
 	Envars             map[string]string
 	SQSTriggers        []SQSTrigger
 	Crons              []Cron
-	Code               map[string]templates.Code
+	Files              map[string]templates.File
 }

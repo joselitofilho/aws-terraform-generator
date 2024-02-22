@@ -1,6 +1,6 @@
 package templates
 
-type Code struct {
+type File struct {
 	Tmpl    string
 	Imports []string
 }

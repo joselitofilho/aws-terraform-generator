@@ -6,11 +6,6 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
 )
 
-type templateMapValue struct {
-	templateName string
-	template     []byte
-}
-
 var (
 	//go:embed tmpls/lambda.tf.tmpl
 	lambdaTFTmpl []byte
@@ -23,6 +18,7 @@ var (
 )
 
 var defaultTemplatesMap = map[string]templates.TemplateMapValue{
-	"main":   {TemplateName: "main-go-template", Template: mainGoTmpl},
-	"lambda": {TemplateName: "lambda-go-template", Template: lambdaGoTmpl},
+	"lambda.go": {TemplateName: "lambda-go-template", Template: lambdaGoTmpl},
+	"lambda.tf": {TemplateName: "lambda-tf-template", Template: lambdaTFTmpl},
+	"main.go":   {TemplateName: "main-go-template", Template: mainGoTmpl},
 }

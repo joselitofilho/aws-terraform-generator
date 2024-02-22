@@ -67,13 +67,7 @@ func (a *APIGateway) Build() error {
 				}
 			}
 
-			codeConf := map[string]templates.Code{}
-			for i := range lambdaConf.Code {
-				codeConf[lambdaConf.Code[i].Key] = templates.Code{
-					Tmpl:    lambdaConf.Code[i].Tmpl,
-					Imports: lambdaConf.Code[i].Imports,
-				}
-			}
+			filesConf := templates.CreateFilesMap(lambdaConf.Files)
 
 			lambdaData := LambdaData{
 				ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
@@ -85,7 +79,7 @@ func (a *APIGateway) Build() error {
 				Envars:             envars,
 				Verb:               lambdaConf.Verb,
 				Path:               lambdaConf.Path,
-				Code:               codeConf,
+				Files:              filesConf,
 			}
 
 			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
@@ -102,7 +96,7 @@ func (a *APIGateway) Build() error {
 			output := fmt.Sprintf("%s/%s/lambda/%s", a.output, apiConf.StackName, lambdaConf.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
-			err = templates.GenerateGoFiles(defaultTemplatesMap, output, codeConf, lambdaData)
+			err = templates.GenerateFiles(defaultTemplatesMap, filesConf, output, lambdaData)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}

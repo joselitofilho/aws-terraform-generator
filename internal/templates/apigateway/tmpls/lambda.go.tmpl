@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	{{ range $.Code.lambda.Imports }}"{{.}}"
+	{{ range getFileImports $.Files "lambda.go" }}"{{ . }}"
 	{{end}}
 )
 
