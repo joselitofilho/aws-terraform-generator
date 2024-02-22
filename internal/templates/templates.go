@@ -10,8 +10,7 @@ import (
 )
 
 func Build(data any, templateName, templateContent string) (string, error) {
-	// Create a new template and parse the template content
-	tmpl, err := template.New(templateName).Parse(string(templateContent))
+	tmpl, err := buildAndParseTemplate(templateName, templateContent)
 	if err != nil {
 		return "", fmt.Errorf("%w", err)
 	}
@@ -28,19 +27,10 @@ func Build(data any, templateName, templateContent string) (string, error) {
 }
 
 func BuildFile(data any, templateName, templateContent, path string) error {
-	// Create a new template and parse the template content
-	tmpl, err := template.New(templateName).Parse(string(templateContent))
+	tmpl, err := buildAndParseTemplate(templateName, templateContent)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
-	tmpl.Funcs(template.FuncMap{
-		"getFileByName": func(files map[string]File, name string) File {
-			return files[name]
-		},
-		"getFileImports": func(files map[string]File, name string) []string {
-			return files[name].Imports
-		},
-	})
 
 	// Execute the template with the data and write the output to a file
 	output, err := os.Create(path)
@@ -66,4 +56,23 @@ func CreateFilesMap(files []config.File) map[string]File {
 		}
 	}
 	return filesConf
+}
+
+// buildAndParseTemplate Create a new template and parse the template content
+func buildAndParseTemplate(name, content string) (*template.Template, error) {
+	tmpl, err := template.New(name).
+		Funcs(template.FuncMap{
+			"getFileByName": func(files map[string]File, name string) File {
+				return files[name]
+			},
+			"getFileImports": func(files map[string]File, name string) []string {
+				return files[name].Imports
+			},
+		}).
+		Parse(content)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return tmpl, nil
 }

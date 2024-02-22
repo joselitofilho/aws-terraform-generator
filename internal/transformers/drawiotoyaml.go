@@ -151,15 +151,16 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 		}
 	}
 
-	apiGateways := []config.APIGateway{}
+	apiGateways := []config.APIGateway{
+		{
+			StackName: stackName,
+			APIG:      true,
+		},
+	}
 
 	for id := range apiGatewaysByID {
-		apiGateways = append(apiGateways, config.APIGateway{
-			StackName: stackName,
-			APIDomain: endpointsByAPIGatewayID[id].Value(),
-			APIG:      true,
-			Lambdas:   apiGatewayLambdas[id],
-		})
+		apiGateways[0].APIDomain = endpointsByAPIGatewayID[id].Value()
+		apiGateways[0].Lambdas = append(apiGateways[0].Lambdas, apiGatewayLambdas[id]...)
 	}
 
 	sqss := []config.SQS{}
