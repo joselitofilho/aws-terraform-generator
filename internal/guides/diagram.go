@@ -36,7 +36,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 	configOptions := make([]string, 0, len(fileMap["config"]))
 	configOptions = append(configOptions, fileMap["config"]...)
 
-	answers := &DiagramAnswers{}
+	answers := DiagramAnswers{}
 
 	if err := survey.Ask([]*survey.Question{
 		{
@@ -68,7 +68,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 	answers.Diagram = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Diagram))
 	answers.Config = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Config))
 
-	return answers, nil
+	return &answers, nil
 }
 
 func replaceDoubleSlash(str string) string {
