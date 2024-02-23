@@ -70,7 +70,7 @@ func (a *APIGateway) Build() error {
 			filesConf := templates.CreateFilesMap(lambdaConf.Files)
 
 			lambdaData := LambdaData{
-				ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
+				ModuleLambdaSource: lambdaConf.Source,
 				StackName:          apiConf.StackName,
 				Name:               lambdaConf.Name,
 				NameSnakeCase:      strcase.ToSnake(lambdaConf.Name),

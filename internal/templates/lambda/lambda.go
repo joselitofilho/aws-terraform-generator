@@ -57,7 +57,7 @@ func (l *Lambda) Build() error {
 		filesConf := templates.CreateFilesMap(lambdaConf.Files)
 
 		data := Data{
-			ModuleLambdaSource: lambdaConf.ModuleLambdaSource,
+			ModuleLambdaSource: lambdaConf.Source,
 			Name:               lambdaConf.Name,
 			NameSnakeCase:      strcase.ToSnake(lambdaConf.Name),
 			NamePascalCase:     strcase.ToPascal(lambdaConf.Name),

@@ -5,5 +5,6 @@ type Modules struct {
 }
 
 type Diagram struct {
-	Modules Modules `yaml:"modules"`
+	StackName string  `yaml:"stack_name"`
+	Modules   Modules `yaml:"modules"`
 }

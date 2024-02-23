@@ -1,13 +1,13 @@
 package config
 
 type Lambda struct {
-	ModuleLambdaSource string              `yaml:"source"`
-	Name               string              `yaml:"name"`
-	Description        string              `yaml:"description"`
-	Envars             []map[string]string `yaml:"envars,omitempty"`
-	SQSTriggers        []SQSTrigger        `yaml:"sqs-triggers,omitempty"`
-	Crons              []Cron              `yaml:"crons,omitempty"`
-	Files              []File              `yaml:"files,omitempty"`
+	Source      string              `yaml:"source"`
+	Name        string              `yaml:"name"`
+	Description string              `yaml:"description"`
+	Envars      []map[string]string `yaml:"envars,omitempty"`
+	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers,omitempty"`
+	Crons       []Cron              `yaml:"crons,omitempty"`
+	Files       []File              `yaml:"files,omitempty"`
 }
 
 type SQSTrigger struct {

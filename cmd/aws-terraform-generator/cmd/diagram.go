@@ -12,27 +12,28 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
+const (
+	diagramCMDFlagConfig  = "config"
+	diagramCMDFlagDiagram = "diagram"
+	diagramCMDFlagOutput  = "output"
+)
+
 // diagramCmd represents the structure command
 var diagramCmd = &cobra.Command{
 	Use:   "diagram",
 	Short: "Manage Diagram",
 	Run: func(cmd *cobra.Command, args []string) {
-		stackName, err := cmd.Flags().GetString("stack")
+		diagram, err := cmd.Flags().GetString(diagramCMDFlagDiagram)
 		if err != nil {
 			panic(err)
 		}
 
-		diagram, err := cmd.Flags().GetString("diagram")
+		configFile, err := cmd.Flags().GetString(diagramCMDFlagConfig)
 		if err != nil {
 			panic(err)
 		}
 
-		configFile, err := cmd.Flags().GetString("config")
-		if err != nil {
-			panic(err)
-		}
-
-		output, err := cmd.Flags().GetString("output")
+		output, err := cmd.Flags().GetString(diagramCMDFlagOutput)
 		if err != nil {
 			panic(err)
 		}
@@ -47,33 +48,17 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		yamlConfigOut, err := transformers.TransformDrawIOToYAML(stackName, resources)
+		yamlParser := config.NewYAML(configFile)
+
+		yamlConfig, err := yamlParser.Parse()
 		if err != nil {
 			panic(err)
 		}
 
-		//
-
-		if configFile != "" {
-			yamlParser := config.NewYAML(configFile)
-
-			yamlConfig, err := yamlParser.Parse()
-			if err != nil {
-				panic(err)
-			}
-
-			for i := range yamlConfigOut.Lambdas {
-				yamlConfigOut.Lambdas[i].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
-			}
-
-			for i, g := range yamlConfigOut.APIGateways {
-				for j := range g.Lambdas {
-					yamlConfigOut.APIGateways[i].Lambdas[j].ModuleLambdaSource = yamlConfig.Diagram.Modules.Lambda
-				}
-			}
+		yamlConfigOut, err := transformers.TransformDrawIOToYAML(yamlConfig, resources)
+		if err != nil {
+			panic(err)
 		}
-
-		//
 
 		data, err := yaml.Marshal(yamlConfigOut)
 		if err != nil {
@@ -92,12 +77,11 @@ var diagramCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(diagramCmd)
 
-	diagramCmd.Flags().StringP("stack", "s", "", "Stack name")
-	diagramCmd.Flags().StringP("diagram", "d", "", "Path to the xml file. For example: ./diagram.xml")
-	diagramCmd.Flags().StringP("config", "c", "", "Path to the YAML config file. For example: ./diagram.config.yaml")
-	diagramCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./diagram.yaml")
+	diagramCmd.Flags().StringP(diagramCMDFlagDiagram, "d", "", "Path to the xml file. For example: ./diagram.xml")
+	diagramCmd.Flags().StringP(diagramCMDFlagConfig, "c", "", "Path to the YAML config file. For example: ./diagram.config.yaml")
+	diagramCmd.Flags().StringP(diagramCMDFlagOutput, "o", "", "Path to the output file. For example: ./diagram.yaml")
 
-	diagramCmd.MarkFlagRequired("stack")
-	diagramCmd.MarkFlagRequired("diagram")
-	diagramCmd.MarkFlagRequired("output")
+	diagramCmd.MarkFlagRequired(diagramCMDFlagDiagram)
+	diagramCmd.MarkFlagRequired(diagramCMDFlagConfig)
+	diagramCmd.MarkFlagRequired(diagramCMDFlagOutput)
 }

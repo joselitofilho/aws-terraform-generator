@@ -9,7 +9,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
 )
 
-func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollection) (*config.Config, error) {
+func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.ResourceCollection) (*config.Config, error) {
 	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	apiGatewaysByID := map[string]drawio.Resource{}
 	cronsByLambdaID := map[string]drawio.Resource{}
@@ -106,6 +106,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 					}
 
 					apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
+						Source:      yamlConfig.Diagram.Modules.Lambda,
 						Name:        lambda.Value(),
 						Description: fmt.Sprintf("%s lambda", lambda.Value()),
 						Envars:      envarsList,
@@ -143,6 +144,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 			}
 
 			lambdas = append(lambdas, config.Lambda{
+				Source:      yamlConfig.Diagram.Modules.Lambda,
 				Name:        lambda.Value(),
 				Description: fmt.Sprintf("%s lambda", lambda.Value()),
 				Envars:      envarsList,
@@ -155,7 +157,7 @@ func TransformDrawIOToYAML(stackName string, resources *drawio.ResourceCollectio
 
 	apiGateways := []config.APIGateway{
 		{
-			StackName: stackName,
+			StackName: yamlConfig.Diagram.StackName,
 			APIG:      true,
 		},
 	}
