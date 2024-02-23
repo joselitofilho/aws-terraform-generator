@@ -199,6 +199,17 @@ sqs:
   - name: source
     max_receive_count: 10
 
+# SNS configuration section
+sns:
+  - name: example # List item 1 under "sns"
+    bucket_name: my-bucket # Name of the S3 bucket
+    lambda: # List of Lambda functions triggered by S3 events
+      - name: exampleReceiver # Lambda function name
+        events: # Events triggering Lambda
+          - "s3:ObjectCreated:*" # Event indicating an object creation in S3
+        filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
+        filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
+
 # Buckets configuration section
 buckets:
   # Configuration for the my-bucket S3 bucket

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ettle/strcase"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
@@ -135,12 +137,13 @@ func GenerateFiles(templatesMap map[string]TemplateMapValue, filesMap map[string
 func buildAndParseTemplate(name, content string) (*template.Template, error) {
 	tmpl, err := template.New(name).
 		Funcs(template.FuncMap{
-			"getFileByName": func(files map[string]File, name string) File {
-				return files[name]
-			},
-			"getFileImports": func(files map[string]File, name string) []string {
-				return files[name].Imports
-			},
+			"getFileByName":  func(files map[string]File, name string) File { return files[name] },
+			"getFileImports": func(files map[string]File, name string) []string { return files[name].Imports },
+			"ToUpper":        func(s string) string { return strings.ToUpper(s) },
+			"ToLower":        func(s string) string { return strings.ToLower(s) },
+			"ToSnake":        func(s string) string { return strcase.ToSnake(s) },
+			"ToCamel":        func(s string) string { return strcase.ToCamel(s) },
+			"ToKebab":        func(s string) string { return strcase.ToKebab(s) },
 		}).
 		Parse(content)
 	if err != nil {

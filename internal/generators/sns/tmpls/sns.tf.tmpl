@@ -1,0 +1,25 @@
+resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {
+  bucket = "${var.client}-${var.environment}-{{$.BucketName}}"
+  {{range $.Lambdas}}
+  lambda_function {
+    lambda_function_arn = module.{{ToSnake .Name}}_lambda.function_arn
+    events              = [{{.Events}}]
+    {{ $length := len .FilterPrefix}}{{ if gt $length 0 }}filter_prefix       = "{{.FilterPrefix}}"{{end}}
+    {{ $length := len .FilterSuffix}}{{ if gt $length 0 }}filter_suffix       = "{{.FilterSuffix}}"{{end}}
+  }
+  {{end}}
+
+  {{ $length := len $.Lambdas}}{{ if gt $length 0 }}depends_on = [
+    {{range $.Lambdas}}aws_lambda_permission.lambda_permission_from_{{ToSnake .Name}}_to_{{ToSnake $.BucketName}},
+    {{end}}
+  ]{{end}}
+}
+{{range $.Lambdas}}
+resource "aws_lambda_permission" "lambda_permission_{{ToSnake .Name}}_and_{{ToSnake $.BucketName}}" {
+  statement_id  = "AllowExecutionFrom{{ToCamel $.BucketName}}"
+  action        = "lambda:InvokeFunction"
+  function_name = module.{{ToSnake .Name}}_lambda.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}"
+}
+{{end}}

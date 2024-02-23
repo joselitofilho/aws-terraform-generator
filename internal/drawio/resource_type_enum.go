@@ -10,6 +10,8 @@ const (
 	LambdaType ResourceType = iota
 	// SQSType represents the SQS resource type
 	SQSType
+	// SNSType represents the SNS resource type
+	SNSType
 	// CronType represents the Cron resource type
 	CronType
 	// APIGatewayType represents the API Gateway resource type
@@ -33,6 +35,8 @@ func (rt ResourceType) String() string {
 		return "Lambda"
 	case SQSType:
 		return "SQS"
+	case SNSType:
+		return "SNS"
 	case CronType:
 		return "Cron"
 	case APIGatewayType:
@@ -57,6 +61,8 @@ func ParseResourceType(s string) ResourceType {
 		return LambdaType
 	case "sqs":
 		return SQSType
+	case "sns":
+		return SNSType
 	case "cron":
 		return CronType
 	case "apigateway":
