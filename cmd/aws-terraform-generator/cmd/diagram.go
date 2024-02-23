@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/s3"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/s3"
 )
 
 // s3Cmd represents the sqs command

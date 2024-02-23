@@ -3,7 +3,7 @@ package lambda
 import (
 	_ "embed"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
+	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
 )
 
 var (

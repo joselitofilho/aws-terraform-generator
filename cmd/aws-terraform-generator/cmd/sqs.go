@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/sqs"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/sqs"
 	"github.com/spf13/cobra"
 )
 

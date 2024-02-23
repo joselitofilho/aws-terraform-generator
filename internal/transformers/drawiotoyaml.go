@@ -6,7 +6,7 @@ import (
 
 	"github.com/ettle/strcase"
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
 func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.ResourceCollection) (*config.Config, error) {

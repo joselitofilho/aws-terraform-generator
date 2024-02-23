@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/apigateway"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/apigateway"
 )
 
 // apigatewayCmd represents the apigateway command

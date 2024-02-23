@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/ettle/strcase"
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates"
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/config"
+	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 

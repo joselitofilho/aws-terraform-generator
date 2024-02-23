@@ -1,6 +1,6 @@
 package apigateway
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/templates"
+import templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
 
 type Data struct {
 	StackName string

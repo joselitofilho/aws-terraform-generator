@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/templates/structure"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/structure"
 )
 
 // structureCmd represents the structure command
