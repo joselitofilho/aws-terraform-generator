@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	rootCMDFlagWorkdir = "workdir"
+
 	guideDiagram = "Generate a diagram config file"
 )
 
@@ -26,7 +28,7 @@ var rootCmd = &cobra.Command{
 	Use:   "aws-terraform-generator",
 	Short: "AWS terraform generator",
 	Run: func(cmd *cobra.Command, args []string) {
-		workdir, err := cmd.Flags().GetString("workdir")
+		workdir, err := cmd.Flags().GetString(rootCMDFlagWorkdir)
 		if err != nil {
 			panic(err)
 		}
@@ -37,8 +39,7 @@ var rootCmd = &cobra.Command{
 		// Read files in the current directory
 		files, err := os.ReadDir(workdir)
 		if err != nil {
-			fmt.Println("Error reading directory:", err)
-			os.Exit(1)
+			panic(fmt.Errorf("error reading directory: %w", err))
 		}
 
 		// Iterate through the files and populate the map
@@ -62,7 +63,14 @@ var rootCmd = &cobra.Command{
 		var commandName string
 		if err := survey.AskOne(&survey.Select{
 			Message: "What would you like to do?",
-			Options: []string{guideDiagram, "Generate a structure", "Generate API gateway", "Generate Lambda", "Generate SQS queue", "Generate S3 bucket"},
+			Options: []string{
+				guideDiagram,
+				"Generate a structure",
+				"Generate API gateway",
+				"Generate Lambda",
+				"Generate SQS queue",
+				"Generate S3 bucket",
+			},
 		}, &commandName); err != nil {
 			panic(err)
 		}
@@ -92,6 +100,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringP("workdir", "d", ".",
+	rootCmd.Flags().StringP(rootCMDFlagWorkdir, "d", ".",
 		"Path to the directory where diagrams and configuration files are stored for the project. For example: ./example")
 }

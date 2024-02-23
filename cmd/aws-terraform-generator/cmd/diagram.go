@@ -38,46 +38,52 @@ var diagramCmd = &cobra.Command{
 			panic(err)
 		}
 
-		root, err := drawio.Parse(diagram)
-		if err != nil {
+		if err := build(diagram, configFile, output); err != nil {
 			panic(err)
 		}
 
-		resources, err := drawio.ParseResources(root)
-		if err != nil {
-			panic(err)
-		}
-
-		yamlParser := config.NewYAML(configFile)
-
-		yamlConfig, err := yamlParser.Parse()
-		if err != nil {
-			panic(err)
-		}
-
-		yamlConfigOut, err := transformers.TransformDrawIOToYAML(yamlConfig, resources)
-		if err != nil {
-			panic(err)
-		}
-
-		data, err := yaml.Marshal(yamlConfigOut)
-		if err != nil {
-			panic(err)
-		}
-
-		err = os.WriteFile(output, data, os.ModePerm)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("YAML '%s' has been generated successfully\n", output)
+		fmt.Printf("Configuration file '%s' has been generated successfully\n", output)
 	},
+}
+
+func build(diagram, configFile, output string) error {
+	yamlConfig, err := config.NewYAML(configFile).Parse()
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	mxFile, err := drawio.Parse(diagram)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	resources, err := drawio.ParseResources(mxFile)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	yamlConfigOut, err := transformers.TransformDrawIOToYAML(yamlConfig, resources)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	data, err := yaml.Marshal(yamlConfigOut)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	err = os.WriteFile(output, data, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	return nil
 }
 
 func init() {
 	rootCmd.AddCommand(diagramCmd)
 
-	diagramCmd.Flags().StringP(diagramCMDFlagDiagram, "d", "", "Path to the xml file. For example: ./diagram.xml")
+	diagramCmd.Flags().StringP(diagramCMDFlagDiagram, "d", "", "Path to the XML file. For example: ./diagram.xml")
 	diagramCmd.Flags().StringP(diagramCMDFlagConfig, "c", "", "Path to the YAML config file. For example: ./diagram.config.yaml")
 	diagramCmd.Flags().StringP(diagramCMDFlagOutput, "o", "", "Path to the output file. For example: ./diagram.yaml")
 
