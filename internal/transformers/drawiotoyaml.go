@@ -15,6 +15,7 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	cronsByLambdaID := map[string]drawio.Resource{}
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
 	envars := map[string]map[string]string{}
+	snsMap := map[string]config.SNS{}
 
 	initEnvarsIfNecessaryByKey := func(target map[string]map[string]string, key string) {
 		if _, ok := target[key]; !ok {
@@ -37,6 +38,15 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 				cronsByLambdaID[lambdaID] = rel.Source
 			case drawio.SQSType:
 				sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], rel.Source)
+			case drawio.SNSType:
+				sns, ok := snsMap[rel.Source.ID()]
+				if !ok {
+					sns = config.SNS{Name: rel.Source.Value()}
+				}
+
+				sns.Lambdas = append(sns.Lambdas, config.SNSResource{Name: rel.Source.Value()})
+
+				snsMap[rel.Source.ID()] = sns
 			}
 		case drawio.APIGatewayType:
 			apiGatewayID := rel.Target.ID()
@@ -49,6 +59,15 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 
 				envars[rel.Source.ID()]["SQS_QUEUE_URL"] =
 					fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(rel.Target.Value()))
+			case drawio.SNSType:
+				sns, ok := snsMap[rel.Source.ID()]
+				if !ok {
+					sns = config.SNS{Name: rel.Source.Value()}
+				}
+
+				sns.SQSs = append(sns.SQSs, config.SNSResource{Name: rel.Source.Value()})
+
+				snsMap[rel.Source.ID()] = sns
 			}
 		case drawio.DatabaseType:
 			switch rel.Source.ReseourceType() {
@@ -84,6 +103,18 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 					fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
 				envars[rel.Source.ID()][fmt.Sprintf("%s_S3_DIRECTORY", strcase.ToSNAKE(bucketName))] =
 					fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(rel.Target.Value())))
+			}
+		case drawio.SNSType:
+			switch rel.Source.ReseourceType() {
+			case drawio.S3Type:
+				sns, ok := snsMap[rel.Target.ID()]
+				if !ok {
+					sns = config.SNS{Name: rel.Target.Value()}
+				}
+
+				sns.BucketName = rel.Source.Value()
+
+				snsMap[rel.Target.ID()] = sns
 			}
 		}
 	}
@@ -193,11 +224,17 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		}
 	}
 
+	snss := make([]config.SNS, 0, len(snsMap))
+	for _, sns := range snsMap {
+		snss = append(snss, sns)
+	}
+
 	return &config.Config{
 		Lambdas:     lambdas,
 		APIGateways: apiGateways,
 		SQSs:        sqss,
 		Buckets:     buckets,
 		RestfulAPIs: restfulAPIs,
+		SNSs:        snss,
 	}, nil
 }

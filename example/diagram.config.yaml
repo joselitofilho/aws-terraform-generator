@@ -1,3 +1,4 @@
 diagram:
+  stack_name: mystack
   modules:
     lambda: git@github.com:username/terraform-aws-lambda?ref=reference

@@ -1,3 +1,14 @@
+# Diagram with stack and modules
+diagram:
+  stack_name: mystack # Name of the stack
+  modules:
+    lambda:
+      url: git@github.com:username/terraform-aws-lambda?ref=reference
+      # URL pointing to the GitHub repository for the Lambda module
+      # Replace "username" with the actual GitHub username
+      # Replace "terraform-aws-lambda" with the actual repository name
+      # Replace "reference" with the actual reference (branch, tag, or commit)
+
 # Structure for stacks with multiple environments
 structure:
   # Stacks section
@@ -203,9 +214,15 @@ sqs:
 sns:
   - name: example # List item 1 under "sns"
     bucket_name: my-bucket # Name of the S3 bucket
-    lambda: # List of Lambda functions triggered by S3 events
+    lambdas: # List of Lambda functions triggered by S3 events
       - name: exampleReceiver # Lambda function name
         events: # Events triggering Lambda
+          - "s3:ObjectCreated:*" # Event indicating an object creation in S3
+        filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
+        filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
+    sqs: # List of SQS to receive notification from an S3 bucket
+      - name: target
+        events: # SQS receiving notification from an S3 bucket
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
         filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
         filter_suffix: ".txt" # Optional. Suffix filter for S3 objects

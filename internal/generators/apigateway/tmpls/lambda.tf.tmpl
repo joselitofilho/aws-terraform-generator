@@ -28,7 +28,7 @@ module "{{$.NameSnakeCase}}_lambda" {
 resource "aws_lambda_permission" "apigw_permission_{{$.NameSnakeCase}}" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = module.{{$.NameSnakeCase}}_lambda.function_arn
+  function_name = aws_lambda_function.{{$.NameSnakeCase}}_lambda.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.{{$.StackName}}_api.execution_arn}/*"
 }
@@ -44,7 +44,7 @@ resource "aws_apigatewayv2_integration" "{{$.NameSnakeCase}}" {
   integration_type   = "AWS_PROXY"
   connection_type    = "INTERNET"
   integration_method = "POST"
-  integration_uri    = module.{{$.NameSnakeCase}}_lambda.lambda_invoke_arn
+  integration_uri    = aws_lambda_function.{{$.NameSnakeCase}}_lambda.invoke_arn
   lifecycle {
     ignore_changes = [
       passthrough_behavior

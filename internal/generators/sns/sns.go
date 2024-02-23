@@ -16,10 +16,11 @@ var snsTFTmpl []byte
 type Data struct {
 	Name       string
 	BucketName string
-	Lambdas    []LambdaSNSData
+	Lambdas    []SNSResourceData
+	SQSs       []SNSResourceData
 }
 
-type LambdaSNSData struct {
+type SNSResourceData struct {
 	Name         string
 	Events       string
 	FilterPrefix string
@@ -54,19 +55,33 @@ func (s *SNS) Build() error {
 			BucketName: conf.BucketName,
 		}
 
-		lambdaEvents := make([]LambdaSNSData, 0, len(conf.Lambdas))
+		lambdaEvents := make([]SNSResourceData, 0, len(conf.Lambdas))
 
 		for _, lambda := range conf.Lambdas {
-			levt := LambdaSNSData{
+			evt := SNSResourceData{
 				Name:         lambda.Name,
 				Events:       fmt.Sprintf(`"%s"`, strings.Join(lambda.Events, ", ")),
 				FilterPrefix: lambda.FilterPrefix,
 				FilterSuffix: lambda.FilterSuffix,
 			}
-			lambdaEvents = append(lambdaEvents, levt)
+			lambdaEvents = append(lambdaEvents, evt)
 		}
 
 		data.Lambdas = lambdaEvents
+
+		sqsEvents := make([]SNSResourceData, 0, len(conf.SQSs))
+
+		for _, sqs := range conf.SQSs {
+			evt := SNSResourceData{
+				Name:         sqs.Name,
+				Events:       fmt.Sprintf(`"%s"`, strings.Join(sqs.Events, ", ")),
+				FilterPrefix: sqs.FilterPrefix,
+				FilterSuffix: sqs.FilterSuffix,
+			}
+			sqsEvents = append(sqsEvents, evt)
+		}
+
+		data.SQSs = sqsEvents
 
 		output, err := templates.Build(data, tmplName, string(snsTFTmpl))
 		if err != nil {

@@ -28,7 +28,7 @@ module "{{$.NameSnakeCase}}_lambda" {
 // {{$.Name}} SQS trigger rule for lambda
 resource "aws_lambda_event_source_mapping" "{{$.NameSnakeCase}}_lambda_sqs_trigger" {
   event_source_arn = {{.SourceARN}}
-  function_name    = module.{{$.NameSnakeCase}}_lambda.function_arn
+  function_name    = aws_lambda_function.{{$.NameSnakeCase}}_lambda.arn
   batch_size       = 1
   enabled          = true
 }
@@ -44,13 +44,13 @@ resource "aws_cloudwatch_event_rule" "{{$.NameSnakeCase}}_cron" {
 
 resource "aws_cloudwatch_event_target" "{{$.NameSnakeCase}}_cron_target" {
   rule = aws_cloudwatch_event_rule.{{$.NameSnakeCase}}_cron.name
-  arn  = module.{{$.NameSnakeCase}}_lambda.function_arn
+  arn  = aws_lambda_function.{{$.NameSnakeCase}}_lambda.arn
 }
 
 resource "aws_lambda_permission" "{{$.NameSnakeCase}}_allow_cron" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = module.{{$.NameSnakeCase}}_lambda.function_arn
+  function_name = aws_lambda_function.{{$.NameSnakeCase}}_lambda.arn
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.{{$.NameSnakeCase}}_cron.arn
 }

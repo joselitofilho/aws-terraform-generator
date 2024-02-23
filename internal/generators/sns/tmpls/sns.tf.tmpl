@@ -1,25 +1,73 @@
 resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {
-  bucket = "${var.client}-${var.environment}-{{$.BucketName}}"
-  {{range $.Lambdas}}
-  lambda_function {
-    lambda_function_arn = module.{{ToSnake .Name}}_lambda.function_arn
-    events              = [{{.Events}}]
-    {{ $length := len .FilterPrefix}}{{ if gt $length 0 }}filter_prefix       = "{{.FilterPrefix}}"{{end}}
-    {{ $length := len .FilterSuffix}}{{ if gt $length 0 }}filter_suffix       = "{{.FilterSuffix}}"{{end}}
+  bucket = "${var.client}-${var.environment}-{{$.BucketName}}_bucket"
+  {{range $.SQSs}}
+  queue {
+    queue_arn = aws_sqs_queue.{{ToSnake .Name}}_sqs.arn
+    events    = [{{.Events}}]
+    {{ $length := len .FilterPrefix}}{{ if gt $length 0 }}filter_prefix = "{{.FilterPrefix}}"{{end}}
+    {{ $length := len .FilterSuffix}}{{ if gt $length 0 }}filter_suffix = "{{.FilterSuffix}}"{{end}}
   }
   {{end}}
-
+  {{range $.Lambdas}}
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.{{ToSnake .Name}}_lambda.arn
+    events              = [{{.Events}}]
+    {{ $length := len .FilterPrefix}}{{ if gt $length 0 }}filter_prefix = "{{.FilterPrefix}}"{{end}}
+    {{ $length := len .FilterSuffix}}{{ if gt $length 0 }}filter_suffix = "{{.FilterSuffix}}"{{end}}
+  }
+  {{end}}
   {{ $length := len $.Lambdas}}{{ if gt $length 0 }}depends_on = [
-    {{range $.Lambdas}}aws_lambda_permission.lambda_permission_from_{{ToSnake .Name}}_to_{{ToSnake $.BucketName}},
+    {{range $.Lambdas}}aws_lambda_permission.lambda_permission_from_{{ToSnake .Name}}_to_{{ToSnake $.BucketName}}_bucket,
     {{end}}
   ]{{end}}
 }
+{{ $length := len $.SQSs}}{{ if gt $length 0 }}
+resource "aws_iam_role_policy" "s3_to_sqs_policy_{{ToSnake $.Name}}" {
+  name   = "s3_to_sqs_policy_{{ToSnake $.Name}}"
+  role   = aws_iam_role.s3_to_sqs_role_{{ToSnake $.Name}}.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Action    = "sqs:SendMessage",
+        Resource  = [
+          {{range $.SQSs}}aws_sqs_queue.{{ToSnake .Name}}_sqs.arn,
+          {{end}}
+        ],
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}_bucket"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "s3_to_sqs_role_{{ToSnake $.Name}}" {
+  name = "s3_to_sqs_role_{{ToSnake $.Name}}"
+
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [
+      {
+        Action    = "sts:AssumeRole",
+        Effect    = "Allow",
+        Principal = {
+          Service = "s3.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+{{end}}
 {{range $.Lambdas}}
 resource "aws_lambda_permission" "lambda_permission_{{ToSnake .Name}}_and_{{ToSnake $.BucketName}}" {
   statement_id  = "AllowExecutionFrom{{ToCamel $.BucketName}}"
   action        = "lambda:InvokeFunction"
-  function_name = module.{{ToSnake .Name}}_lambda.function_name
+  function_name = aws_lambda_function.{{ToSnake .Name}}_lambda.function_name
   principal     = "s3.amazonaws.com"
-  source_arn    = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}"
+  source_arn    = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}_bucket"
 }
 {{end}}
