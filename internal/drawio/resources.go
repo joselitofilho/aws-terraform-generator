@@ -1,6 +1,7 @@
 package drawio
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -127,6 +128,9 @@ type ResourceCollection struct {
 func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 	resources := &ResourceCollection{}
 
+	var reDatabase = regexp.MustCompile(
+		`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|mxgraph.aws4.documentdb_with_mongodb_compatibility`)
+
 	for _, cell := range mxFile.Diagram.MxGraphModel.Root.MxCells {
 		switch {
 		case strings.Contains(cell.Style, "mxgraph.aws3.lambda"):
@@ -147,7 +151,7 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 		case strings.Contains(cell.Style, "mxgraph.aws3.s3"):
 			storage := NewS3(cell.Id, cell.Value)
 			resources.Buckets = append(resources.Buckets, storage)
-		case strings.Contains(cell.Style, "mxgraph.flowchart.database"):
+		case reDatabase.MatchString(cell.Style):
 			database := NewDatabase(cell.Id, cell.Value)
 			resources.Databases = append(resources.Databases, database)
 		case strings.Contains(cell.Style, "mxgraph.veeam2.restful_api"):
