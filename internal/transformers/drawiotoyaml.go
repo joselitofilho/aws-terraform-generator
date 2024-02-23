@@ -22,41 +22,46 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		}
 	}
 
+	resourcesByTypeMap := map[drawio.ResourceType][]drawio.Resource{}
+	for _, resource := range resources.Resources {
+		resourcesByTypeMap[resource.ReseourceType()] = append(resourcesByTypeMap[resource.ReseourceType()], resource)
+	}
+
 	for _, rel := range resources.Relationships {
-		switch rel.Target.(type) {
-		case drawio.Lambda:
+		switch rel.Target.ReseourceType() {
+		case drawio.LambdaType:
 			lambdaID := rel.Target.ID()
 
-			switch rel.Source.(type) {
-			case drawio.Cron:
+			switch rel.Source.ReseourceType() {
+			case drawio.CronType:
 				cronsByLambdaID[lambdaID] = rel.Source
-			case drawio.SQS:
+			case drawio.SQSType:
 				sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], rel.Source)
 			}
-		case drawio.APIGateway:
+		case drawio.APIGatewayType:
 			apiGatewayID := rel.Target.ID()
 			apiGatewaysByID[apiGatewayID] = rel.Target
 			endpointsByAPIGatewayID[apiGatewayID] = rel.Source
-		case drawio.SQS:
-			switch rel.Source.(type) {
-			case drawio.Lambda:
+		case drawio.SQSType:
+			switch rel.Source.ReseourceType() {
+			case drawio.LambdaType:
 				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				envars[rel.Source.ID()]["SQS_QUEUE_URL"] =
 					fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(rel.Target.Value()))
 			}
-		case drawio.Database:
-			switch rel.Source.(type) {
-			case drawio.Lambda:
+		case drawio.DatabaseType:
+			switch rel.Source.ReseourceType() {
+			case drawio.LambdaType:
 				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				envars[rel.Source.ID()]["DOCDB_HOST"] = "var.docdb_host"
 				envars[rel.Source.ID()]["DOCDB_USER"] = "var.docdb_user"
 				envars[rel.Source.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
 			}
-		case drawio.RestfulAPI:
-			switch rel.Source.(type) {
-			case drawio.Lambda:
+		case drawio.RestfulAPIType:
+			switch rel.Source.ReseourceType() {
+			case drawio.LambdaType:
 				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				restfulAPIName := strings.ToLower(rel.Target.Value())
@@ -68,9 +73,9 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 				envars[rel.Source.ID()][fmt.Sprintf("%s_USER", strcase.ToSNAKE(restfulAPIName))] =
 					fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
 			}
-		case drawio.S3:
-			switch rel.Source.(type) {
-			case drawio.Lambda:
+		case drawio.S3Type:
+			switch rel.Source.ReseourceType() {
+			case drawio.LambdaType:
 				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
 
 				bucketName := strings.ToLower(rel.Target.Value())
@@ -87,15 +92,13 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	lambdas := []config.Lambda{}
 	apiGatewayLambdas := map[string][]config.APIGatewayLambda{}
 
-	for i := range resources.Lambdas {
-		lambda := resources.Lambdas[i]
-
+	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
 		isAPIGatewayLambda := false
 
 		for _, rel := range resources.Relationships {
 			if rel.Target.ID() == lambda.ID() {
-				switch rel.Source.(type) {
-				case drawio.APIGateway:
+				switch rel.Source.ReseourceType() {
+				case drawio.APIGatewayType:
 					isAPIGatewayLambda = true
 
 					apiGatewayID := rel.Source.ID()
@@ -169,20 +172,20 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 
 	sqss := []config.SQS{}
 
-	for _, sqs := range resources.SQSs {
+	for _, sqs := range resourcesByTypeMap[drawio.SQSType] {
 		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
 	}
 
 	buckets := []config.S3{}
 
-	for _, bucket := range resources.Buckets {
+	for _, bucket := range resourcesByTypeMap[drawio.S3Type] {
 		buckets = append(buckets, config.S3{Name: bucket.Value()})
 	}
 
 	restfulAPIs := []config.RestfulAPI{}
 	restfulAPINames := map[string]struct{}{}
 
-	for _, restfulAPI := range resources.RestfulAPIs {
+	for _, restfulAPI := range resourcesByTypeMap[drawio.RestfulAPIType] {
 		name := restfulAPI.Value()
 		if _, ok := restfulAPINames[name]; !ok {
 			restfulAPIs = append(restfulAPIs, config.RestfulAPI{Name: name})
