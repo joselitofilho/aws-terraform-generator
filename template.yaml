@@ -166,8 +166,7 @@ lambdas:
     crons:
       - schedule_expression: cron(0 1 * * ? *)
         is_enabled: var.trigger_enabled
-    # File configuration for lambda function
-    files:
+    files: # Optional. List of files that we can customize
       - name: lambda.go
         imports: # Optional. We can specify what imports we want to add in the output GoLang file.
           - "github.com/mylogging/logging"
@@ -212,6 +211,10 @@ sqs:
   # Configuration for the target SQS queue
   - name: target
     max_receive_count: 15
+    files: # Optional. List of files that we can customize
+      - name: "target-sqs.tf"
+        tmpl: |-
+          resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
   # Configuration for the source SQS queue
   - name: source
     max_receive_count: 10
@@ -232,8 +235,8 @@ sns:
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
         filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
         filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
-    files: # List of files that we can customize
-      - name: "sns.tf"
+    files: # Optional. List of files that we can customize
+      - name: "example-sns.tf"
         tmpl: |-
           resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
 
@@ -242,6 +245,10 @@ buckets:
   # Configuration for the my-bucket S3 bucket
   - name: my-bucket
     expiration-days: 90
+    files: # Optional. List of files that we can customize
+      - name: "my-bucket-s3.tf"
+        tmpl: |-
+          resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
 
 # RESTful API configurations include API names.
 restfulapis:

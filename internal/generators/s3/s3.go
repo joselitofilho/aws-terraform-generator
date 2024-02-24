@@ -3,6 +3,7 @@ package s3
 import (
 	_ "embed"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/ettle/strcase"
@@ -10,9 +11,6 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
-
-//go:embed tmpls/s3.tf.tmpl
-var s3TFTmpl []byte
 
 type Data struct {
 	Name           string
@@ -49,6 +47,19 @@ func (s *S3) Build() error {
 			NameWithSpace:  strings.ReplaceAll(conf.Name, "-", " "),
 			NameSnakeCase:  strcase.ToSnake(conf.Name),
 			ExpirationDays: conf.ExpirationDays,
+		}
+
+		if len(conf.Files) > 0 {
+			filesConf := generators.CreateFilesMap(conf.Files)
+
+			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("S3 '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		outputData, err := generators.Build(data, tmplName, string(s3TFTmpl))

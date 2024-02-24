@@ -3,6 +3,7 @@ package sqs
 import (
 	_ "embed"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/ettle/strcase"
@@ -11,9 +12,6 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
-
-//go:embed tmpls/sqs.tf.tmpl
-var sqsTFTmpl []byte
 
 type Data struct {
 	Name            string
@@ -50,6 +48,19 @@ func (s *SQS) Build() error {
 			NameWithSpace:   strings.ReplaceAll(conf.Name, "-", " "),
 			NameSnakeCase:   strcase.ToSnake(conf.Name),
 			MaxReceiveCount: conf.MaxReceiveCount,
+		}
+
+		if len(conf.Files) > 0 {
+			filesConf := generators.CreateFilesMap(conf.Files)
+
+			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("SQS '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(sqsTFTmpl))
