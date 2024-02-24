@@ -1,17 +1,10 @@
 package guides
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-)
-
-var (
-	ErrDirDoesNotContainAnyConfigFile  = errors.New("this directory does not contain any config (.yaml|.yml) file")
-	ErrDirDoesNotContainAnyDiagramFile = errors.New("this directory does not contain any diagram (.xml) file")
 )
 
 type DiagramAnswers struct {
@@ -26,8 +19,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 	}
 
 	if len(fileMap["config"]) == 0 {
-		fmt.Println("This directory does not contain any config (.yaml|.yml) file")
-		os.Exit(1)
+		return nil, ErrDirDoesNotContainAnyConfigFile
 	}
 
 	diagramOptions := make([]string, 0, len(fileMap["diagram"]))
@@ -37,6 +29,13 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 	configOptions = append(configOptions, fileMap["config"]...)
 
 	answers := DiagramAnswers{}
+
+	var defaultConfigOption int
+	for i := range configOptions {
+		if strings.Contains(configOptions[i], "diagram.config") {
+			defaultConfigOption = i
+		}
+	}
 
 	if err := survey.Ask([]*survey.Question{
 		{
@@ -51,6 +50,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 			Name: "config",
 			Prompt: &survey.Select{
 				Message: "Choose a config:",
+				Default: defaultConfigOption,
 				Options: configOptions,
 			},
 		},
@@ -58,19 +58,19 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	if err := survey.AskOne(&survey.Input{
-		Message: "Enter the output file:",
-		Default: replaceDoubleSlash(fmt.Sprintf("%s/%s.yaml", workdir, strings.TrimSuffix(answers.Diagram, ".xml")))},
+	if err := survey.AskOne(
+		&survey.Input{
+			Message: "Enter the output file:",
+			Default: replaceDoubleSlash(fmt.Sprintf("%s/%s.yaml",
+				workdir, strings.TrimSuffix(answers.Diagram, ".xml"))),
+		},
 		&answers.Output); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
 	answers.Diagram = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Diagram))
 	answers.Config = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Config))
+	answers.Output = replaceDoubleSlash(answers.Config)
 
 	return &answers, nil
-}
-
-func replaceDoubleSlash(str string) string {
-	return strings.ReplaceAll(str, "//", "/")
 }

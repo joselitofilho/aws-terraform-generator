@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/joselitofilho/aws-terraform-generator/internal/guides"
 	"github.com/spf13/cobra"
 
@@ -16,11 +17,16 @@ import (
 const (
 	rootCMDFlagWorkdir = "workdir"
 
-	guideDiagram = "Generate a diagram config file"
+	optionGuideDiagram          = "Generate a diagram config file"
+	optionGuideInitialStructure = "Generate the initial structure"
+	optionGuideCode             = "Generate code"
+	optionExit                  = "Exit"
 )
 
 var (
 	ErrNoDiagramOrConfigFiles = errors.New("this directory does not contain any diagram or config files")
+
+	fmtRed = color.New(color.FgHiRed)
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -57,35 +63,74 @@ var rootCmd = &cobra.Command{
 		}
 
 		if len(fileMap) == 0 {
-			panic(ErrNoDiagramOrConfigFiles)
+			fmtRed.Println("🚨 This directory does not contain any diagram or config files.")
+			os.Exit(1)
 		}
+
+		fmt.Println(`
+
+		 ██████╗ ██████╗ ██████╗ ███████╗     ██████╗ ███████╗███╗   ██╗
+		██╔════╝██╔═══██╗██╔══██╗██╔════╝    ██╔════╝ ██╔════╝████╗  ██║
+		██║     ██║   ██║██║  ██║█████╗      ██║  ███╗█████╗  ██╔██╗ ██║
+		██║     ██║   ██║██║  ██║██╔══╝      ██║   ██║██╔══╝  ██║╚██╗██║
+		╚██████╗╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████╗██║ ╚████║
+		 ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝╚═╝  ╚═══╝
+
+`)
 
 		var commandName string
 		if err := survey.AskOne(&survey.Select{
 			Message: "What would you like to do?",
 			Options: []string{
-				guideDiagram,
-				"Generate a structure",
-				"Generate API gateway",
-				"Generate Lambda",
-				"Generate SQS queue",
-				"Generate S3 bucket",
+				optionGuideDiagram,
+				optionGuideInitialStructure,
+				optionGuideCode,
+				optionExit,
 			},
 		}, &commandName); err != nil {
 			panic(err)
 		}
 
 		switch commandName {
-		case guideDiagram:
+		case optionGuideDiagram:
 			answers, err := guides.GuideDiagram(workdir, fileMap)
 			if err != nil {
-				panic(err)
+				fmtRed.Printf("🚨 %s\n", err)
+				os.Exit(1)
 			}
 
 			_ = diagramCmd.Flags().Set(diagramCMDFlagDiagram, answers.Diagram)
 			_ = diagramCmd.Flags().Set(diagramCMDFlagConfig, answers.Config)
 			_ = diagramCmd.Flags().Set(diagramCMDFlagOutput, answers.Output)
 			diagramCmd.Run(diagramCmd, []string{})
+		case optionGuideInitialStructure:
+			answers, err := guides.GuideStructure(workdir, fileMap)
+			if err != nil {
+				fmtRed.Printf("🚨 %s\n", err)
+				os.Exit(1)
+			}
+
+			_ = structureCmd.Flags().Set(structureCMDFlagConfig, answers.Config)
+			_ = structureCmd.Flags().Set(structureCMDFlagOutput, answers.Output)
+			structureCmd.Run(structureCmd, []string{})
+		case optionGuideCode:
+			// var commandCodeName string
+			// if err := survey.AskOne(&survey.Select{
+			// 	Message: "Choose as you wish:",
+			// 	Options: []string{
+			// 		"Generate the stack structure",
+			// 		"Generate API gateway",
+			// 		"Generate Lambda",
+			// 		"Generate SQS queue",
+			// 		"Generate S3 bucket",
+			// 		optionExit,
+			// 	},
+			// }, &commandCodeName); err != nil {
+			// 	panic(err)
+			// }
+			os.Exit(0)
+		default:
+			os.Exit(0)
 		}
 	},
 }
@@ -100,6 +145,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringP(rootCMDFlagWorkdir, "d", ".",
+	rootCmd.Flags().StringP(rootCMDFlagWorkdir, "", ".",
 		"Path to the directory where diagrams and configuration files are stored for the project. For example: ./example")
 }
