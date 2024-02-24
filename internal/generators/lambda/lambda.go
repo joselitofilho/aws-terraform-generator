@@ -7,7 +7,7 @@ import (
 
 	"github.com/ettle/strcase"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
@@ -54,7 +54,7 @@ func (l *Lambda) Build() error {
 			}
 		}
 
-		filesConf := templates.CreateFilesMap(lambdaConf.Files)
+		filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
 		data := Data{
 			ModuleLambdaSource: lambdaConf.Source,
@@ -76,7 +76,7 @@ func (l *Lambda) Build() error {
 		tmplName := "lambda-tf-template"
 		tmpl := string(lambdaTFTmpl)
 
-		err = templates.BuildFile(data, tmplName, tmpl, outputFile)
+		err = generators.BuildFile(data, tmplName, tmpl, outputFile)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -91,7 +91,7 @@ func (l *Lambda) Build() error {
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		err = templates.GenerateFiles(defaultTemplatesMap, filesConf, output, data)
+		err = generators.GenerateFiles(defaultTemplatesMap, filesConf, output, data)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

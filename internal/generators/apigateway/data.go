@@ -1,6 +1,6 @@
 package apigateway
 
-import templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+import "github.com/joselitofilho/aws-terraform-generator/internal/generators"
 
 type Data struct {
 	StackName string
@@ -17,5 +17,5 @@ type LambdaData struct {
 	Envars             map[string]string
 	Verb               string
 	Path               string
-	Files              map[string]templates.File
+	Files              map[string]generators.File
 }

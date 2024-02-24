@@ -3,7 +3,7 @@ package lambda
 import (
 	_ "embed"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 )
 
 type SQSTrigger struct {
@@ -24,5 +24,5 @@ type Data struct {
 	Envars             map[string]string
 	SQSTriggers        []SQSTrigger
 	Crons              []Cron
-	Files              map[string]templates.File
+	Files              map[string]generators.File
 }

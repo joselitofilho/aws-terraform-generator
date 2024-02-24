@@ -3,7 +3,7 @@ package lambda
 import (
 	_ "embed"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 	mainGoTmpl []byte
 )
 
-var defaultTemplatesMap = map[string]templates.TemplateMapValue{
+var defaultTemplatesMap = map[string]generators.TemplateMapValue{
 	"lambda.go": {TemplateName: "lambda-go-template", Template: lambdaGoTmpl},
 	"lambda.tf": {TemplateName: "lambda-tf-template", Template: lambdaTFTmpl},
 	"main.go":   {TemplateName: "main-go-template", Template: mainGoTmpl},

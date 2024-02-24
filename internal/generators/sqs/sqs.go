@@ -7,7 +7,7 @@ import (
 
 	"github.com/ettle/strcase"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
@@ -52,7 +52,7 @@ func (s *SQS) Build() error {
 			MaxReceiveCount: conf.MaxReceiveCount,
 		}
 
-		output, err := templates.Build(data, tmplName, string(sqsTFTmpl))
+		output, err := generators.Build(data, tmplName, string(sqsTFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -61,7 +61,7 @@ func (s *SQS) Build() error {
 	}
 
 	if result != "" {
-		err = templates.BuildFile(Data{}, tmplName, result, s.output)
+		err = generators.BuildFile(Data{}, tmplName, result, s.output)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

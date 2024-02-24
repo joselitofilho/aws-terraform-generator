@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
@@ -54,9 +54,9 @@ func (s *SNS) Build() error {
 		}
 
 		if len(conf.Files) > 0 {
-			filesConf := templates.CreateFilesMap(conf.Files)
+			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = templates.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
+			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -94,7 +94,7 @@ func (s *SNS) Build() error {
 
 		data.SQSs = sqsEvents
 
-		output, err := templates.Build(data, tmplName, string(snsTFTmpl))
+		output, err := generators.Build(data, tmplName, string(snsTFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -103,7 +103,7 @@ func (s *SNS) Build() error {
 	}
 
 	if result != "" {
-		err = templates.BuildFile(Data{}, tmplName, result, s.output)
+		err = generators.BuildFile(Data{}, tmplName, result, s.output)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

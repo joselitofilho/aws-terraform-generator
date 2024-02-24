@@ -7,7 +7,7 @@ import (
 
 	"github.com/ettle/strcase"
 
-	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
@@ -49,7 +49,7 @@ func (a *APIGateway) Build() error {
 				APIDomain: apiConf.APIDomain,
 			}
 
-			err = templates.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, data)
+			err = generators.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -67,7 +67,7 @@ func (a *APIGateway) Build() error {
 				}
 			}
 
-			filesConf := templates.CreateFilesMap(lambdaConf.Files)
+			filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
 			lambdaData := LambdaData{
 				ModuleLambdaSource: lambdaConf.Source,
@@ -86,7 +86,7 @@ func (a *APIGateway) Build() error {
 			tmpl := string(lambdaTFTmpl)
 			outputFile := fmt.Sprintf("%s/%s", output, fileName)
 
-			err = templates.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, lambdaData)
+			err = generators.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, lambdaData)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -96,7 +96,7 @@ func (a *APIGateway) Build() error {
 			output := fmt.Sprintf("%s/%s/lambda/%s", a.output, apiConf.StackName, lambdaConf.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
-			err = templates.GenerateFiles(defaultTemplatesMap, filesConf, output, lambdaData)
+			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, output, lambdaData)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
