@@ -226,6 +226,10 @@ sns:
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
         filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
         filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
+    files:
+      - name: "sns.tf"
+        tmpl: |-
+          resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
 
 # Buckets configuration section
 buckets:

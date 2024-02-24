@@ -14,4 +14,5 @@ type SNS struct {
 	BucketName string        `yaml:"bucket_name"`
 	Lambdas    []SNSResource `yaml:"lambdas,omitempty"`
 	SQSs       []SNSResource `yaml:"sqs,omitempty"`
+	Files      []File        `yaml:"files,omitempty"`
 }

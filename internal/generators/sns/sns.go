@@ -3,15 +3,13 @@ package sns
 import (
 	_ "embed"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	templates "github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
-
-//go:embed tmpls/sns.tf.tmpl
-var snsTFTmpl []byte
 
 type Data struct {
 	Name       string
@@ -53,6 +51,19 @@ func (s *SNS) Build() error {
 		data := Data{
 			Name:       conf.Name,
 			BucketName: conf.BucketName,
+		}
+
+		if len(conf.Files) > 0 {
+			filesConf := templates.CreateFilesMap(conf.Files)
+
+			err = templates.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		lambdaEvents := make([]SNSResourceData, 0, len(conf.Lambdas))
