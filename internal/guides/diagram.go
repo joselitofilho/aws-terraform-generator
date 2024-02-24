@@ -70,7 +70,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 
 	answers.Diagram = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Diagram))
 	answers.Config = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Config))
-	answers.Output = replaceDoubleSlash(answers.Config)
+	answers.Output = replaceDoubleSlash(answers.Output)
 
 	return &answers, nil
 }

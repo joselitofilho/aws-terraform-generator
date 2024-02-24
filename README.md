@@ -7,6 +7,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 - [Install](#install)
 - [Features](#features)
 - [How it works](#how-it-works)
+- [Recommended step by step](#recommended-step-by-step)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
@@ -29,6 +30,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
     - Database
     - Lambda
     - Restful API
+    - SNS
     - SQS with DLQ
     - S3
 
@@ -45,6 +47,65 @@ If you're using [diagrams](https://app.diagrams.net/), you can also generate the
 
 If you have any questions or suggestions, feel free to create an [issue](https://github.com/joselitofilho/aws-terraform-generator/issues). Your contribution is much appreciated.
 
+## Recommended step by step
+
+**Step 1**: Create a folder to organize the diagram and configuration files, ideally named after your stack.
+```bash
+$ mkdir mystack
+```
+
+**Step 2**: Create your diagram using [Diagrams](https://app.diagrams.net/). If you have already created one, proceed to the next step.
+
+**Step 3**: Export and download your diagram as an XML file (file name suggestion: `diagram.xml`).
+You can find instructions on how to do that at this link: https://www.drawio.com/doc/faq/export-to-xml.
+
+Move the file to the folder created in the Step 1.
+
+```bash
+$ mv ~/Downloads/diagram.xml mystack/diagram.xml
+```
+
+**Step 4**: Create the diagram configuration file.
+
+Suggestion [diagram.config.yaml](./example/diagram.config.yaml):
+```bash
+$ cp ./example/diagram.config.yaml mystack/diagram.config.yaml
+```
+
+Change the values according to your project.
+
+**Step 5**: Create the structure configuration file.
+
+Suggestion [structure.config.yaml](./example/structure.config.yaml):
+```bash
+$ cp ./example/structure.config.yaml mystack/structure.config.yaml
+```
+
+**Step 6**: Run the generator guide to assist you.
+
+```bash
+$ aws-terraform-generator --wordir mystack
+```
+
+Output:
+```bash
+
+
+                 ██████╗ ██████╗ ██████╗ ███████╗     ██████╗ ███████╗███╗   ██╗
+                ██╔════╝██╔═══██╗██╔══██╗██╔════╝    ██╔════╝ ██╔════╝████╗  ██║
+                ██║     ██║   ██║██║  ██║█████╗      ██║  ███╗█████╗  ██╔██╗ ██║
+                ██║     ██║   ██║██║  ██║██╔══╝      ██║   ██║██╔══╝  ██║╚██╗██║
+                ╚██████╗╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████╗██║ ╚████║
+                 ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝╚═╝  ╚═══╝
+
+
+? What would you like to do?  [Use arrows to move, type to filter]
+> Generate a diagram config file
+  Generate the initial structure
+  Generate code
+  Exit
+```
+
 ## Usage
 
 To use these configurations:
@@ -57,8 +118,10 @@ $ aws-terraform-generator diagram -s mystack -c examples/diagram.config.yaml -d 
 $ aws-terraform-generator structure -c examples/structure.yaml -o ./output
 $ aws-terraform-generator apigateway -c examples/mystack.yaml -o ./output
 $ aws-terraform-generator lambda -c examples/mystack.yaml -o ./output/mystack
+$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack/mod/sns.tf
 $ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack/mod/sqs.tf
 $ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack/mod/s3.tf
+$ aws-terraform-generator --workdir ./examples
 ```
 
 ## Contributing

@@ -1,4 +1,5 @@
-# Diagram with stack and modules
+# Diagram configurations include modules to specify the URL pointing to the GitHub
+# repository for the resources module.
 diagram:
   stack_name: mystack # Name of the stack
   modules:
@@ -11,11 +12,15 @@ diagram:
 
 # Structure for stacks with multiple environments
 structure:
-  # Stacks section
+  # Stacks section. Each stack configuration includes folders for different environments (`dev`, `uat`, `prd`, etc.),
+  # default templates, and specific configurations for lambdas, API gateways, SQS, and so on.
   stacks:
     # Stack for mystack service
     - stack_name: mystack
-      # Folders for different environments
+      # Folders for different environments Each environment folder contains the following Terraform files:
+      #  - `main.tf`: Main Terraform configuration.
+      #  - `terragrunt.hcl`: Terragrunt configuration.
+      #  - `vars.tf`: Variable definitions.
       folders:
         # Development environment
         - name: dev
@@ -52,9 +57,9 @@ structure:
         # Lambda functions
         - name: lambda
 
-  # Default templates section
+  # Default templates are provided for creating stacks. These templates include backend configuration, provider
+  # configuration, module instantiation, and variable definitions.
   default_templates:
-    # Default Terraform template files
     - main.tf: |-
         # Terraform backend and required providers configuration
         terraform {
@@ -138,7 +143,8 @@ structure:
           type = string
         }
 
-# Lambdas configuration section
+# Lambda configurations include lambda function names, descriptions, environment variables, SQS triggers,
+# cron schedules, and code configurations.
 lambdas:
   # Configuration for the coexampleceiver lambda function
   - source: git@github.com:username/terraform-aws-lambda?ref=reference
@@ -169,7 +175,7 @@ lambdas:
           |- # Optional. We can specify the template for the output GoLang file.
           package main
 
-# API Gateways configuration section
+# API Gateway configurations include stack names, API domain names, lambda associations, and code configurations.
 apigateways:
   # Stack configuration for the mystack API Gateway
   - stack_name: example
@@ -201,7 +207,7 @@ apigateways:
                   lambda.Start({{$.Name}}Lambda.run)
               }
 
-# SQS configuration section
+# SQS configurations include queue names and maximum receive counts.
 sqs:
   # Configuration for the target SQS queue
   - name: target
@@ -212,7 +218,7 @@ sqs:
 
 # SNS configuration section
 sns:
-  - name: example # List item 1 under "sns"
+  - name: example
     bucket_name: my-bucket # Name of the S3 bucket
     lambdas: # List of Lambda functions triggered by S3 events
       - name: exampleReceiver # Lambda function name
@@ -226,18 +232,18 @@ sns:
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
         filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
         filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
-    files:
+    files: # List of files that we can customize
       - name: "sns.tf"
         tmpl: |-
           resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
 
-# Buckets configuration section
+# S3 bucket configurations include bucket names, object keys, and source paths.
 buckets:
   # Configuration for the my-bucket S3 bucket
   - name: my-bucket
     expiration-days: 90
 
-# Restfulapis configuration section
+# RESTful API configurations include API names.
 restfulapis:
   # Configuration for the Oracle RESTful API
   - name: MyAPI

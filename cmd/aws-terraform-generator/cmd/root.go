@@ -39,34 +39,6 @@ var rootCmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		// Create a map to store file extensions and their respective files
-		fileMap := make(map[string][]string)
-
-		// Read files in the current directory
-		files, err := os.ReadDir(workdir)
-		if err != nil {
-			printErrorAndExit(fmt.Errorf("error reading directory: %w", err))
-		}
-
-		// Iterate through the files and populate the map
-		for _, file := range files {
-			if !file.IsDir() {
-				ext := strings.ToLower(path.Ext(file.Name()))
-
-				switch ext {
-				case ".xml":
-					fileMap[diagramCMDFlagDiagram] = append(fileMap[diagramCMDFlagDiagram], file.Name())
-				case ".yaml", ".yml":
-					fileMap[diagramCMDFlagConfig] = append(fileMap[diagramCMDFlagConfig], file.Name())
-				}
-			}
-		}
-
-		if len(fileMap) == 0 {
-			fmtRed.Println("🚨 This directory does not contain any diagram or config files.")
-			os.Exit(1)
-		}
-
 		fmt.Println(`
 
 		 ██████╗ ██████╗ ██████╗ ███████╗     ██████╗ ███████╗███╗   ██╗
@@ -80,6 +52,32 @@ var rootCmd = &cobra.Command{
 
 		shouldContinue := true
 		for shouldContinue {
+			// Create a map to store file extensions and their respective files
+			fileMap := make(map[string][]string)
+
+			// Read files in the current directory
+			files, err := os.ReadDir(workdir)
+			if err != nil {
+				printErrorAndExit(fmt.Errorf("error reading directory: %w", err))
+			}
+
+			// Iterate through the files and populate the map
+			for _, file := range files {
+				if !file.IsDir() {
+					ext := strings.ToLower(path.Ext(file.Name()))
+
+					switch ext {
+					case ".xml":
+						fileMap[diagramCMDFlagDiagram] = append(fileMap[diagramCMDFlagDiagram], file.Name())
+					case ".yaml", ".yml":
+						fileMap[diagramCMDFlagConfig] = append(fileMap[diagramCMDFlagConfig], file.Name())
+					}
+				}
+			}
+
+			if len(fileMap) == 0 {
+				printErrorAndExit(ErrNoDiagramOrConfigFiles)
+			}
 
 			var commandName string
 			if err := survey.AskOne(&survey.Select{

@@ -20,6 +20,7 @@ output/
 
 # Go workspace file
 go.work
+*draft.md
 
 # Configuration files for executable
 *.yaml
