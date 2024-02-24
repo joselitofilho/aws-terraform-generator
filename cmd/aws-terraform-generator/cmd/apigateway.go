@@ -6,24 +6,29 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/apigateway"
 )
 
+const (
+	apigatewayCMDFlagConfig = "config"
+	apigatewayCMDFlagOutput = "output"
+)
+
 // apigatewayCmd represents the apigateway command
 var apigatewayCmd = &cobra.Command{
 	Use:   "apigateway",
 	Short: "Manage APIGateway",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString("config")
+		config, err := cmd.Flags().GetString(apigatewayCMDFlagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString("output")
+		output, err := cmd.Flags().GetString(apigatewayCMDFlagOutput)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		err = apigateway.NewAPIGateway(config, output).Build()
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 	},
 }
@@ -31,9 +36,9 @@ var apigatewayCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(apigatewayCmd)
 
-	apigatewayCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./apigateway.config.yaml")
-	apigatewayCmd.Flags().StringP("output", "o", "", "Path to the output folder. For example: ./output")
+	apigatewayCmd.Flags().StringP(apigatewayCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./apigateway.config.yaml")
+	apigatewayCmd.Flags().StringP(apigatewayCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
 
-	apigatewayCmd.MarkFlagRequired("config")
-	apigatewayCmd.MarkFlagRequired("output")
+	apigatewayCmd.MarkFlagRequired(apigatewayCMDFlagConfig)
+	apigatewayCmd.MarkFlagRequired(apigatewayCMDFlagOutput)
 }

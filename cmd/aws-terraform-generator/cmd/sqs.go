@@ -5,26 +5,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	sqsCMDFlagConfig = "config"
+	sqsCMDFlagOutput = "output"
+)
+
 // sqsCmd represents the sqs command
 var sqsCmd = &cobra.Command{
 	Use:   "sqs",
 	Short: "Manage SQS",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString("config")
+		config, err := cmd.Flags().GetString(sqsCMDFlagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString("output")
+		output, err := cmd.Flags().GetString(sqsCMDFlagOutput)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		sqsTmpl := sqs.NewSQS(config, output)
 
 		err = sqsTmpl.Build()
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 	},
 }
@@ -32,9 +37,9 @@ var sqsCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(sqsCmd)
 
-	sqsCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./sqs.config.yaml")
-	sqsCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/sqs.tf")
+	sqsCmd.Flags().StringP(sqsCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./sqs.config.yaml")
+	sqsCmd.Flags().StringP(sqsCMDFlagOutput, "o", "", "Path to the output file. For example: ./output/sqs.tf")
 
-	sqsCmd.MarkFlagRequired("config")
-	sqsCmd.MarkFlagRequired("output")
+	sqsCmd.MarkFlagRequired(sqsCMDFlagConfig)
+	sqsCmd.MarkFlagRequired(sqsCMDFlagOutput)
 }

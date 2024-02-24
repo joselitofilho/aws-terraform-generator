@@ -18,17 +18,17 @@ var structureCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := cmd.Flags().GetString(structureCMDFlagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		output, err := cmd.Flags().GetString(structureCMDFlagOutput)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		err = structure.NewStructure(config, output).Build()
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 	},
 }

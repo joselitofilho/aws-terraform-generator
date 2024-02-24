@@ -103,12 +103,14 @@ func (s *SNS) Build() error {
 	}
 
 	if result != "" {
-		err = generators.BuildFile(Data{}, tmplName, result, s.output)
+		outputFile := fmt.Sprintf("%s/sns.tf", s.output)
+
+		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.TerraformFormat(s.output)
+		err = utils.TerraformFormat(outputFile)
 		if err != nil {
 			fmt.Println(err)
 		}

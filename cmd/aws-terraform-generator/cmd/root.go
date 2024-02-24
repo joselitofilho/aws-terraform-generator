@@ -36,7 +36,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		workdir, err := cmd.Flags().GetString(rootCMDFlagWorkdir)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		// Create a map to store file extensions and their respective files
@@ -45,7 +45,7 @@ var rootCmd = &cobra.Command{
 		// Read files in the current directory
 		files, err := os.ReadDir(workdir)
 		if err != nil {
-			panic(fmt.Errorf("error reading directory: %w", err))
+			printErrorAndExit(fmt.Errorf("error reading directory: %w", err))
 		}
 
 		// Iterate through the files and populate the map
@@ -88,15 +88,14 @@ var rootCmd = &cobra.Command{
 				optionExit,
 			},
 		}, &commandName); err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		switch commandName {
 		case optionGuideDiagram:
 			answers, err := guides.GuideDiagram(workdir, fileMap)
 			if err != nil {
-				fmtRed.Printf("🚨 %s\n", err)
-				os.Exit(1)
+				printErrorAndExit(err)
 			}
 
 			_ = diagramCmd.Flags().Set(diagramCMDFlagDiagram, answers.Diagram)
@@ -106,29 +105,46 @@ var rootCmd = &cobra.Command{
 		case optionGuideInitialStructure:
 			answers, err := guides.GuideStructure(workdir, fileMap)
 			if err != nil {
-				fmtRed.Printf("🚨 %s\n", err)
-				os.Exit(1)
+				printErrorAndExit(err)
 			}
 
 			_ = structureCmd.Flags().Set(structureCMDFlagConfig, answers.Config)
 			_ = structureCmd.Flags().Set(structureCMDFlagOutput, answers.Output)
 			structureCmd.Run(structureCmd, []string{})
 		case optionGuideCode:
-			// var commandCodeName string
-			// if err := survey.AskOne(&survey.Select{
-			// 	Message: "Choose as you wish:",
-			// 	Options: []string{
-			// 		"Generate the stack structure",
-			// 		"Generate API gateway",
-			// 		"Generate Lambda",
-			// 		"Generate SQS queue",
-			// 		"Generate S3 bucket",
-			// 		optionExit,
-			// 	},
-			// }, &commandCodeName); err != nil {
-			// 	panic(err)
-			// }
-			os.Exit(0)
+			answers, err := guides.GuideCode(workdir, fileMap)
+			if err != nil {
+				printErrorAndExit(err)
+			}
+
+			fmt.Println("→ Generating API Gateway code...")
+			_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagConfig, answers.Config)
+			_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagOutput, answers.Output)
+			apigatewayCmd.Run(apigatewayCmd, []string{})
+			fmt.Println()
+
+			fmt.Println("→ Generating Lambda code...")
+			_ = lambdaCmd.Flags().Set(lambdaCMDFlagConfig, answers.Config)
+			_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, answers.Output)
+			lambdaCmd.Run(lambdaCmd, []string{})
+			fmt.Println()
+
+			fmt.Println("→ Generating S3 code...")
+			_ = s3Cmd.Flags().Set(s3CMDFlagConfig, answers.Config)
+			_ = s3Cmd.Flags().Set(s3CMDFlagOutput, answers.Output)
+			s3Cmd.Run(s3Cmd, []string{})
+			fmt.Println()
+
+			fmt.Println("→ Generating SNS code...")
+			_ = snsCmd.Flags().Set(snsCMDFlagConfig, answers.Config)
+			_ = snsCmd.Flags().Set(snsCMDFlagOutput, answers.Output)
+			snsCmd.Run(snsCmd, []string{})
+			fmt.Println()
+
+			fmt.Println("→ Generating SQS code...")
+			_ = sqsCmd.Flags().Set(sqsCMDFlagConfig, answers.Config)
+			_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, answers.Output)
+			sqsCmd.Run(sqsCmd, []string{})
 		default:
 			os.Exit(0)
 		}
@@ -147,4 +163,9 @@ func Execute() {
 func init() {
 	rootCmd.Flags().StringP(rootCMDFlagWorkdir, "", ".",
 		"Path to the directory where diagrams and configuration files are stored for the project. For example: ./example")
+}
+
+func printErrorAndExit(err error) {
+	fmtRed.Printf("🚨 %s\n", err)
+	os.Exit(1)
 }

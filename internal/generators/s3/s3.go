@@ -51,21 +51,23 @@ func (s *S3) Build() error {
 			ExpirationDays: conf.ExpirationDays,
 		}
 
-		output, err := generators.Build(data, tmplName, string(s3TFTmpl))
+		outputData, err := generators.Build(data, tmplName, string(s3TFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		result = fmt.Sprintf("%s\n%s", result, output)
+		result = fmt.Sprintf("%s\n%s", result, outputData)
 	}
 
 	if result != "" {
-		err = generators.BuildFile(Data{}, tmplName, result, s.output)
+		outputFile := fmt.Sprintf("%s/s3.tf", s.output)
+
+		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.TerraformFormat(s.output)
+		err = utils.TerraformFormat(outputFile)
 		if err != nil {
 			fmt.Println(err)
 		}

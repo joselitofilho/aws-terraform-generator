@@ -5,24 +5,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	snsCMDFlagConfig = "config"
+	snsCMDFlagOutput = "output"
+)
+
 // snsCmd represents the sqs command
 var snsCmd = &cobra.Command{
 	Use:   "sns",
 	Short: "Manage SNS",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString("config")
+		config, err := cmd.Flags().GetString(snsCMDFlagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString("output")
+		output, err := cmd.Flags().GetString(snsCMDFlagOutput)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		err = sns.NewSNS(config, output).Build()
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 	},
 }
@@ -30,9 +35,9 @@ var snsCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(snsCmd)
 
-	snsCmd.Flags().StringP("config", "c", "", "Path to the configuration file. For example: ./sns.config.yaml")
-	snsCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/sns.tf")
+	snsCmd.Flags().StringP(snsCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./sns.config.yaml")
+	snsCmd.Flags().StringP(snsCMDFlagOutput, "o", "", "Path to the output file. For example: ./output/sns.tf")
 
-	snsCmd.MarkFlagRequired("config")
-	snsCmd.MarkFlagRequired("output")
+	snsCmd.MarkFlagRequired(snsCMDFlagConfig)
+	snsCmd.MarkFlagRequired(snsCMDFlagOutput)
 }

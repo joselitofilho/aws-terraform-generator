@@ -25,21 +25,21 @@ var diagramCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		diagram, err := cmd.Flags().GetString(diagramCMDFlagDiagram)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		configFile, err := cmd.Flags().GetString(diagramCMDFlagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		output, err := cmd.Flags().GetString(diagramCMDFlagOutput)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		if err := build(diagram, configFile, output); err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
 		fmt.Printf("Configuration file '%s' has been generated successfully\n", output)
