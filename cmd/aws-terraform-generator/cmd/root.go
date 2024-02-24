@@ -78,76 +78,86 @@ var rootCmd = &cobra.Command{
 
 `)
 
-		var commandName string
-		if err := survey.AskOne(&survey.Select{
-			Message: "What would you like to do?",
-			Options: []string{
-				optionGuideDiagram,
-				optionGuideInitialStructure,
-				optionGuideCode,
-				optionExit,
-			},
-		}, &commandName); err != nil {
-			printErrorAndExit(err)
+		shouldContinue := true
+		for shouldContinue {
+
+			var commandName string
+			if err := survey.AskOne(&survey.Select{
+				Message: "What would you like to do?",
+				Options: []string{
+					optionGuideDiagram,
+					optionGuideInitialStructure,
+					optionGuideCode,
+					optionExit,
+				},
+			}, &commandName); err != nil {
+				printErrorAndExit(err)
+			}
+
+			switch commandName {
+			case optionGuideDiagram:
+				answers, err := guides.GuideDiagram(workdir, fileMap)
+				if err != nil {
+					printErrorAndExit(err)
+				}
+
+				_ = diagramCmd.Flags().Set(diagramCMDFlagDiagram, answers.Diagram)
+				_ = diagramCmd.Flags().Set(diagramCMDFlagConfig, answers.Config)
+				_ = diagramCmd.Flags().Set(diagramCMDFlagOutput, answers.Output)
+				diagramCmd.Run(diagramCmd, []string{})
+			case optionGuideInitialStructure:
+				answers, err := guides.GuideStructure(workdir, fileMap)
+				if err != nil {
+					printErrorAndExit(err)
+				}
+
+				_ = structureCmd.Flags().Set(structureCMDFlagConfig, answers.Config)
+				_ = structureCmd.Flags().Set(structureCMDFlagOutput, answers.Output)
+				structureCmd.Run(structureCmd, []string{})
+			case optionGuideCode:
+				answers, err := guides.GuideCode(workdir, fileMap)
+				if err != nil {
+					printErrorAndExit(err)
+				}
+
+				fmt.Println("→ Generating API Gateway code...")
+				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagConfig, answers.Config)
+				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagOutput, answers.Output)
+				apigatewayCmd.Run(apigatewayCmd, []string{})
+				fmt.Println()
+
+				fmt.Println("→ Generating Lambda code...")
+				_ = lambdaCmd.Flags().Set(lambdaCMDFlagConfig, answers.Config)
+				_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, answers.Output)
+				lambdaCmd.Run(lambdaCmd, []string{})
+				fmt.Println()
+
+				fmt.Println("→ Generating S3 code...")
+				_ = s3Cmd.Flags().Set(s3CMDFlagConfig, answers.Config)
+				_ = s3Cmd.Flags().Set(s3CMDFlagOutput, answers.Output)
+				s3Cmd.Run(s3Cmd, []string{})
+				fmt.Println()
+
+				fmt.Println("→ Generating SNS code...")
+				_ = snsCmd.Flags().Set(snsCMDFlagConfig, answers.Config)
+				_ = snsCmd.Flags().Set(snsCMDFlagOutput, answers.Output)
+				snsCmd.Run(snsCmd, []string{})
+				fmt.Println()
+
+				fmt.Println("→ Generating SQS code...")
+				_ = sqsCmd.Flags().Set(sqsCMDFlagConfig, answers.Config)
+				_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, answers.Output)
+				sqsCmd.Run(sqsCmd, []string{})
+			default:
+				shouldContinue = false
+			}
+
+			if shouldContinue {
+				fmt.Println()
+			}
 		}
 
-		switch commandName {
-		case optionGuideDiagram:
-			answers, err := guides.GuideDiagram(workdir, fileMap)
-			if err != nil {
-				printErrorAndExit(err)
-			}
-
-			_ = diagramCmd.Flags().Set(diagramCMDFlagDiagram, answers.Diagram)
-			_ = diagramCmd.Flags().Set(diagramCMDFlagConfig, answers.Config)
-			_ = diagramCmd.Flags().Set(diagramCMDFlagOutput, answers.Output)
-			diagramCmd.Run(diagramCmd, []string{})
-		case optionGuideInitialStructure:
-			answers, err := guides.GuideStructure(workdir, fileMap)
-			if err != nil {
-				printErrorAndExit(err)
-			}
-
-			_ = structureCmd.Flags().Set(structureCMDFlagConfig, answers.Config)
-			_ = structureCmd.Flags().Set(structureCMDFlagOutput, answers.Output)
-			structureCmd.Run(structureCmd, []string{})
-		case optionGuideCode:
-			answers, err := guides.GuideCode(workdir, fileMap)
-			if err != nil {
-				printErrorAndExit(err)
-			}
-
-			fmt.Println("→ Generating API Gateway code...")
-			_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagConfig, answers.Config)
-			_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagOutput, answers.Output)
-			apigatewayCmd.Run(apigatewayCmd, []string{})
-			fmt.Println()
-
-			fmt.Println("→ Generating Lambda code...")
-			_ = lambdaCmd.Flags().Set(lambdaCMDFlagConfig, answers.Config)
-			_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, answers.Output)
-			lambdaCmd.Run(lambdaCmd, []string{})
-			fmt.Println()
-
-			fmt.Println("→ Generating S3 code...")
-			_ = s3Cmd.Flags().Set(s3CMDFlagConfig, answers.Config)
-			_ = s3Cmd.Flags().Set(s3CMDFlagOutput, answers.Output)
-			s3Cmd.Run(s3Cmd, []string{})
-			fmt.Println()
-
-			fmt.Println("→ Generating SNS code...")
-			_ = snsCmd.Flags().Set(snsCMDFlagConfig, answers.Config)
-			_ = snsCmd.Flags().Set(snsCMDFlagOutput, answers.Output)
-			snsCmd.Run(snsCmd, []string{})
-			fmt.Println()
-
-			fmt.Println("→ Generating SQS code...")
-			_ = sqsCmd.Flags().Set(sqsCMDFlagConfig, answers.Config)
-			_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, answers.Output)
-			sqsCmd.Run(sqsCmd, []string{})
-		default:
-			os.Exit(0)
-		}
+		fmt.Println("👋 Goodbye. Until next time!")
 	},
 }
 
