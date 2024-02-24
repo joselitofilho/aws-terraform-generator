@@ -36,7 +36,7 @@ func init() {
 	rootCmd.AddCommand(snsCmd)
 
 	snsCmd.Flags().StringP(snsCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./sns.config.yaml")
-	snsCmd.Flags().StringP(snsCMDFlagOutput, "o", "", "Path to the output file. For example: ./output/sns.tf")
+	snsCmd.Flags().StringP(snsCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
 
 	snsCmd.MarkFlagRequired(snsCMDFlagConfig)
 	snsCmd.MarkFlagRequired(snsCMDFlagOutput)

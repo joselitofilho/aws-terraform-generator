@@ -25,9 +25,7 @@ var sqsCmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		sqsTmpl := sqs.NewSQS(config, output)
-
-		err = sqsTmpl.Build()
+		err = sqs.NewSQS(config, output).Build()
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -38,7 +36,7 @@ func init() {
 	rootCmd.AddCommand(sqsCmd)
 
 	sqsCmd.Flags().StringP(sqsCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./sqs.config.yaml")
-	sqsCmd.Flags().StringP(sqsCMDFlagOutput, "o", "", "Path to the output file. For example: ./output/sqs.tf")
+	sqsCmd.Flags().StringP(sqsCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
 
 	sqsCmd.MarkFlagRequired(sqsCMDFlagConfig)
 	sqsCmd.MarkFlagRequired(sqsCMDFlagOutput)

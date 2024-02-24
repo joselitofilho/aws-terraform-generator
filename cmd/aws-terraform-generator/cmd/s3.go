@@ -26,9 +26,7 @@ var s3Cmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		s3Tmpl := s3.NewS3(config, output)
-
-		err = s3Tmpl.Build()
+		err = s3.NewS3(config, output).Build()
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -39,7 +37,7 @@ func init() {
 	rootCmd.AddCommand(s3Cmd)
 
 	s3Cmd.Flags().StringP(s3CMDFlagConfig, "c", "", "Path to the configuration file. For example: ./s3.config.yaml")
-	s3Cmd.Flags().StringP(s3CMDFlagOutput, "o", "", "Path to the output file. For example: ./output/s3.tf")
+	s3Cmd.Flags().StringP(s3CMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
 
 	s3Cmd.MarkFlagRequired(s3CMDFlagConfig)
 	s3Cmd.MarkFlagRequired(s3CMDFlagOutput)
