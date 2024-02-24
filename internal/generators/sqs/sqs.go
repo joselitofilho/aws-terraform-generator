@@ -4,9 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"path/filepath"
-	"strings"
-
-	"github.com/ettle/strcase"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
@@ -15,8 +12,6 @@ import (
 
 type Data struct {
 	Name            string
-	NameWithSpace   string
-	NameSnakeCase   string
 	MaxReceiveCount int32
 }
 
@@ -45,8 +40,6 @@ func (s *SQS) Build() error {
 
 		data := Data{
 			Name:            conf.Name,
-			NameWithSpace:   strings.ReplaceAll(conf.Name, "-", " "),
-			NameSnakeCase:   strcase.ToSnake(conf.Name),
 			MaxReceiveCount: conf.MaxReceiveCount,
 		}
 

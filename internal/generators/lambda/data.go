@@ -18,8 +18,6 @@ type Cron struct {
 type Data struct {
 	ModuleLambdaSource string
 	Name               string
-	NameSnakeCase      string
-	NamePascalCase     string
 	Description        string
 	Envars             map[string]string
 	SQSTriggers        []SQSTrigger

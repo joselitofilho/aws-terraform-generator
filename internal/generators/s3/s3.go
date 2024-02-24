@@ -4,9 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"path/filepath"
-	"strings"
 
-	"github.com/ettle/strcase"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
@@ -14,8 +12,6 @@ import (
 
 type Data struct {
 	Name           string
-	NameWithSpace  string
-	NameSnakeCase  string
 	ExpirationDays int
 }
 
@@ -44,8 +40,6 @@ func (s *S3) Build() error {
 
 		data := Data{
 			Name:           conf.Name,
-			NameWithSpace:  strings.ReplaceAll(conf.Name, "-", " "),
-			NameSnakeCase:  strcase.ToSnake(conf.Name),
 			ExpirationDays: conf.ExpirationDays,
 		}
 

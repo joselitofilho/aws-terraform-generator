@@ -1,4 +1,4 @@
-resource "aws_s3_bucket" "{{$.NameSnakeCase}}_bucket" {
+resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {
   bucket = "${var.client}-${var.environment}-{{$.Name}}"
   acl    = "private"
 

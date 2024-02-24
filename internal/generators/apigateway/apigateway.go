@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ettle/strcase"
-
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
@@ -73,8 +71,6 @@ func (a *APIGateway) Build() error {
 				ModuleLambdaSource: lambdaConf.Source,
 				StackName:          apiConf.StackName,
 				Name:               lambdaConf.Name,
-				NameSnakeCase:      strcase.ToSnake(lambdaConf.Name),
-				NamePascalCase:     strcase.ToPascal(lambdaConf.Name),
 				Description:        lambdaConf.Description,
 				Envars:             envars,
 				Verb:               lambdaConf.Verb,

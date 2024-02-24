@@ -9,7 +9,7 @@ import (
 
 type {{$.Name}}Lambda struct {}
 
-func new{{$.NamePascalCase}}Lambda() *{{$.Name}}Lambda {
+func new{{ToPascal $.Name}}Lambda() *{{$.Name}}Lambda {
 	return &{{$.Name}}Lambda{}
 }
 

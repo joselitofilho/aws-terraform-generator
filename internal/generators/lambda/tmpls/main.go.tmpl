@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	{{$.Name}}Lambda := new{{$.NamePascalCase}}Lambda()
+	{{$.Name}}Lambda := new{{ToPascal $.Name}}Lambda()
 
 	lambda.Start({{$.Name}}Lambda.run)
 }

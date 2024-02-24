@@ -1,18 +1,18 @@
-// {{$.NameWithSpace}} SQS queue
-resource "aws_sqs_queue" "{{$.NameSnakeCase}}_sqs" {
+// {{ToSpace $.Name}} SQS queue
+resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {
   name                       = "${var.client}-${var.environment}-{{$.Name}}"
   visibility_timeout_seconds = 720
 
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.{{$.NameSnakeCase}}_sqs_dlq.arn
+    deadLetterTargetArn = aws_sqs_queue.{{ToSnake $.Name}}_sqs_dlq.arn
     maxReceiveCount     = {{$.MaxReceiveCount}}
   })
 
-  depends_on = [aws_sqs_queue.{{$.NameSnakeCase}}_sqs_dlq]
+  depends_on = [aws_sqs_queue.{{ToSnake $.Name}}_sqs_dlq]
 }
 
-// {{$.NameWithSpace}} DLQ queue
-resource "aws_sqs_queue" "{{$.NameSnakeCase}}_sqs_dlq" {
+// {{ToSpace $.Name}} DLQ queue
+resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs_dlq" {
   name                       = "${var.client}-${var.environment}-{{$.Name}}-dlq"
   visibility_timeout_seconds = 720
 }
