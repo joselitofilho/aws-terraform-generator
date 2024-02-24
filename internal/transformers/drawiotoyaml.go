@@ -10,18 +10,12 @@ import (
 )
 
 func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.ResourceCollection) (*config.Config, error) {
-	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	apiGatewaysByID := map[string]drawio.Resource{}
+	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	cronsByLambdaID := map[string]drawio.Resource{}
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
 	envars := map[string]map[string]string{}
 	snsMap := map[string]config.SNS{}
-
-	initEnvarsIfNecessaryByKey := func(target map[string]map[string]string, key string) {
-		if _, ok := target[key]; !ok {
-			target[key] = map[string]string{}
-		}
-	}
 
 	resourcesByTypeMap := map[drawio.ResourceType][]drawio.Resource{}
 	for _, resource := range resources.Resources {
@@ -29,99 +23,81 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	}
 
 	for _, rel := range resources.Relationships {
-		switch rel.Target.ReseourceType() {
+		target := rel.Target
+		source := rel.Source
+
+		switch target.ReseourceType() {
 		case drawio.LambdaType:
-			lambdaID := rel.Target.ID()
-
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.CronType:
-				cronsByLambdaID[lambdaID] = rel.Source
+				buildCronToLambda(cronsByLambdaID, source, target)
 			case drawio.SQSType:
-				sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], rel.Source)
+				buildSQSToLambda(sqsTriggersByLambdaID, source, target)
 			case drawio.SNSType:
-				sns, ok := snsMap[rel.Source.ID()]
-				if !ok {
-					sns = config.SNS{Name: rel.Source.Value()}
-				}
-
-				sns.Lambdas = append(sns.Lambdas, config.SNSResource{Name: rel.Source.Value()})
-
-				snsMap[rel.Source.ID()] = sns
+				buildSNSToLambda(snsMap, source)
 			}
 		case drawio.APIGatewayType:
-			apiGatewayID := rel.Target.ID()
-			apiGatewaysByID[apiGatewayID] = rel.Target
-			endpointsByAPIGatewayID[apiGatewayID] = rel.Source
+			switch source.ReseourceType() {
+			case drawio.EndpointType:
+				buildEndpointToAPIGateway(apiGatewaysByID, endpointsByAPIGatewayID, source, target)
+			}
 		case drawio.SQSType:
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.LambdaType:
-				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
-
-				envars[rel.Source.ID()]["SQS_QUEUE_URL"] =
-					fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(rel.Target.Value()))
+				buildLambdaToSQS(envars, source, target)
 			case drawio.SNSType:
-				sns, ok := snsMap[rel.Source.ID()]
-				if !ok {
-					sns = config.SNS{Name: rel.Source.Value()}
-				}
-
-				sns.SQSs = append(sns.SQSs, config.SNSResource{Name: rel.Source.Value()})
-
-				snsMap[rel.Source.ID()] = sns
+				buildSNSToSQS(snsMap, source)
 			}
 		case drawio.DatabaseType:
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.LambdaType:
-				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
-
-				envars[rel.Source.ID()]["DOCDB_HOST"] = "var.docdb_host"
-				envars[rel.Source.ID()]["DOCDB_USER"] = "var.docdb_user"
-				envars[rel.Source.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
+				buildLambdaToDatabase(envars, source)
 			}
 		case drawio.RestfulAPIType:
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.LambdaType:
-				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
-
-				restfulAPIName := strings.ToLower(rel.Target.Value())
-
-				envars[rel.Source.ID()][fmt.Sprintf("%s_API_BASE_URL", strcase.ToSNAKE(restfulAPIName))] =
-					fmt.Sprintf("var.%s_api_base_url", strcase.ToSnake(restfulAPIName))
-				envars[rel.Source.ID()][fmt.Sprintf("%s_HOST", strcase.ToSNAKE(restfulAPIName))] =
-					fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
-				envars[rel.Source.ID()][fmt.Sprintf("%s_USER", strcase.ToSNAKE(restfulAPIName))] =
-					fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
+				buildLambdaToRestfulAPI(envars, source, target)
 			}
 		case drawio.S3Type:
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.LambdaType:
-				initEnvarsIfNecessaryByKey(envars, rel.Source.ID())
-
-				bucketName := strings.ToLower(rel.Target.Value())
-
-				envars[rel.Source.ID()][fmt.Sprintf("%s_S3_BUCKET", strcase.ToSNAKE(bucketName))] =
-					fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
-				envars[rel.Source.ID()][fmt.Sprintf("%s_S3_DIRECTORY", strcase.ToSNAKE(bucketName))] =
-					fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(rel.Target.Value())))
+				buildLambdaToS3(envars, source, target)
 			}
 		case drawio.SNSType:
-			switch rel.Source.ReseourceType() {
+			switch source.ReseourceType() {
 			case drawio.S3Type:
-				sns, ok := snsMap[rel.Target.ID()]
-				if !ok {
-					sns = config.SNS{Name: rel.Target.Value()}
-				}
-
-				sns.BucketName = rel.Source.Value()
-
-				snsMap[rel.Target.ID()] = sns
+				buildS3ToSNS(snsMap, source, target)
 			}
 		}
 	}
 
-	defaultFiles := []config.File{{Name: "lambda.go"}, {Name: "main.go"}}
+	lambdas, apiGatewayLambdas := buildLambdas(resourcesByTypeMap, resources, envars, yamlConfig, cronsByLambdaID, sqsTriggersByLambdaID)
+	apiGateways := buildAPIGateways(yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdas)
+	snss := buildSNSs(snsMap)
+	sqss := buildSQSs(resourcesByTypeMap)
+	buckets := buildBuckets(resourcesByTypeMap)
+	restfulAPIs := buildRestfulAPIs(resourcesByTypeMap)
+
+	return &config.Config{
+		Lambdas:     lambdas,
+		APIGateways: apiGateways,
+		SNSs:        snss,
+		SQSs:        sqss,
+		Buckets:     buckets,
+		RestfulAPIs: restfulAPIs,
+	}, nil
+}
+
+func buildLambdas(
+	resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource,
+	resources *drawio.ResourceCollection, envars map[string]map[string]string,
+	yamlConfig *config.Config,
+	cronsByLambdaID map[string]drawio.Resource,
+	sqsTriggersByLambdaID map[string][]drawio.Resource,
+) ([]config.Lambda, map[string][]config.APIGatewayLambda) {
 	lambdas := []config.Lambda{}
 	apiGatewayLambdas := map[string][]config.APIGatewayLambda{}
+	defaultFiles := []config.File{{Name: "lambda.go"}, {Name: "main.go"}}
 
 	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
 		isAPIGatewayLambda := false
@@ -189,6 +165,15 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		}
 	}
 
+	return lambdas, apiGatewayLambdas
+}
+
+func buildAPIGateways(
+	yamlConfig *config.Config,
+	apiGatewaysByID map[string]drawio.Resource,
+	endpointsByAPIGatewayID map[string]drawio.Resource,
+	apiGatewayLambdas map[string][]config.APIGatewayLambda,
+) []config.APIGateway {
 	apiGateways := []config.APIGateway{
 		{
 			StackName: yamlConfig.Diagram.StackName,
@@ -200,19 +185,30 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		apiGateways[0].APIDomain = endpointsByAPIGatewayID[id].Value()
 		apiGateways[0].Lambdas = append(apiGateways[0].Lambdas, apiGatewayLambdas[id]...)
 	}
+	return apiGateways
+}
 
+func buildSQSs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.SQS {
 	sqss := []config.SQS{}
 
 	for _, sqs := range resourcesByTypeMap[drawio.SQSType] {
 		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
 	}
 
+	return sqss
+}
+
+func buildBuckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.S3 {
 	buckets := []config.S3{}
 
 	for _, bucket := range resourcesByTypeMap[drawio.S3Type] {
 		buckets = append(buckets, config.S3{Name: bucket.Value()})
 	}
 
+	return buckets
+}
+
+func buildRestfulAPIs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.RestfulAPI {
 	restfulAPIs := []config.RestfulAPI{}
 	restfulAPINames := map[string]struct{}{}
 
@@ -224,17 +220,15 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		}
 	}
 
+	return restfulAPIs
+}
+
+func buildSNSs(snsMap map[string]config.SNS) []config.SNS {
 	snss := make([]config.SNS, 0, len(snsMap))
+
 	for _, sns := range snsMap {
 		snss = append(snss, sns)
 	}
 
-	return &config.Config{
-		Lambdas:     lambdas,
-		APIGateways: apiGateways,
-		SQSs:        sqss,
-		Buckets:     buckets,
-		RestfulAPIs: restfulAPIs,
-		SNSs:        snss,
-	}, nil
+	return snss
 }
