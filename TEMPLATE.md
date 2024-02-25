@@ -26,7 +26,7 @@ Default templates:
 | :----------------- | :------------------------------------------------------ |
 | StackName          | The name of the stack associated with the Lambda.       |
 | Name               | The name of the Lambda function.                        |
-| AsModule           | If true, the Lambda will be recreated as module, otherwise as resource. |
+| AsModule           | If true, the Lambda will be created as module, otherwise as resource. |
 | Source             | The source of the Lambda function module.               |
 | RoleName           | The role name of the Lambda execution role.             |
 | Runtime            | Identifier of the Lambda runtime.                       |
@@ -56,7 +56,7 @@ Default temaplates:
 | Name                | Description                                            |
 | :------------------ | :----------------------------------------------------- |
 | Name                | The name of the Lambda.                                |
-| AsModule            | If true, the Lambda will be recreated as module, otherwise as resource. |
+| AsModule            | If true, the Lambda will be created as module, otherwise as resource. |
 | Source              | The source of the Lambda.                              |
 | RoleName            | The role name of the Lambda execution role.            |
 | Runtime             | Identifier of the Lambda runtime.                      |
