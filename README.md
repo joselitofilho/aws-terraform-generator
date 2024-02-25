@@ -1,6 +1,24 @@
-# aws-terraform-generator
+<div align="center">
+
+# AWS Terraform Generator
+
+[![GitHub tag](https://img.shields.io/github/tag/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
+[![Contributions - Welcome](https://img.shields.io/badge/Contributions-Welcome-2ea44f?style=for-the-badge)](#contributing)
+[![License](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](#license)
+
+[![Made with Golang](https://img.shields.io/badge/Golang->=1.19.4-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
+[![Using Terraform](https://img.shields.io/badge/Terraform->=3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")
+[![Using Diagrams](https://img.shields.io/badge/Diagrams-orange?logo=&logoColor=white&style=for-the-badge)](https://app.diagrams.net/ "Go to Diagram homepage")
+
+[![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/joselitofilho)
+
+</div>
+
+# Overview
 
 The AWS Terraform Generator is a powerful tool designed to simplify and streamline the process of creating Terraform configurations for AWS infrastructure. With this tool, you can quickly generate Terraform code to provision AWS resources such as EC2 instances, S3 buckets, RDS databases, Lambda functions, API Gateways, and much more.
+
+[![Start Here](https://img.shields.io/badge/start%20here-blue?style=for-the-badge)](#recommended-step-by-step)
 
 **Table of contents**
 
@@ -39,7 +57,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 The code generator already comes with some pre-configured templates for generating Terraform and GoLang files. All generator 
 configuration is based on YAML files, making it easy to customize the available resources and templates.
 
-The first step is to write the configuration file specified [here](README_CONFIGURATION.md). You can also use this [example](example/) as a reference.
+The first step is to write the configuration file specified [here](CONFIGURATION.md). You can also use this [example](example/) as a reference.
 
 There you go! Now you can generate the structure of your project or the files based on the configured resources. You can execute the commands in any order.
 
@@ -118,11 +136,23 @@ $ aws-terraform-generator diagram -s mystack -c examples/diagram.config.yaml -d 
 $ aws-terraform-generator structure -c examples/structure.yaml -o ./output
 $ aws-terraform-generator apigateway -c examples/mystack.yaml -o ./output
 $ aws-terraform-generator lambda -c examples/mystack.yaml -o ./output/mystack
-$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack/mod/sns.tf
-$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack/mod/sqs.tf
-$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack/mod/s3.tf
+$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack/mod
+$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack/mod
+$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack/mod
 $ aws-terraform-generator --workdir ./examples
 ```
+
+## Configuration
+
+All you need know regarding configuration you can find in the [configuration](CONFIGURATION.md) section.
+
+[![open - Configuration](https://img.shields.io/badge/open-configuration-blue?style=for-the-badge)](CONFIGURATION.md "Go to configuration")
+
+## Template
+
+For code generation, we are using the standard Golang library [text/template](https://pkg.go.dev/text/template). Further details about the available variables and the definition of some added utility functions can be found in the [template](TEMPLATE.md) section.
+
+[![open - Template](https://img.shields.io/badge/open-template-blue?style=for-the-badge)](TEMPLATE.md "Go to configuration")
 
 ## Contributing
 

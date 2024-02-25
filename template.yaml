@@ -1,22 +1,21 @@
 # Diagram configurations include modules to specify the URL pointing to the GitHub
 # repository for the resources module.
 diagram:
-  stack_name: mystack # Name of the stack
+  stack_name: mystack
   modules:
     lambda:
-      url: git@github.com:username/terraform-aws-lambda?ref=reference
       # URL pointing to the GitHub repository for the Lambda module
       # Replace "username" with the actual GitHub username
       # Replace "terraform-aws-lambda" with the actual repository name
       # Replace "reference" with the actual reference (branch, tag, or commit)
+      url: git@github.com:username/terraform-aws-lambda?ref=reference
 
 # Structure for stacks with multiple environments
 structure:
   # Stacks section. Each stack configuration includes folders for different environments (`dev`, `uat`, `prd`, etc.),
   # default templates, and specific configurations for lambdas, API gateways, SQS, and so on.
   stacks:
-    # Stack for mystack service
-    - stack_name: mystack
+    - name: mystack
       # Folders for different environments Each environment folder contains the following Terraform files:
       #  - `main.tf`: Main Terraform configuration.
       #  - `terragrunt.hcl`: Terragrunt configuration.
@@ -24,29 +23,29 @@ structure:
       folders:
         # Development environment
         - name: dev
+          # Terraform configuration files for dev environment
           files:
-            # Terraform configuration files for dev environment
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # User Acceptance Testing environment
         - name: uat
+          # Terraform configuration files for uat environment
           files:
-            # Terraform configuration files for uat environment
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # Production environment
         - name: prd
+          # Terraform configuration files for prd environment
           files:
-            # Terraform configuration files for prd environment
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # Common module
         - name: mod
+          # Terraform configuration files for module
           files:
-            # Terraform configuration files for module
             - name: main.tf
               # Template for generating stack_name based on environment
               tmpl: |-
@@ -146,12 +145,12 @@ structure:
 # Lambda configurations include lambda function names, descriptions, environment variables, SQS triggers,
 # cron schedules, and code configurations.
 lambdas:
-  # Configuration for the coexampleceiver lambda function
-  - source: git@github.com:username/terraform-aws-lambda?ref=reference
-    name: exampleReceiver
+  # Configuration for the exampleReceiver lambda function
+  - name: exampleReceiver
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
     description: "Trigger on schedule and initiate the execution of example receiver"
+    # Environment variables
     envars:
-      # Environment variables
       - MYAPI_API_BASE_URL: var.myapi_api_base_url
         MYAPI_USER: var.myapi_user
         MYAPI_PASSWORD_SECRET: aws_secretsmanager_secret.myapi_password.name
@@ -166,35 +165,38 @@ lambdas:
     crons:
       - schedule_expression: cron(0 1 * * ? *)
         is_enabled: var.trigger_enabled
-    files: # Optional. List of files that we can customize
+    # Optional. List of files that we can customize
+    files:
       - name: lambda.go
-        imports: # Optional. We can specify what imports we want to add in the output GoLang file.
+        # Optional. We can specify what imports we want to add in the output GoLang file.
+        imports:
           - "github.com/mylogging/logging"
-        tmpl:
-          |- # Optional. We can specify the template for the output GoLang file.
+        # Optional. We can specify the template for the output GoLang file.
+        tmpl: |-
           package main
 
 # API Gateway configurations include stack names, API domain names, lambda associations, and code configurations.
 apigateways:
   # Stack configuration for the mystack API Gateway
-  - stack_name: example
-    api_domain: example-api.example-${var.environment}.com
+  - stack_name: mystack
+    api_domain: mystack-api.domain-${var.environment}.com
     apig: true
     # Lambdas associated with the mystack API Gateway
     lambdas:
-      - source: git@github.com:username/terraform-aws-lambda?ref=reference
-        name: exampleAPIReceiver
+      - name: exampleAPIReceiver
+        source: git@github.com:username/terraform-aws-lambda?ref=reference
         description: Trigger the example API receiver via API Gateway
         verb: POST
-        path: /v1/mystacks
+        path: /v1/examples
         # File configuration for the lambda associated with the API Gateway
         files:
           - name: lambda.go
-            imports: # Optional. We have the option to specify the imports to include in the resulting GoLang file.
+            # Optional. We have the option to specify the imports to include in the resulting GoLang file.
+            imports:
               - "github.com/logging"
           - name: main.go
-            tmpl:
-              |- # Optional. We can specify the template for the output GoLang file.
+            # Optional. We can specify the template for the output GoLang file.
+            tmpl: |- 
               package main
 
               import(
@@ -211,7 +213,8 @@ sqs:
   # Configuration for the target SQS queue
   - name: target
     max_receive_count: 15
-    files: # Optional. List of files that we can customize
+    # Optional. List of files that we can customize
+    files:
       - name: "target-sqs.tf"
         tmpl: |-
           resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
@@ -222,20 +225,30 @@ sqs:
 # SNS configuration section
 sns:
   - name: example
-    bucket_name: my-bucket # Name of the S3 bucket
-    lambdas: # List of Lambda functions triggered by S3 events
-      - name: exampleReceiver # Lambda function name
-        events: # Events triggering Lambda
+    # Name of the S3 bucket
+    bucket_name: my-bucket
+    # List of Lambda functions triggered by S3 events
+    lambdas:
+      - name: exampleReceiver
+        # Events triggering Lambda
+        events:
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
-        filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
-        filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
-    sqs: # List of SQS to receive notification from an S3 bucket
+        # Optional. Prefix filter for S3 objects
+        filter_prefix: "my_prefix"
+        # Optional. Suffix filter for S3 objects
+        filter_suffix: ".txt"
+    # List of SQS to receive notification from an S3 bucket
+    sqs:
       - name: target
-        events: # SQS receiving notification from an S3 bucket
+        # SQS receiving notification from an S3 bucket
+        events:
           - "s3:ObjectCreated:*" # Event indicating an object creation in S3
-        filter_prefix: "my_prefix" # Optional. Prefix filter for S3 objects
-        filter_suffix: ".txt" # Optional. Suffix filter for S3 objects
-    files: # Optional. List of files that we can customize
+        # Optional. Prefix filter for S3 objects
+        filter_prefix: "my_prefix"
+        # Optional. Suffix filter for S3 objects
+        filter_suffix: ".txt"
+    # Optional. List of files that we can customize
+    files:
       - name: "example-sns.tf"
         tmpl: |-
           resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
@@ -252,5 +265,5 @@ buckets:
 
 # RESTful API configurations include API names.
 restfulapis:
-  # Configuration for the Oracle RESTful API
+  # Configuration for the MyAPI RESTful API
   - name: MyAPI

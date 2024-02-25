@@ -6,11 +6,11 @@ type Folder struct {
 }
 
 type Stack struct {
-	StackName string   `yaml:"stack_name"`
-	Folders   []Folder `yaml:"folders"`
+	Name    string   `yaml:"name"`
+	Folders []Folder `yaml:"folders"`
 }
 
 type Structure struct {
 	Stacks           []Stack         `yaml:"stacks"`
-	DefaultTemplates []DefaultConfig `yaml:"default_templates"`
+	DefaultTemplates []DefaultConfig `yaml:"default_templates,omitempty"`
 }

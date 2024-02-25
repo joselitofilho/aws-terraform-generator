@@ -35,11 +35,11 @@ func (s *Structure) Build() error {
 		conf := yamlConfig.Structure.Stacks[i]
 
 		data := Data{
-			StackName: conf.StackName,
+			StackName: conf.Name,
 		}
 
 		for _, folder := range conf.Folders {
-			output := fmt.Sprintf("%s/%s/%s", s.output, conf.StackName, folder.Name)
+			output := fmt.Sprintf("%s/%s/%s", s.output, conf.Name, folder.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
 			for _, file := range folder.Files {
@@ -52,7 +52,7 @@ func (s *Structure) Build() error {
 			}
 		}
 
-		fmt.Printf("Structure '%s' has been generated successfully\n", conf.StackName)
+		fmt.Printf("Structure '%s' has been generated successfully\n", conf.Name)
 	}
 
 	return nil
