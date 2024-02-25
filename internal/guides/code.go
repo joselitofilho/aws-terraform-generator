@@ -71,7 +71,5 @@ func GuideCode(workdir string, fileMap map[string][]string) (*CodeAnswers, error
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	answers.Output = replaceDoubleSlash(fmt.Sprintf("%s/%s", answers.Output, answers.StackName))
-
 	return &answers, nil
 }

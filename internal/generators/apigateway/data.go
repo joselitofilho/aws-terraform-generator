@@ -8,12 +8,15 @@ type Data struct {
 }
 
 type LambdaData struct {
-	ModuleLambdaSource string
-	StackName          string
-	Name               string
-	Description        string
-	Envars             map[string]string
-	Verb               string
-	Path               string
-	Files              map[string]generators.File
+	Name        string
+	AsModule    bool
+	Source      string
+	RoleName    string
+	Runtime     string
+	StackName   string
+	Description string
+	Envars      map[string]string
+	Verb        string
+	Path        string
+	Files       map[string]generators.File
 }

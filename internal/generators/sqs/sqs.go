@@ -3,7 +3,6 @@ package sqs
 import (
 	_ "embed"
 	"fmt"
-	"path/filepath"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
@@ -46,7 +45,7 @@ func (s *SQS) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, filepath.Dir(s.output), data)
+			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, fmt.Sprintf("%s/mod", s.output), data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -65,7 +64,7 @@ func (s *SQS) Build() error {
 	}
 
 	if result != "" {
-		outputFile := fmt.Sprintf("%s/sqs.tf", s.output)
+		outputFile := fmt.Sprintf("%s/mod/sqs.tf", s.output)
 
 		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
 		if err != nil {

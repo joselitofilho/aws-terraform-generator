@@ -2,13 +2,14 @@
 # repository for the resources module.
 diagram:
   stack_name: mystack
-  modules:
-    lambda:
-      # URL pointing to the GitHub repository for the Lambda module
-      # Replace "username" with the actual GitHub username
-      # Replace "terraform-aws-lambda" with the actual repository name
-      # Replace "reference" with the actual reference (branch, tag, or commit)
-      url: git@github.com:username/terraform-aws-lambda?ref=reference
+  lambda:
+    # URL pointing to the GitHub repository for the Lambda module
+    # Replace "username" with the actual GitHub username
+    # Replace "terraform-aws-lambda" with the actual repository name
+    # Replace "reference" with the actual reference (branch, tag, or commit)
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
+    role_name: execute_lambda
+    runtime: go1.x
 
 # Structure for stacks with multiple environments
 structure:
@@ -148,6 +149,8 @@ lambdas:
   # Configuration for the exampleReceiver lambda function
   - name: exampleReceiver
     source: git@github.com:username/terraform-aws-lambda?ref=reference
+    role_name: execute_lambda
+    runtime: go1.x
     description: "Trigger on schedule and initiate the execution of example receiver"
     # Environment variables
     envars:
@@ -185,6 +188,8 @@ apigateways:
     lambdas:
       - name: exampleAPIReceiver
         source: git@github.com:username/terraform-aws-lambda?ref=reference
+        role_name: execute_lambda
+        runtime: go1.x
         description: Trigger the example API receiver via API Gateway
         verb: POST
         path: /v1/examples

@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
@@ -54,14 +55,24 @@ func (l *Lambda) Build() error {
 
 		filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
+		asModule := strings.Contains(lambdaConf.Source, "git@")
+
+		roleName := lambdaConf.RoleName
+		if roleName == "" {
+			roleName = "iam_for_lambda"
+		}
+
 		data := Data{
-			ModuleLambdaSource: lambdaConf.Source,
-			Name:               lambdaConf.Name,
-			Description:        lambdaConf.Description,
-			Envars:             envars,
-			SQSTriggers:        sqsTriggers,
-			Crons:              crons,
-			Files:              filesConf,
+			Name:        lambdaConf.Name,
+			AsModule:    asModule,
+			Source:      lambdaConf.Source,
+			RoleName:    roleName,
+			Runtime:     lambdaConf.Runtime,
+			Description: lambdaConf.Description,
+			Envars:      envars,
+			SQSTriggers: sqsTriggers,
+			Crons:       crons,
+			Files:       filesConf,
 		}
 
 		output := fmt.Sprintf("%s/mod", l.output)

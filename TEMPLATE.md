@@ -24,9 +24,12 @@ Default templates:
 
 | Name               | Description                                             |
 | :----------------- | :------------------------------------------------------ |
-| ModuleLambdaSource | The source of the Lambda function module.               |
 | StackName          | The name of the stack associated with the Lambda.       |
 | Name               | The name of the Lambda function.                        |
+| AsModule           | If true, the Lambda will be recreated as module, otherwise as resource. |
+| Source             | The source of the Lambda function module.               |
+| RoleName           | The role name of the Lambda execution role.             |
+| Runtime            | Identifier of the Lambda runtime.                       |
 | Description        | Description of the Lambda function.                     |
 | Envars             | Environment variables associated with the Lambda.       |
 | Verb               | HTTP verb associated with the Lambda (if applicable).   |
@@ -52,8 +55,11 @@ Default temaplates:
 
 | Name                | Description                                            |
 | :------------------ | :----------------------------------------------------- |
-| ModuleLambdaSource  | The source of the Lambda function module.              |
 | Name                | The name of the Lambda.                                |
+| AsModule            | If true, the Lambda will be recreated as module, otherwise as resource. |
+| Source              | The source of the Lambda.                              |
+| RoleName            | The role name of the Lambda execution role.            |
+| Runtime             | Identifier of the Lambda runtime.                      |
 | Description         | Description of the Lambda.                             |
 | Envars              | Environment variables associated with the Lambda.      |
 | SQSTriggers         | List of SQS triggers associated with the Lambda.       |

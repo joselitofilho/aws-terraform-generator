@@ -1,5 +1,5 @@
-module "{{ToSnake $.Name}}_lambda" {
-  source = "{{$.ModuleLambdaSource}}"
+{{if $.AsModule}}module "{{ToSnake $.Name}}_lambda" {
+  source = "{{$.Source}}"
 
   stack_name                               = local.stack_name
   lambda_function_description              = "{{$.Description}}"
@@ -8,7 +8,7 @@ module "{{ToSnake $.Name}}_lambda" {
   lambda_function_kms_key_arn              = var.lambda_function_kms_key_arn
   lambda_function_sns_topic_monitoring_arn = var.alerting_sns_topic_arn
   lambda_function_source_base_path         = var.lambda_function_source_base_path
-  lambda_function_existing_execute_role    = "arn:aws:iam::${var.account_id}:role/execute_lambda"
+  lambda_function_existing_execute_role    = "arn:aws:iam::${var.account_id}:role/{{$.RoleName}}"
   lambda_function_vpc_config               = var.lambda_function_vpc_config
 
   lambda_function_env_vars = {
@@ -23,7 +23,24 @@ module "{{ToSnake $.Name}}_lambda" {
   environment = var.environment
   region      = var.region
   account_id  = var.account_id
-}
+}{{else}}resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {
+  filename      = "{{$.Source}}/{{ToSnake $.Name}}_lambda.zip"
+  function_name = "{{ToSnake $.Name}}_lambda"
+  description   = "{{$.Description}}"
+  role          = aws_iam_role.{{$.RoleName}}.arn
+  handler       = "{{ToSnake $.Name}}_lambda"
+
+  source_code_hash = filebase64sha256("{{$.Source}}/{{ToSnake $.Name}}_lambda.zip")
+
+  runtime = "{{$.Runtime}}"
+
+  environment {
+    variables = {
+      {{ range $key, $value := $.Envars }}{{$key}} = {{$value}}
+      {{end}}
+    }
+  }
+}{{end}}
 {{ $length := len $.SQSTriggers}}{{ if gt $length 0 }}{{ range $i, $sqs := $.SQSTriggers }}
 // {{$.Name}} SQS trigger rule for lambda
 resource "aws_lambda_event_source_mapping" "{{ToSnake $.Name}}_lambda_sqs_trigger" {

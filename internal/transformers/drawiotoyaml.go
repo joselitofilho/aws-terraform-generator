@@ -116,8 +116,10 @@ func buildLambdas(
 					}
 
 					apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
-						Source:      yamlConfig.Diagram.Modules.Lambda,
 						Name:        lambda.Value(),
+						Source:      yamlConfig.Diagram.Lambda.Source,
+						RoleName:    yamlConfig.Diagram.Lambda.RoleName,
+						Runtime:     yamlConfig.Diagram.Lambda.Runtime,
 						Description: fmt.Sprintf("%s lambda", lambda.Value()),
 						Envars:      envarsList,
 						Verb:        strings.Split(rel.Source.Value(), " ")[0],
@@ -154,8 +156,10 @@ func buildLambdas(
 			}
 
 			lambdas = append(lambdas, config.Lambda{
-				Source:      yamlConfig.Diagram.Modules.Lambda,
 				Name:        lambda.Value(),
+				Source:      yamlConfig.Diagram.Lambda.Source,
+				RoleName:    yamlConfig.Diagram.Lambda.RoleName,
+				Runtime:     yamlConfig.Diagram.Lambda.Runtime,
 				Description: fmt.Sprintf("%s lambda", lambda.Value()),
 				Envars:      envarsList,
 				SQSTriggers: sqsTriggers,

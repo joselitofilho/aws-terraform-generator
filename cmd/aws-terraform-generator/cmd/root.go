@@ -118,6 +118,8 @@ var rootCmd = &cobra.Command{
 					printErrorAndExit(err)
 				}
 
+				stackOutput := fmt.Sprintf("%s/%s", answers.Output, answers.StackName)
+
 				fmt.Println("→ Generating API Gateway code...")
 				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagConfig, answers.Config)
 				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagOutput, answers.Output)
@@ -126,25 +128,25 @@ var rootCmd = &cobra.Command{
 
 				fmt.Println("→ Generating Lambda code...")
 				_ = lambdaCmd.Flags().Set(lambdaCMDFlagConfig, answers.Config)
-				_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, answers.Output)
+				_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, stackOutput)
 				lambdaCmd.Run(lambdaCmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating S3 code...")
 				_ = s3Cmd.Flags().Set(s3CMDFlagConfig, answers.Config)
-				_ = s3Cmd.Flags().Set(s3CMDFlagOutput, answers.Output)
+				_ = s3Cmd.Flags().Set(s3CMDFlagOutput, stackOutput)
 				s3Cmd.Run(s3Cmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating SNS code...")
 				_ = snsCmd.Flags().Set(snsCMDFlagConfig, answers.Config)
-				_ = snsCmd.Flags().Set(snsCMDFlagOutput, answers.Output)
+				_ = snsCmd.Flags().Set(snsCMDFlagOutput, stackOutput)
 				snsCmd.Run(snsCmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating SQS code...")
 				_ = sqsCmd.Flags().Set(sqsCMDFlagConfig, answers.Config)
-				_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, answers.Output)
+				_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, stackOutput)
 				sqsCmd.Run(sqsCmd, []string{})
 			default:
 				shouldContinue = false

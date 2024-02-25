@@ -1,8 +1,10 @@
 package config
 
 type Lambda struct {
-	Source      string              `yaml:"source"`
 	Name        string              `yaml:"name"`
+	Source      string              `yaml:"source"`
+	RoleName    string              `yaml:"role_name,omitempty"`
+	Runtime     string              `yaml:"runtime,omitempty"`
 	Description string              `yaml:"description"`
 	Envars      []map[string]string `yaml:"envars,omitempty"`
 	SQSTriggers []SQSTrigger        `yaml:"sqs-triggers,omitempty"`

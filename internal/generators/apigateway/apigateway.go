@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
@@ -67,15 +68,25 @@ func (a *APIGateway) Build() error {
 
 			filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
+			asModule := strings.Contains(lambdaConf.Source, "git@")
+
+			roleName := lambdaConf.RoleName
+			if roleName == "" {
+				roleName = "iam_for_lambda"
+			}
+
 			lambdaData := LambdaData{
-				ModuleLambdaSource: lambdaConf.Source,
-				StackName:          apiConf.StackName,
-				Name:               lambdaConf.Name,
-				Description:        lambdaConf.Description,
-				Envars:             envars,
-				Verb:               lambdaConf.Verb,
-				Path:               lambdaConf.Path,
-				Files:              filesConf,
+				Name:        lambdaConf.Name,
+				AsModule:    asModule,
+				Source:      lambdaConf.Source,
+				RoleName:    roleName,
+				Runtime:     lambdaConf.Runtime,
+				StackName:   apiConf.StackName,
+				Description: lambdaConf.Description,
+				Envars:      envars,
+				Verb:        lambdaConf.Verb,
+				Path:        lambdaConf.Path,
+				Files:       filesConf,
 			}
 
 			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
