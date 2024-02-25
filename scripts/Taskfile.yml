@@ -1,0 +1,24 @@
+version: "3"
+
+vars:
+  LINT_TIMEOUT: 5m
+
+tasks:
+  install:
+    desc: "Install all project tools"
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+      - go install go.uber.org/mock/mockgen@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - go install mvdan.cc/gofumpt@v0.4.0
+
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - golangci-lint version
+      - golangci-lint run -v --timeout="{{.LINT_TIMEOUT}}" {{.USER_WORKING_DIR}}/...
+  
+  fmt:
+    desc: "Format code"
+    cmds:
+      - goimports -w . && gofumpt -l -w .

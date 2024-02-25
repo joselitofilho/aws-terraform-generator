@@ -11,16 +11,16 @@ import (
 )
 
 type APIGateway struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewAPIGateway(config, output string) *APIGateway {
-	return &APIGateway{config: config, output: output}
+func NewAPIGateway(configFileName, output string) *APIGateway {
+	return &APIGateway{configFileName: configFileName, output: output}
 }
 
 func (a *APIGateway) Build() error {
-	yamlParser := config.NewYAML(a.config)
+	yamlParser := config.NewYAML(a.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

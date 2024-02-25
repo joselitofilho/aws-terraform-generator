@@ -10,16 +10,16 @@ import (
 )
 
 type Structure struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewStructure(config, output string) *Structure {
-	return &Structure{config: config, output: output}
+func NewStructure(configFileName, output string) *Structure {
+	return &Structure{configFileName: configFileName, output: output}
 }
 
 func (s *Structure) Build() error {
-	yamlParser := config.NewYAML(s.config)
+	yamlParser := config.NewYAML(s.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

@@ -15,8 +15,13 @@ import (
 )
 
 const (
-	rootCMDFlagWorkdir = "workdir"
+	flagConfig  = "config"
+	flagDiagram = "diagram"
+	flagOutput  = "output"
+	flagWorkdir = "workdir"
+)
 
+const (
 	optionGuideDiagram          = "Generate a diagram config file"
 	optionGuideInitialStructure = "Generate the initial structure"
 	optionGuideCode             = "Generate code"
@@ -34,12 +39,12 @@ var rootCmd = &cobra.Command{
 	Use:   "aws-terraform-generator",
 	Short: "AWS terraform generator",
 	Run: func(cmd *cobra.Command, args []string) {
-		workdir, err := cmd.Flags().GetString(rootCMDFlagWorkdir)
+		workdir, err := cmd.Flags().GetString(flagWorkdir)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		fmt.Println(`
+		title := `
 
 		 ██████╗ ██████╗ ██████╗ ███████╗     ██████╗ ███████╗███╗   ██╗
 		██╔════╝██╔═══██╗██╔══██╗██╔════╝    ██╔════╝ ██╔════╝████╗  ██║
@@ -48,7 +53,8 @@ var rootCmd = &cobra.Command{
 		╚██████╗╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████╗██║ ╚████║
 		 ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝╚═╝  ╚═══╝
 
-`)
+`
+		fmt.Println(title)
 
 		shouldContinue := true
 		for shouldContinue {
@@ -68,9 +74,9 @@ var rootCmd = &cobra.Command{
 
 					switch ext {
 					case ".xml":
-						fileMap[diagramCMDFlagDiagram] = append(fileMap[diagramCMDFlagDiagram], file.Name())
+						fileMap[flagDiagram] = append(fileMap[flagDiagram], file.Name())
 					case ".yaml", ".yml":
-						fileMap[diagramCMDFlagConfig] = append(fileMap[diagramCMDFlagConfig], file.Name())
+						fileMap[flagConfig] = append(fileMap[flagConfig], file.Name())
 					}
 				}
 			}
@@ -99,9 +105,9 @@ var rootCmd = &cobra.Command{
 					printErrorAndExit(err)
 				}
 
-				_ = diagramCmd.Flags().Set(diagramCMDFlagDiagram, answers.Diagram)
-				_ = diagramCmd.Flags().Set(diagramCMDFlagConfig, answers.Config)
-				_ = diagramCmd.Flags().Set(diagramCMDFlagOutput, answers.Output)
+				_ = diagramCmd.Flags().Set(flagDiagram, answers.Diagram)
+				_ = diagramCmd.Flags().Set(flagConfig, answers.Config)
+				_ = diagramCmd.Flags().Set(flagOutput, answers.Output)
 				diagramCmd.Run(diagramCmd, []string{})
 			case optionGuideInitialStructure:
 				answers, err := guides.GuideStructure(workdir, fileMap)
@@ -109,8 +115,8 @@ var rootCmd = &cobra.Command{
 					printErrorAndExit(err)
 				}
 
-				_ = structureCmd.Flags().Set(structureCMDFlagConfig, answers.Config)
-				_ = structureCmd.Flags().Set(structureCMDFlagOutput, answers.Output)
+				_ = structureCmd.Flags().Set(flagConfig, answers.Config)
+				_ = structureCmd.Flags().Set(flagOutput, answers.Output)
 				structureCmd.Run(structureCmd, []string{})
 			case optionGuideCode:
 				answers, err := guides.GuideCode(workdir, fileMap)
@@ -121,32 +127,32 @@ var rootCmd = &cobra.Command{
 				stackOutput := fmt.Sprintf("%s/%s", answers.Output, answers.StackName)
 
 				fmt.Println("→ Generating API Gateway code...")
-				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagConfig, answers.Config)
-				_ = apigatewayCmd.Flags().Set(apigatewayCMDFlagOutput, answers.Output)
+				_ = apigatewayCmd.Flags().Set(flagConfig, answers.Config)
+				_ = apigatewayCmd.Flags().Set(flagOutput, answers.Output)
 				apigatewayCmd.Run(apigatewayCmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating Lambda code...")
-				_ = lambdaCmd.Flags().Set(lambdaCMDFlagConfig, answers.Config)
-				_ = lambdaCmd.Flags().Set(lambdaCMDFlagOutput, stackOutput)
+				_ = lambdaCmd.Flags().Set(flagConfig, answers.Config)
+				_ = lambdaCmd.Flags().Set(flagOutput, stackOutput)
 				lambdaCmd.Run(lambdaCmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating S3 code...")
-				_ = s3Cmd.Flags().Set(s3CMDFlagConfig, answers.Config)
-				_ = s3Cmd.Flags().Set(s3CMDFlagOutput, stackOutput)
+				_ = s3Cmd.Flags().Set(flagConfig, answers.Config)
+				_ = s3Cmd.Flags().Set(flagOutput, stackOutput)
 				s3Cmd.Run(s3Cmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating SNS code...")
-				_ = snsCmd.Flags().Set(snsCMDFlagConfig, answers.Config)
-				_ = snsCmd.Flags().Set(snsCMDFlagOutput, stackOutput)
+				_ = snsCmd.Flags().Set(flagConfig, answers.Config)
+				_ = snsCmd.Flags().Set(flagOutput, stackOutput)
 				snsCmd.Run(snsCmd, []string{})
 				fmt.Println()
 
 				fmt.Println("→ Generating SQS code...")
-				_ = sqsCmd.Flags().Set(sqsCMDFlagConfig, answers.Config)
-				_ = sqsCmd.Flags().Set(sqsCMDFlagOutput, stackOutput)
+				_ = sqsCmd.Flags().Set(flagConfig, answers.Config)
+				_ = sqsCmd.Flags().Set(flagOutput, stackOutput)
 				sqsCmd.Run(sqsCmd, []string{})
 			default:
 				shouldContinue = false
@@ -170,8 +176,9 @@ func Execute() {
 	}
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
-	rootCmd.Flags().StringP(rootCMDFlagWorkdir, "", ".",
+	rootCmd.Flags().StringP(flagWorkdir, "", ".",
 		"Path to the directory where diagrams and configuration files are stored for the project. For example: ./example")
 }
 

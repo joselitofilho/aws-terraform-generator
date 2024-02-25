@@ -17,61 +17,13 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	envars := map[string]map[string]string{}
 	snsMap := map[string]config.SNS{}
 
-	resourcesByTypeMap := map[drawio.ResourceType][]drawio.Resource{}
-	for _, resource := range resources.Resources {
-		resourcesByTypeMap[resource.ReseourceType()] = append(resourcesByTypeMap[resource.ReseourceType()], resource)
-	}
+	buildResourceRelationships(
+		resources, cronsByLambdaID, sqsTriggersByLambdaID, snsMap, apiGatewaysByID, endpointsByAPIGatewayID, envars)
 
-	for _, rel := range resources.Relationships {
-		target := rel.Target
-		source := rel.Source
+	resourcesByTypeMap := buildResourcesByTypeMap(resources)
 
-		switch target.ReseourceType() {
-		case drawio.LambdaType:
-			switch source.ReseourceType() {
-			case drawio.CronType:
-				buildCronToLambda(cronsByLambdaID, source, target)
-			case drawio.SQSType:
-				buildSQSToLambda(sqsTriggersByLambdaID, source, target)
-			case drawio.SNSType:
-				buildSNSToLambda(snsMap, source)
-			}
-		case drawio.APIGatewayType:
-			switch source.ReseourceType() {
-			case drawio.EndpointType:
-				buildEndpointToAPIGateway(apiGatewaysByID, endpointsByAPIGatewayID, source, target)
-			}
-		case drawio.SQSType:
-			switch source.ReseourceType() {
-			case drawio.LambdaType:
-				buildLambdaToSQS(envars, source, target)
-			case drawio.SNSType:
-				buildSNSToSQS(snsMap, source)
-			}
-		case drawio.DatabaseType:
-			switch source.ReseourceType() {
-			case drawio.LambdaType:
-				buildLambdaToDatabase(envars, source)
-			}
-		case drawio.RestfulAPIType:
-			switch source.ReseourceType() {
-			case drawio.LambdaType:
-				buildLambdaToRestfulAPI(envars, source, target)
-			}
-		case drawio.S3Type:
-			switch source.ReseourceType() {
-			case drawio.LambdaType:
-				buildLambdaToS3(envars, source, target)
-			}
-		case drawio.SNSType:
-			switch source.ReseourceType() {
-			case drawio.S3Type:
-				buildS3ToSNS(snsMap, source, target)
-			}
-		}
-	}
-
-	lambdas, apiGatewayLambdas := buildLambdas(resourcesByTypeMap, resources, envars, yamlConfig, cronsByLambdaID, sqsTriggersByLambdaID)
+	lambdas, apiGatewayLambdas := buildLambdas(
+		resourcesByTypeMap, resources, envars, yamlConfig, cronsByLambdaID, sqsTriggersByLambdaID)
 	apiGateways := buildAPIGateways(yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdas)
 	snss := buildSNSs(snsMap)
 	sqss := buildSQSs(resourcesByTypeMap)
@@ -88,15 +40,79 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	}, nil
 }
 
+func buildResourcesByTypeMap(resources *drawio.ResourceCollection) map[drawio.ResourceType][]drawio.Resource {
+	resourcesByTypeMap := map[drawio.ResourceType][]drawio.Resource{}
+
+	for _, resource := range resources.Resources {
+		resourcesByTypeMap[resource.ReseourceType()] = append(resourcesByTypeMap[resource.ReseourceType()], resource)
+	}
+
+	return resourcesByTypeMap
+}
+
+//nolint:gocyclo // Reducing complexity will make it unreadable
+func buildResourceRelationships(
+	resources *drawio.ResourceCollection,
+	cronsByLambdaID map[string]drawio.Resource,
+	sqsTriggersByLambdaID map[string][]drawio.Resource,
+	snsMap map[string]config.SNS,
+	apiGatewaysByID map[string]drawio.Resource,
+	endpointsByAPIGatewayID map[string]drawio.Resource,
+	envars map[string]map[string]string,
+) {
+	for _, rel := range resources.Relationships {
+		target := rel.Target
+		source := rel.Source
+
+		switch target.ReseourceType() {
+		case drawio.LambdaType:
+			switch source.ReseourceType() {
+			case drawio.CronType:
+				buildCronToLambda(cronsByLambdaID, source, target)
+			case drawio.SQSType:
+				buildSQSToLambda(sqsTriggersByLambdaID, source, target)
+			case drawio.SNSType:
+				buildSNSToLambda(snsMap, source)
+			}
+		case drawio.APIGatewayType:
+			if source.ReseourceType() == drawio.EndpointType {
+				buildEndpointToAPIGateway(apiGatewaysByID, endpointsByAPIGatewayID, source, target)
+			}
+		case drawio.SQSType:
+			switch source.ReseourceType() {
+			case drawio.LambdaType:
+				buildLambdaToSQS(envars, source, target)
+			case drawio.SNSType:
+				buildSNSToSQS(snsMap, source)
+			}
+		case drawio.DatabaseType:
+			if source.ReseourceType() == drawio.LambdaType {
+				buildLambdaToDatabase(envars, source)
+			}
+		case drawio.RestfulAPIType:
+			if source.ReseourceType() == drawio.LambdaType {
+				buildLambdaToRestfulAPI(envars, source, target)
+			}
+		case drawio.S3Type:
+			if source.ReseourceType() == drawio.LambdaType {
+				buildLambdaToS3(envars, source, target)
+			}
+		case drawio.SNSType:
+			if source.ReseourceType() == drawio.S3Type {
+				buildS3ToSNS(snsMap, source, target)
+			}
+		}
+	}
+}
+
 func buildLambdas(
 	resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource,
 	resources *drawio.ResourceCollection, envars map[string]map[string]string,
 	yamlConfig *config.Config,
 	cronsByLambdaID map[string]drawio.Resource,
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
-) ([]config.Lambda, map[string][]config.APIGatewayLambda) {
-	lambdas := []config.Lambda{}
-	apiGatewayLambdas := map[string][]config.APIGatewayLambda{}
+) (lambdas []config.Lambda, apiGatewayLambdas map[string][]config.APIGatewayLambda) {
+	apiGatewayLambdas = map[string][]config.APIGatewayLambda{}
 	defaultFiles := []config.File{{Name: "lambda.go"}, {Name: "main.go"}}
 
 	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
@@ -104,8 +120,7 @@ func buildLambdas(
 
 		for _, rel := range resources.Relationships {
 			if rel.Target.ID() == lambda.ID() {
-				switch rel.Source.ReseourceType() {
-				case drawio.APIGatewayType:
+				if rel.Source.ReseourceType() == drawio.APIGatewayType {
 					isAPIGatewayLambda = true
 
 					apiGatewayID := rel.Source.ID()

@@ -1,3 +1,4 @@
+//nolint:dupl // That is a false positive
 package cmd
 
 import (
@@ -6,22 +7,17 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/lambda"
 )
 
-const (
-	lambdaCMDFlagConfig = "config"
-	lambdaCMDFlagOutput = "output"
-)
-
 // lambdaCmd represents the lambda command
 var lambdaCmd = &cobra.Command{
 	Use:   "lambda",
 	Short: "Manage Lambda",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString(lambdaCMDFlagConfig)
+		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString(lambdaCMDFlagOutput)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -33,12 +29,15 @@ var lambdaCmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(lambdaCmd)
 
-	lambdaCmd.Flags().StringP(lambdaCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./lambda.config.yaml")
-	lambdaCmd.Flags().StringP(lambdaCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
+	lambdaCmd.Flags().StringP(flagConfig, "c", "",
+		"Path to the configuration file. For example: ./lambda.config.yaml")
+	lambdaCmd.Flags().StringP(flagOutput, "o", "",
+		"Path to the output folder. For example: ./output")
 
-	lambdaCmd.MarkFlagRequired(lambdaCMDFlagConfig)
-	lambdaCmd.MarkFlagRequired(lambdaCMDFlagOutput)
+	_ = lambdaCmd.MarkFlagRequired(flagConfig)
+	_ = lambdaCmd.MarkFlagRequired(flagOutput)
 }

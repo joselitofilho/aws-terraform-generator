@@ -9,7 +9,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
-func buildCronToLambda(cronsByLambdaID map[string]drawio.Resource, cron drawio.Resource, lambda drawio.Resource) {
+func buildCronToLambda(cronsByLambdaID map[string]drawio.Resource, cron, lambda drawio.Resource) {
 	cronsByLambdaID[lambda.ID()] = cron
 }
 
@@ -24,12 +24,11 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
-func buildLambdaToSQS(envars map[string]map[string]string, lambda drawio.Resource, sqs drawio.Resource,
+func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
 ) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
-	envars[lambda.ID()]["SQS_QUEUE_URL"] =
-		fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqs.Value()))
+	envars[lambda.ID()]["SQS_QUEUE_URL"] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqs.Value()))
 }
 
 func buildLambdaToDatabase(envars map[string]map[string]string, lambda drawio.Resource) {
@@ -40,28 +39,28 @@ func buildLambdaToDatabase(envars map[string]map[string]string, lambda drawio.Re
 	envars[lambda.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
 }
 
-func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda drawio.Resource, restfulAPI drawio.Resource) {
+func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
 	restfulAPIName := strings.ToLower(restfulAPI.Value())
 
-	envars[lambda.ID()][fmt.Sprintf("%s_API_BASE_URL", strcase.ToSNAKE(restfulAPIName))] =
-		fmt.Sprintf("var.%s_api_base_url", strcase.ToSnake(restfulAPIName))
-	envars[lambda.ID()][fmt.Sprintf("%s_HOST", strcase.ToSNAKE(restfulAPIName))] =
-		fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
-	envars[lambda.ID()][fmt.Sprintf("%s_USER", strcase.ToSNAKE(restfulAPIName))] =
-		fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
+	envars[lambda.ID()][fmt.Sprintf("%s_API_BASE_URL",
+		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_api_base_url", strcase.ToSnake(restfulAPIName))
+	envars[lambda.ID()][fmt.Sprintf("%s_HOST",
+		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
+	envars[lambda.ID()][fmt.Sprintf("%s_USER",
+		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
 }
 
-func buildLambdaToS3(envars map[string]map[string]string, lambda drawio.Resource, s3Bucket drawio.Resource) {
+func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawio.Resource) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
 	bucketName := strings.ToLower(s3Bucket.Value())
 
-	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET", strcase.ToSNAKE(bucketName))] =
-		fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
-	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY", strcase.ToSNAKE(bucketName))] =
-		fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(s3Bucket.Value())))
+	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
+		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
+	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
+		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(s3Bucket.Value())))
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns drawio.Resource) {
@@ -86,12 +85,12 @@ func buildSNSToSQS(snsMap map[string]config.SNS, sqs drawio.Resource) {
 	snsMap[sqs.ID()] = snsConfig
 }
 
-func buildSQSToLambda(sqsTriggersByLambdaID map[string][]drawio.Resource, sqs drawio.Resource, lambda drawio.Resource) {
+func buildSQSToLambda(sqsTriggersByLambdaID map[string][]drawio.Resource, sqs, lambda drawio.Resource) {
 	lambdaID := lambda.ID()
 	sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], sqs)
 }
 
-func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket drawio.Resource, sns drawio.Resource) {
+func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
 	snsConfig, ok := snsMap[sns.ID()]
 	if !ok {
 		snsConfig = config.SNS{Name: sns.Value()}

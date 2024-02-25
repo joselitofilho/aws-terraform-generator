@@ -1,3 +1,4 @@
+//nolint:dupl // That is a false positive
 package cmd
 
 import (
@@ -6,22 +7,17 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/structure"
 )
 
-const (
-	structureCMDFlagConfig = "config"
-	structureCMDFlagOutput = "output"
-)
-
 // structureCmd represents the structure command
 var structureCmd = &cobra.Command{
 	Use:   "structure",
 	Short: "Manage Structure",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString(structureCMDFlagConfig)
+		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString(structureCMDFlagOutput)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -33,12 +29,15 @@ var structureCmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(structureCmd)
 
-	structureCmd.Flags().StringP(structureCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./structure.config.yaml")
-	structureCmd.Flags().StringP(structureCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
+	structureCmd.Flags().StringP(flagConfig, "c", "",
+		"Path to the configuration file. For example: ./structure.config.yaml")
+	structureCmd.Flags().StringP(flagOutput, "o", "",
+		"Path to the output folder. For example: ./output")
 
-	structureCmd.MarkFlagRequired(structureCMDFlagConfig)
-	structureCmd.MarkFlagRequired(structureCMDFlagOutput)
+	_ = structureCmd.MarkFlagRequired(flagConfig)
+	_ = structureCmd.MarkFlagRequired(flagOutput)
 }

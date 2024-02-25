@@ -1,13 +1,10 @@
+//nolint:dupl // That is a false positive
 package cmd
 
 import (
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/sns"
 	"github.com/spf13/cobra"
-)
 
-const (
-	snsCMDFlagConfig = "config"
-	snsCMDFlagOutput = "output"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/sns"
 )
 
 // snsCmd represents the sqs command
@@ -15,12 +12,12 @@ var snsCmd = &cobra.Command{
 	Use:   "sns",
 	Short: "Manage SNS",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString(snsCMDFlagConfig)
+		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString(snsCMDFlagOutput)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -32,12 +29,13 @@ var snsCmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(snsCmd)
 
-	snsCmd.Flags().StringP(snsCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./sns.config.yaml")
-	snsCmd.Flags().StringP(snsCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
+	snsCmd.Flags().StringP(flagConfig, "c", "", "Path to the configuration file. For example: ./sns.config.yaml")
+	snsCmd.Flags().StringP(flagOutput, "o", "", "Path to the output folder. For example: ./output")
 
-	snsCmd.MarkFlagRequired(snsCMDFlagConfig)
-	snsCmd.MarkFlagRequired(snsCMDFlagOutput)
+	_ = snsCmd.MarkFlagRequired(flagConfig)
+	_ = snsCmd.MarkFlagRequired(flagOutput)
 }

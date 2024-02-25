@@ -29,7 +29,7 @@ func GoFormat(fileName string) error {
 		return fmt.Errorf("error formatting source code: %w", err)
 	}
 
-	err = os.WriteFile(fileName, formattedContent, 0644)
+	err = os.WriteFile(fileName, formattedContent, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error writing to output file: %w", err)
 	}

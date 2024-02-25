@@ -40,14 +40,14 @@ func Build(data any, templateName, templateContent string) (string, error) {
 	return output.String(), nil
 }
 
-func BuildFile(data any, templateName, templateContent, path string) error {
+func BuildFile(data any, templateName, templateContent, outputPath string) error {
 	tmpl, err := buildAndParseTemplate(templateName, templateContent)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
 	// Execute the template with the data and write the output to a file
-	output, err := os.Create(path)
+	output, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -139,13 +139,13 @@ func buildAndParseTemplate(name, content string) (*template.Template, error) {
 		Funcs(template.FuncMap{
 			"getFileByName":  func(files map[string]File, name string) File { return files[name] },
 			"getFileImports": func(files map[string]File, name string) []string { return files[name].Imports },
-			"ToCamel":        func(s string) string { return strcase.ToCamel(s) },
-			"ToKebab":        func(s string) string { return strcase.ToKebab(s) },
-			"ToLower":        func(s string) string { return strings.ToLower(s) },
-			"ToPascal":       func(s string) string { return strcase.ToPascal(s) },
+			"ToCamel":        strcase.ToCamel,
+			"ToKebab":        strcase.ToKebab,
+			"ToLower":        strings.ToLower,
+			"ToPascal":       strcase.ToPascal,
 			"ToSpace":        func(s string) string { return strings.ReplaceAll(strcase.ToKebab(s), "-", " ") },
-			"ToSnake":        func(s string) string { return strcase.ToSnake(s) },
-			"ToUpper":        func(s string) string { return strings.ToUpper(s) },
+			"ToSnake":        strcase.ToSnake,
+			"ToUpper":        strings.ToUpper,
 		}).
 		Parse(content)
 	if err != nil {
@@ -155,7 +155,7 @@ func buildAndParseTemplate(name, content string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func formatFileBasedOnExt(fileName string, outputFile string) error {
+func formatFileBasedOnExt(fileName, outputFile string) error {
 	var err error
 
 	ext := path.Ext(fileName)

@@ -13,11 +13,11 @@ import (
 type Data struct {
 	Name       string
 	BucketName string
-	Lambdas    []SNSResourceData
-	SQSs       []SNSResourceData
+	Lambdas    []ResourceData
+	SQSs       []ResourceData
 }
 
-type SNSResourceData struct {
+type ResourceData struct {
 	Name         string
 	Events       string
 	FilterPrefix string
@@ -25,16 +25,16 @@ type SNSResourceData struct {
 }
 
 type SNS struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewSNS(config, output string) *SNS {
-	return &SNS{config: config, output: output}
+func NewSNS(configFileName, output string) *SNS {
+	return &SNS{configFileName: configFileName, output: output}
 }
 
 func (s *SNS) Build() error {
-	yamlParser := config.NewYAML(s.config)
+	yamlParser := config.NewYAML(s.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
@@ -65,12 +65,12 @@ func (s *SNS) Build() error {
 			continue
 		}
 
-		lambdaEvents := make([]SNSResourceData, 0, len(conf.Lambdas))
+		lambdaEvents := make([]ResourceData, 0, len(conf.Lambdas))
 
 		for _, lambda := range conf.Lambdas {
-			evt := SNSResourceData{
+			evt := ResourceData{
 				Name:         lambda.Name,
-				Events:       fmt.Sprintf(`"%s"`, strings.Join(lambda.Events, ", ")),
+				Events:       fmt.Sprintf("%q", strings.Join(lambda.Events, ", ")),
 				FilterPrefix: lambda.FilterPrefix,
 				FilterSuffix: lambda.FilterSuffix,
 			}
@@ -79,12 +79,12 @@ func (s *SNS) Build() error {
 
 		data.Lambdas = lambdaEvents
 
-		sqsEvents := make([]SNSResourceData, 0, len(conf.SQSs))
+		sqsEvents := make([]ResourceData, 0, len(conf.SQSs))
 
 		for _, sqs := range conf.SQSs {
-			evt := SNSResourceData{
+			evt := ResourceData{
 				Name:         sqs.Name,
-				Events:       fmt.Sprintf(`"%s"`, strings.Join(sqs.Events, ", ")),
+				Events:       fmt.Sprintf("%q", strings.Join(sqs.Events, ", ")),
 				FilterPrefix: sqs.FilterPrefix,
 				FilterSuffix: sqs.FilterSuffix,
 			}
@@ -104,13 +104,11 @@ func (s *SNS) Build() error {
 	if result != "" {
 		outputFile := fmt.Sprintf("%s/mod/sns.tf", s.output)
 
-		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
-		if err != nil {
+		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.TerraformFormat(outputFile)
-		if err != nil {
+		if err := utils.TerraformFormat(outputFile); err != nil {
 			fmt.Println(err)
 		}
 

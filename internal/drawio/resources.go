@@ -47,7 +47,7 @@ func (rc *ResourceCollection) AddResource(resource Resource) {
 }
 
 // AddRelationship adds a relationship to the collection
-func (rc *ResourceCollection) AddRelationship(source Resource, target Resource) {
+func (rc *ResourceCollection) AddRelationship(source, target Resource) {
 	relationship := Relationship{Source: source, Target: target}
 	rc.Relationships = append(rc.Relationships, relationship)
 }
@@ -56,8 +56,10 @@ func (rc *ResourceCollection) AddRelationship(source Resource, target Resource) 
 func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 	resources := NewResourceCollection()
 
-	for _, cell := range mxFile.Diagram.MxGraphModel.Root.MxCells {
-		resource := createResource(cell.Id, cell.Value, cell.Style)
+	for i := range mxFile.Diagram.MxGraphModel.Root.MxCells {
+		cell := mxFile.Diagram.MxGraphModel.Root.MxCells[i]
+
+		resource := createResource(cell.ID, cell.Value, cell.Style)
 		if resource != nil {
 			resources.AddResource(resource)
 		}
@@ -68,7 +70,8 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 		resourcesMap[resource.ID()] = resource
 	}
 
-	for _, cell := range mxFile.Diagram.MxGraphModel.Root.MxCells {
+	for i := range mxFile.Diagram.MxGraphModel.Root.MxCells {
+		cell := mxFile.Diagram.MxGraphModel.Root.MxCells[i]
 		if cell.Source != "" && cell.Target != "" {
 			source := resourcesMap[cell.Source]
 			target := resourcesMap[cell.Target]
@@ -83,8 +86,8 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 
 // createResource creates a resource based on cell data
 func createResource(id, value, style string) Resource {
-	var reDatabase = regexp.MustCompile(
-		`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|mxgraph.aws4.documentdb_with_mongodb_compatibility`)
+	reDatabase := regexp.MustCompile(`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|` +
+		`mxgraph.aws4.documentdb_with_mongodb_compatibility`)
 
 	switch {
 	case strings.Contains(style, "mxgraph.aws3.lambda"):

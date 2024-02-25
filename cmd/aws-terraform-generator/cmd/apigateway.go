@@ -1,3 +1,4 @@
+//nolint:dupl // That is a false positive
 package cmd
 
 import (
@@ -6,22 +7,17 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/apigateway"
 )
 
-const (
-	apigatewayCMDFlagConfig = "config"
-	apigatewayCMDFlagOutput = "output"
-)
-
 // apigatewayCmd represents the apigateway command
 var apigatewayCmd = &cobra.Command{
 	Use:   "apigateway",
 	Short: "Manage APIGateway",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString(apigatewayCMDFlagConfig)
+		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString(apigatewayCMDFlagOutput)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -33,12 +29,15 @@ var apigatewayCmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(apigatewayCmd)
 
-	apigatewayCmd.Flags().StringP(apigatewayCMDFlagConfig, "c", "", "Path to the configuration file. For example: ./apigateway.config.yaml")
-	apigatewayCmd.Flags().StringP(apigatewayCMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
+	apigatewayCmd.Flags().StringP(flagConfig, "c", "",
+		"Path to the configuration file. For example: ./apigateway.config.yaml")
+	apigatewayCmd.Flags().StringP(flagOutput, "o", "",
+		"Path to the output folder. For example: ./output")
 
-	apigatewayCmd.MarkFlagRequired(apigatewayCMDFlagConfig)
-	apigatewayCmd.MarkFlagRequired(apigatewayCMDFlagOutput)
+	_ = apigatewayCmd.MarkFlagRequired(flagConfig)
+	_ = apigatewayCmd.MarkFlagRequired(flagOutput)
 }

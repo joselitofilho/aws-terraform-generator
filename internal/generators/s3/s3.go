@@ -15,16 +15,16 @@ type Data struct {
 }
 
 type S3 struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewS3(config, output string) *S3 {
-	return &S3{config: config, output: output}
+func NewS3(configFileName, output string) *S3 {
+	return &S3{configFileName: configFileName, output: output}
 }
 
 func (s *S3) Build() error {
-	yamlParser := config.NewYAML(s.config)
+	yamlParser := config.NewYAML(s.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
@@ -66,13 +66,11 @@ func (s *S3) Build() error {
 	if result != "" {
 		outputFile := fmt.Sprintf("%s/mod/s3.tf", s.output)
 
-		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
-		if err != nil {
+		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.TerraformFormat(outputFile)
-		if err != nil {
+		if err := utils.TerraformFormat(outputFile); err != nil {
 			fmt.Println(err)
 		}
 

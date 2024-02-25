@@ -12,16 +12,16 @@ import (
 )
 
 type Lambda struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewLambda(config, output string) *Lambda {
-	return &Lambda{config: config, output: output}
+func NewLambda(configFileName, output string) *Lambda {
+	return &Lambda{configFileName: configFileName, output: output}
 }
 
 func (l *Lambda) Build() error {
-	yamlParser := config.NewYAML(l.config)
+	yamlParser := config.NewYAML(l.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {

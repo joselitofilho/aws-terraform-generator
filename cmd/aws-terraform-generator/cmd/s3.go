@@ -1,3 +1,4 @@
+//nolint:dupl // That is a false positive
 package cmd
 
 import (
@@ -6,22 +7,17 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/s3"
 )
 
-const (
-	s3CMDFlagConfig = "config"
-	s3CMDFlagOutput = "output"
-)
-
 // s3Cmd represents the sqs command
 var s3Cmd = &cobra.Command{
 	Use:   "s3",
 	Short: "Manage S3",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := cmd.Flags().GetString(s3CMDFlagConfig)
+		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString(s3CMDFlagOutput)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
 			printErrorAndExit(err)
 		}
@@ -33,12 +29,13 @@ var s3Cmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(s3Cmd)
 
-	s3Cmd.Flags().StringP(s3CMDFlagConfig, "c", "", "Path to the configuration file. For example: ./s3.config.yaml")
-	s3Cmd.Flags().StringP(s3CMDFlagOutput, "o", "", "Path to the output folder. For example: ./output")
+	s3Cmd.Flags().StringP(flagConfig, "c", "", "Path to the configuration file. For example: ./s3.config.yaml")
+	s3Cmd.Flags().StringP(flagOutput, "o", "", "Path to the output folder. For example: ./output")
 
-	s3Cmd.MarkFlagRequired(s3CMDFlagConfig)
-	s3Cmd.MarkFlagRequired(s3CMDFlagOutput)
+	_ = s3Cmd.MarkFlagRequired(flagConfig)
+	_ = s3Cmd.MarkFlagRequired(flagOutput)
 }

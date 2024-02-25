@@ -33,7 +33,7 @@ type Root struct {
 // MxCell represents a cell element within the draw.io XML file
 type MxCell struct {
 	XMLName  xml.Name `xml:"mxCell"`
-	Id       string   `xml:"id,attr"`
+	ID       string   `xml:"id,attr"`
 	Value    string   `xml:"value,attr"`
 	Style    string   `xml:"style,attr"`
 	Parent   string   `xml:"parent,attr"`

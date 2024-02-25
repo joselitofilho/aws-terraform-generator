@@ -15,16 +15,16 @@ type Data struct {
 }
 
 type SQS struct {
-	config string
-	output string
+	configFileName string
+	output         string
 }
 
-func NewSQS(config, output string) *SQS {
-	return &SQS{config: config, output: output}
+func NewSQS(configFileName, output string) *SQS {
+	return &SQS{configFileName: configFileName, output: output}
 }
 
 func (s *SQS) Build() error {
-	yamlParser := config.NewYAML(s.config)
+	yamlParser := config.NewYAML(s.configFileName)
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
@@ -66,13 +66,11 @@ func (s *SQS) Build() error {
 	if result != "" {
 		outputFile := fmt.Sprintf("%s/mod/sqs.tf", s.output)
 
-		err = generators.BuildFile(Data{}, tmplName, result, outputFile)
-		if err != nil {
+		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		err = utils.TerraformFormat(outputFile)
-		if err != nil {
+		if err := utils.TerraformFormat(outputFile); err != nil {
 			fmt.Println(err)
 		}
 
