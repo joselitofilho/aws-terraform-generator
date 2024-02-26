@@ -1,7 +1,6 @@
 package drawio
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -109,9 +108,9 @@ func createResource(id, value, style string) Resource {
 	case strings.Contains(style, "mxgraph.veeam2.restful_api"):
 		return &GenericResource{id: id, value: value, resourceType: RestfulAPIType}
 	default:
-		if strings.Contains(style, "shape") {
-			fmt.Printf("%+v\n", []string{id, value, style})
-		}
+		// if strings.Contains(style, "shape") {
+		// fmt.Printf("%+v\n", []string{id, value, style})
+		// }
 		return nil
 	}
 }

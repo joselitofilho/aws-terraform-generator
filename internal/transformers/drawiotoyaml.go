@@ -87,7 +87,7 @@ func buildResourceRelationships(
 			}
 		case drawio.DatabaseType:
 			if source.ReseourceType() == drawio.LambdaType {
-				buildLambdaToDatabase(envars, source)
+				buildLambdaToDatabase(envars, source, target)
 			}
 		case drawio.RestfulAPIType:
 			if source.ReseourceType() == drawio.LambdaType {

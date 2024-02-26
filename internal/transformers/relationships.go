@@ -24,12 +24,17 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
-func buildLambdaToDatabase(envars map[string]map[string]string, lambda drawio.Resource) {
+func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database drawio.Resource) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
-	envars[lambda.ID()]["DOCDB_HOST"] = "var.docdb_host"
-	envars[lambda.ID()]["DOCDB_USER"] = "var.docdb_user"
-	envars[lambda.ID()]["DOCDB_PASSWORD_SECRET"] = "var.docdb_password_secret"
+	dbName := strings.ToLower(database.Value())
+
+	envars[lambda.ID()][fmt.Sprintf("%sDB_HOST",
+		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_host", strcase.ToSnake(dbName))
+	envars[lambda.ID()][fmt.Sprintf("%sDB_USER",
+		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_user", strcase.ToSnake(dbName))
+	envars[lambda.ID()][fmt.Sprintf("%sDB_PASSWORD_SECRET",
+		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_password_secret", strcase.ToSnake(dbName))
 }
 
 func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
@@ -60,10 +65,10 @@ func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Re
 ) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
-	sqsName := strcase.ToSnake(sqs.Value())
+	sqsName := strings.ToLower(sqs.Value())
 
 	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
-		strings.ToUpper(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", sqsName)
+		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqsName))
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns drawio.Resource) {
