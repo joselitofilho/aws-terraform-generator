@@ -16,7 +16,7 @@ import (
 var diagramCmd = &cobra.Command{
 	Use:   "diagram",
 	Short: "Manage Diagram",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		diagram, err := cmd.Flags().GetString(flagDiagram)
 		if err != nil {
 			printErrorAndExit(err)

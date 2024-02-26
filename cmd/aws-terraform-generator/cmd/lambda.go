@@ -11,7 +11,7 @@ import (
 var lambdaCmd = &cobra.Command{
 	Use:   "lambda",
 	Short: "Manage Lambda",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)

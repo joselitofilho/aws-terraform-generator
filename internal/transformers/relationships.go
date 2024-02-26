@@ -24,13 +24,6 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
-func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
-) {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
-
-	envars[lambda.ID()]["SQS_QUEUE_URL"] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqs.Value()))
-}
-
 func buildLambdaToDatabase(envars map[string]map[string]string, lambda drawio.Resource) {
 	initEnvarsIfNecessaryByKey(envars, lambda.ID())
 
@@ -61,6 +54,16 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("%q_files", strings.ToLower(strcase.ToSnake(lambda.Value())))
+}
+
+func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
+) {
+	initEnvarsIfNecessaryByKey(envars, lambda.ID())
+
+	sqsName := strcase.ToSnake(sqs.Value())
+
+	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
+		strings.ToUpper(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", sqsName)
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns drawio.Resource) {

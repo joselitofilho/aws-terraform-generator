@@ -11,7 +11,7 @@ import (
 var structureCmd = &cobra.Command{
 	Use:   "structure",
 	Short: "Manage Structure",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)

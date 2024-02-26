@@ -38,7 +38,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "aws-terraform-generator",
 	Short: "AWS terraform generator",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		workdir, err := cmd.Flags().GetString(flagWorkdir)
 		if err != nil {
 			printErrorAndExit(err)

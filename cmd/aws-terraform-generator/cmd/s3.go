@@ -11,7 +11,7 @@ import (
 var s3Cmd = &cobra.Command{
 	Use:   "s3",
 	Short: "Manage S3",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		config, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
 			printErrorAndExit(err)
