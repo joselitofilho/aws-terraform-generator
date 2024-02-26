@@ -221,7 +221,7 @@ func buildBuckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) 
 	buckets := []config.S3{}
 
 	for _, bucket := range resourcesByTypeMap[drawio.S3Type] {
-		buckets = append(buckets, config.S3{Name: bucket.Value()})
+		buckets = append(buckets, config.S3{Name: bucket.Value(), ExpirationDays: 90})
 	}
 
 	return buckets

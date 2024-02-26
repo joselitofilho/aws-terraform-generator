@@ -60,7 +60,7 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
-		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("%s_files", strings.ToLower(strcase.ToSnake(s3Bucket.Value())))
+		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("%q_files", strings.ToLower(strcase.ToSnake(lambda.Value())))
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns drawio.Resource) {
