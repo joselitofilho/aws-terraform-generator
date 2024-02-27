@@ -81,7 +81,7 @@ func buildResourceRelationships(
 			case drawio.SQSType:
 				buildSQSToLambda(sqsTriggersByLambdaID, source, target)
 			case drawio.SNSType:
-				buildSNSToLambda(snsMap, source)
+				buildSNSToLambda(snsMap, source, target)
 			}
 		case drawio.APIGatewayType:
 			if source.ReseourceType() == drawio.EndpointType {
@@ -92,7 +92,7 @@ func buildResourceRelationships(
 			case drawio.LambdaType:
 				buildLambdaToSQS(envars, source, target)
 			case drawio.SNSType:
-				buildSNSToSQS(snsMap, source)
+				buildSNSToSQS(snsMap, source, target)
 			}
 		case drawio.DatabaseType:
 			if source.ReseourceType() == drawio.LambdaType {

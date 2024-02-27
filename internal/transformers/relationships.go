@@ -9,6 +9,15 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
+func buildLambdaVars(envars map[string]map[string]string, lambda, target drawio.Resource, variables []string) {
+	targetName := initLambdaEnvarsAndGetTargetName(envars, lambda, target)
+
+	for _, v := range variables {
+		envars[lambda.ID()][fmt.Sprintf("%s%s",
+			strcase.ToSNAKE(targetName), v)] = "var." + strcase.ToSnake(fmt.Sprintf("%s%s", targetName, v))
+	}
+}
+
 func buildCronToLambda(cronsByLambdaID map[string]drawio.Resource, cron, lambda drawio.Resource) {
 	cronsByLambdaID[lambda.ID()] = cron
 }
@@ -22,15 +31,6 @@ func buildEndpointToAPIGateway(
 	apiGatewayID := apiGateways.ID()
 	apiGatewaysByID[apiGatewayID] = apiGateways
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
-}
-
-func buildLambdaVars(envars map[string]map[string]string, lambda, target drawio.Resource, variables []string) {
-	targetName := initLambdaEnvarsAndGetTargetName(envars, lambda, target)
-
-	for _, v := range variables {
-		envars[lambda.ID()][fmt.Sprintf("%s%s",
-			strcase.ToSNAKE(targetName), v)] = strcase.ToSnake(fmt.Sprintf("var.%s%s", targetName, v))
-	}
 }
 
 func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database drawio.Resource) {
@@ -47,7 +47,7 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
-		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("%q_files", strings.ToLower(strcase.ToSnake(lambda.Value())))
+		strcase.ToSNAKE(bucketName))] = fmt.Sprintf(`"%s_files"`, strings.ToLower(strcase.ToSnake(lambda.Value())))
 }
 
 func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
@@ -58,26 +58,32 @@ func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Re
 		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqsName))
 }
 
-func buildSNSToLambda(snsMap map[string]config.SNS, sns drawio.Resource) {
+func buildSNSToLambda(snsMap map[string]config.SNS, sns, lambda drawio.Resource) {
 	snsConfig, ok := snsMap[sns.ID()]
 	if !ok {
 		snsConfig = config.SNS{Name: sns.Value()}
 	}
 
-	snsConfig.Lambdas = append(snsConfig.Lambdas, config.SNSResource{Name: sns.Value()})
+	snsConfig.Lambdas = append(snsConfig.Lambdas, config.SNSResource{
+		Name:   lambda.Value(),
+		Events: []string{"s3:ObjectCreated:*"},
+	})
 
 	snsMap[sns.ID()] = snsConfig
 }
 
-func buildSNSToSQS(snsMap map[string]config.SNS, sqs drawio.Resource) {
-	snsConfig, ok := snsMap[sqs.ID()]
+func buildSNSToSQS(snsMap map[string]config.SNS, sns, sqs drawio.Resource) {
+	snsConfig, ok := snsMap[sns.ID()]
 	if !ok {
-		snsConfig = config.SNS{Name: sqs.Value()}
+		snsConfig = config.SNS{Name: sns.Value()}
 	}
 
-	snsConfig.SQSs = append(snsConfig.SQSs, config.SNSResource{Name: sqs.Value()})
+	snsConfig.SQSs = append(snsConfig.SQSs, config.SNSResource{
+		Name:   sqs.Value(),
+		Events: []string{"s3:ObjectCreated:*"},
+	})
 
-	snsMap[sqs.ID()] = snsConfig
+	snsMap[sns.ID()] = snsConfig
 }
 
 func buildSQSToLambda(sqsTriggersByLambdaID map[string][]drawio.Resource, sqs, lambda drawio.Resource) {
