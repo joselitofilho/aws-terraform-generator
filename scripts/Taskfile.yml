@@ -32,8 +32,7 @@ tasks:
   coverage:
     desc: "Run code coverage"
     cmds:
-      - cd {{.USER_WORKING_DIR}}
-      - go test {{.GOTEST_ARGS}} -coverpkg=../... -coverprofile=coverage.out ../...
+      - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile=coverage.out -cover ../...
       - cat coverage.out | grep -v "mock" > coverage.nomocks.out
       - go tool cover -func coverage.nomocks.out > coverage.out
   
