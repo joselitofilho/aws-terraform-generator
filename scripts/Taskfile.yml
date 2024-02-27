@@ -32,6 +32,13 @@ tasks:
   coverage:
     desc: "Run code coverage"
     cmds:
-      - go test {{.GOTEST_ARGS}} -coverprofile=coverage.out -cover {{.USER_WORKING_DIR}}/...
+      - cd {{.USER_WORKING_DIR}}
+      - go test {{.GOTEST_ARGS}} -coverpkg=../... -coverprofile=coverage.out ../...
       - cat coverage.out | grep -v "mock" > coverage.nomocks.out
-      - go tool cover -func coverage.nomocks.out
+      - go tool cover -func coverage.nomocks.out > coverage.out
+  
+  update-coverage:
+    desc: "Update coverage badge in the README"
+    cmds:
+      # - task: coverage
+      - ./update_coverage.sh ./coverage.out {{.USER_WORKING_DIR}}/README.md
