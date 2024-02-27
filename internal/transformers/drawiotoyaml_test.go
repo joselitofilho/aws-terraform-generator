@@ -498,7 +498,7 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 		resources  *drawio.ResourceCollection
 	}
 
-	restfullAPI := drawio.NewGenericResource("id1", "my-api", drawio.RestfulAPIType)
+	restfulAPI := drawio.NewGenericResource("id1", "my-api", drawio.RestfulAPIType)
 	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
 
 	tests := []struct {
@@ -511,7 +511,7 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 			name: "only restful API",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{restfullAPI}},
+				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{restfulAPI}},
 			},
 			want: &config.Config{RestfulAPIs: []config.RestfulAPI{{Name: "my-api"}}},
 		},
@@ -520,8 +520,8 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 			args: args{
 				yamlConfig: diagramConfig,
 				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{restfullAPI, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: restfullAPI}},
+					Resources:     []drawio.Resource{restfulAPI, lambda},
+					Relationships: []drawio.Relationship{{Source: lambda, Target: restfulAPI}},
 				},
 			},
 			want: &config.Config{

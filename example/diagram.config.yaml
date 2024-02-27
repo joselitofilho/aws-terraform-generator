@@ -1,4 +1,6 @@
 diagram:
   stack_name: mystack
-  modules:
-    lambda: git@github.com:username/terraform-aws-lambda?ref=reference
+  lambda:
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
+    role_name: execute_lambda
+    runtime: go1.x

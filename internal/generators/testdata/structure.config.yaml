@@ -1,0 +1,30 @@
+structure:
+  stacks:
+    - name: teststack
+      folders:
+        - name: dev
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: uat
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: prd
+          files:
+            - name: main.tf
+            - name: terragrunt.hcl
+            - name: vars.tf
+        - name: mod
+          files:
+            - name: main.tf
+              tmpl: |-
+                locals { stack_name = "{{$.StackName}}-${var.environment}" }
+            - name: vars.tf
+        - name: lambda
+  
+  default_templates:
+    - main.tf: |-
+        # Terraform backend and required providers configuration

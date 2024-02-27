@@ -4,10 +4,12 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 )
 
 type APIGateway struct {
@@ -24,36 +26,29 @@ func (a *APIGateway) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	defaultTmplsMap := map[string]string{
-		"apig.tf":   string(apigTFTmpl),
-		"lambda.tf": string(lambdaTFTmpl),
+		return fmt.Errorf("%w: %s", generatorerrs.ErrYAMLParse, err)
 	}
 
 	for i := range yamlConfig.APIGateways {
 		apiConf := yamlConfig.APIGateways[i]
 
-		output := fmt.Sprintf("%s/%s/mod", a.output, apiConf.StackName)
+		output := path.Join(a.output, apiConf.StackName, "mod")
 		_ = os.MkdirAll(output, os.ModePerm)
 
 		if apiConf.APIG {
-			fileName := "apig.tf"
-			tmpl := string(apigTFTmpl)
-			outputFile := fmt.Sprintf("%s/%s", output, fileName)
+			outputFile := path.Join(output, filenameTfAPIG)
 
 			data := Data{
 				StackName: apiConf.StackName,
 				APIDomain: apiConf.APIDomain,
 			}
 
-			err = generators.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, data)
+			err = generators.GenerateFile(defaultTfTemplateFiles, filenameTfAPIG, "", outputFile, data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("Terraform '%s' has been generated successfully\n", fileName)
+			fmt.Printf("Terraform '%s' has been generated successfully\n", filenameTfAPIG)
 		}
 
 		for j := range apiConf.Lambdas {
@@ -90,20 +85,19 @@ func (a *APIGateway) Build() error {
 			}
 
 			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
-			tmpl := string(lambdaTFTmpl)
-			outputFile := fmt.Sprintf("%s/%s", output, fileName)
+			outputFile := path.Join(output, fileName)
 
-			err = generators.GenerateFile(defaultTmplsMap, fileName, tmpl, outputFile, lambdaData)
+			err = generators.GenerateFile(defaultTfTemplateFiles, fileName, "", outputFile, lambdaData)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
 			fmt.Printf("Terraform '%s' has been generated successfully\n", fileName)
 
-			output := fmt.Sprintf("%s/%s/lambda/%s", a.output, apiConf.StackName, lambdaConf.Name)
+			output := path.Join(a.output, apiConf.StackName, "lambda", lambdaConf.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
-			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, output, lambdaData)
+			err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, output)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}

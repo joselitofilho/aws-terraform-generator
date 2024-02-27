@@ -3,10 +3,12 @@ package s3
 import (
 	_ "embed"
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 )
 
 type Data struct {
@@ -28,8 +30,11 @@ func (s *S3) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
 	}
+
+	modPath := path.Join(s.output, "mod")
+	_ = os.MkdirAll(modPath, os.ModePerm)
 
 	tmplName := "s3-tf-template"
 	result := ""
@@ -45,7 +50,7 @@ func (s *S3) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, fmt.Sprintf("%s/mod", s.output), data)
+			err = generators.GenerateFiles(defaultTfTemplateFiles, filesConf, data, modPath)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -64,14 +69,11 @@ func (s *S3) Build() error {
 	}
 
 	if result != "" {
-		outputFile := fmt.Sprintf("%s/mod/s3.tf", s.output)
+		outputFile := path.Join(modPath, "s3.tf")
 
-		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
+		err = generators.GenerateFile(defaultTfTemplateFiles, tmplName, result, outputFile, Data{})
+		if err != nil {
 			return fmt.Errorf("%w", err)
-		}
-
-		if err := utils.TerraformFormat(outputFile); err != nil {
-			fmt.Println(err)
 		}
 
 		fmt.Println("S3 has been generated successfully")

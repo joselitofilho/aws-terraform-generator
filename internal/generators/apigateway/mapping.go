@@ -2,8 +2,13 @@ package apigateway
 
 import (
 	_ "embed"
+)
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
+const (
+	filenameTfAPIG   = "apig.tf"
+	filenameTfLambda = "lambda.tf"
+	filenameGoLambda = "lambda.go"
+	filenameGoMain   = "main.go"
 )
 
 var (
@@ -20,9 +25,12 @@ var (
 	mainGoTmpl []byte
 )
 
-var defaultTemplatesMap = map[string]generators.TemplateMapValue{
-	"apig.tf":   {TemplateName: "apig-tf-template", Template: apigTFTmpl},
-	"lambda.go": {TemplateName: "lambda-go-template", Template: lambdaGoTmpl},
-	"lambda.tf": {TemplateName: "lambda-tf-template", Template: lambdaTFTmpl},
-	"main.go":   {TemplateName: "main-go-template", Template: mainGoTmpl},
+var defaultTfTemplateFiles = map[string]string{
+	filenameTfAPIG:   string(apigTFTmpl),
+	filenameTfLambda: string(lambdaTFTmpl),
+}
+
+var defaultGoTemplateFiles = map[string]string{
+	filenameGoLambda: string(lambdaGoTmpl),
+	filenameGoMain:   string(mainGoTmpl),
 }

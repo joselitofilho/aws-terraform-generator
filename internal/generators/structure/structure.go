@@ -4,9 +4,11 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 )
 
 type Structure struct {
@@ -23,12 +25,14 @@ func (s *Structure) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
 	}
 
 	defaultTemplatesMap := map[string]string{}
 	for i := range yamlConfig.Structure.DefaultTemplates {
-		defaultTemplatesMap = yamlConfig.Structure.DefaultTemplates[i]
+		for k, v := range yamlConfig.Structure.DefaultTemplates[i] {
+			defaultTemplatesMap[k] = v
+		}
 	}
 
 	for i := range yamlConfig.Structure.Stacks {
@@ -39,7 +43,7 @@ func (s *Structure) Build() error {
 		}
 
 		for _, folder := range conf.Folders {
-			output := fmt.Sprintf("%s/%s/%s", s.output, conf.Name, folder.Name)
+			output := path.Join(s.output, conf.Name, folder.Name)
 			_ = os.MkdirAll(output, os.ModePerm)
 
 			for _, file := range folder.Files {

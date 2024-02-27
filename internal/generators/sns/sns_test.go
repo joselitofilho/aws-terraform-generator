@@ -2,9 +2,18 @@ package sns
 
 import (
 	_ "embed"
+	"os"
+	"path"
 	"testing"
 
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	testdataFolder = "../testdata"
+	testOutput     = "./testoutput"
 )
 
 func TestSNS_Build(t *testing.T) {
@@ -13,21 +22,55 @@ func TestSNS_Build(t *testing.T) {
 		output         string
 	}
 
+	happypathPath := path.Join(testOutput, "happypath")
+
 	tests := []struct {
-		name      string
-		fields    fields
-		targetErr error
+		name             string
+		fields           fields
+		extraValidations func(testing.TB, error)
+		targetErr        error
 	}{
-		// TODO: Add test cases.
+		{
+			name: "happy path",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sns.config.yaml"),
+				output:         happypathPath,
+			},
+			extraValidations: func(tb testing.TB, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(happypathPath, "mod")
+				require.FileExists(tb, path.Join(modPath, "example-sns.tf"))
+				require.FileExists(tb, path.Join(modPath, "sns.tf"))
+			},
+		},
+		{
+			name: "when yaml parser fails should return an error",
+			fields: fields{
+				configFileName: "",
+				output:         "",
+			},
+			targetErr: generatorserrs.ErrYAMLParse,
+		},
 	}
 
 	for i := range tests {
 		tc := tests[i]
 
+		defer func() {
+			_ = os.RemoveAll(testOutput)
+		}()
+
 		t.Run(tc.name, func(t *testing.T) {
 			err := NewSNS(tc.fields.configFileName, tc.fields.output).Build()
 
 			require.ErrorIs(t, err, tc.targetErr)
+
+			if tc.extraValidations != nil {
+				tc.extraValidations(t, err)
+			}
 		})
 	}
 }

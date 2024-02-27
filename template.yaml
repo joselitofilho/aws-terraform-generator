@@ -193,12 +193,23 @@ apigateways:
         description: Trigger the example API receiver via API Gateway
         verb: POST
         path: /v1/examples
+        envars:
+          - MYVAR: MYVAR_VALUE
         # File configuration for the lambda associated with the API Gateway
         files:
           - name: lambda.go
             # Optional. We have the option to specify the imports to include in the resulting GoLang file.
             imports:
-              - "github.com/logging"
+              - context
+              - github.com/logging
+            # Optional. We can specify the template for the output GoLang file.
+            tmpl: |-
+              package main
+
+              import (
+                {{ range getFileImports $.Files "lambda.go" }}"{{ . }}"
+                {{end}}
+              )
           - name: main.go
             # Optional. We can specify the template for the output GoLang file.
             tmpl: |- 

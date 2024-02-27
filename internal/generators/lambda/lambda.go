@@ -4,11 +4,12 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 )
 
 type Lambda struct {
@@ -25,7 +26,7 @@ func (l *Lambda) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
 	}
 
 	for i := range yamlConfig.Lambdas {
@@ -75,22 +76,14 @@ func (l *Lambda) Build() error {
 			Files:       filesConf,
 		}
 
-		output := fmt.Sprintf("%s/mod", l.output)
+		output := path.Join(l.output, "mod")
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		outputFile := fmt.Sprintf("%s/%s.tf", output, lambdaConf.Name)
+		outputFile := path.Join(output, lambdaConf.Name+".tf")
 
-		tmplName := "lambda-tf-template"
-		tmpl := string(lambdaTFTmpl)
-
-		err = generators.BuildFile(data, tmplName, tmpl, outputFile)
+		err = generators.GenerateFile(defaultTfTemplatesMap, filenameTfLambda, "", outputFile, data)
 		if err != nil {
 			return fmt.Errorf("%w", err)
-		}
-
-		err = utils.TerraformFormat(output)
-		if err != nil {
-			fmt.Printf("%s: %s\n", lambdaConf.Name, err)
 		}
 
 		fmt.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
@@ -98,7 +91,7 @@ func (l *Lambda) Build() error {
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		err = generators.GenerateFiles(defaultTemplatesMap, filesConf, output, data)
+		err = generators.GenerateFiles(defaultGoTemplatesMap, filesConf, data, output)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

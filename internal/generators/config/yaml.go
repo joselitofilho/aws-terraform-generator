@@ -7,6 +7,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	osReadFile    = os.ReadFile
+	yamlUnmarshal = yaml.Unmarshal
+)
+
 type YAML struct {
 	fileName string
 }
@@ -16,13 +21,13 @@ func NewYAML(fileName string) *YAML {
 }
 
 func (y *YAML) Parse() (*Config, error) {
-	yamlFile, err := os.ReadFile(y.fileName)
+	yamlFile, err := osReadFile(y.fileName)
 	if err != nil {
 		return nil, fmt.Errorf("read YAML file error: %w", err)
 	}
 
 	var config Config
-	if err := yaml.Unmarshal(yamlFile, &config); err != nil {
+	if err := yamlUnmarshal(yamlFile, &config); err != nil {
 		return nil, fmt.Errorf("unmarshal YAML file error: %w", err)
 	}
 

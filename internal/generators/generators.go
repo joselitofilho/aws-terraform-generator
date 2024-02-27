@@ -18,11 +18,6 @@ import (
 
 var ErrUnsupportedFileType = errors.New("unsupported file type")
 
-type TemplateMapValue struct {
-	TemplateName string
-	Template     []byte
-}
-
 func Build(data any, templateName, templateContent string) (string, error) {
 	tmpl, err := buildAndParseTemplate(templateName, templateContent)
 	if err != nil {
@@ -72,16 +67,14 @@ func CreateFilesMap(files []config.File) map[string]File {
 	return filesConf
 }
 
-func GenerateFile(
-	defaultTemplatesMap map[string]string, fileName, fileTmpl, outputFile string, data any,
-) error {
+func GenerateFile(templatesMap map[string]string, fileName, fileTmpl, outputFile string, data any) error {
 	var (
 		tmpl     string
 		tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", "-"))
 	)
 
 	if fileTmpl == "" {
-		tmpl = defaultTemplatesMap[fileName]
+		tmpl = templatesMap[fileName]
 	} else {
 		tmpl = fileTmpl
 	}
@@ -100,36 +93,38 @@ func GenerateFile(
 	return err
 }
 
-func GenerateFiles(templatesMap map[string]TemplateMapValue, filesMap map[string]File, output string, data any) error {
-	for fileName, file := range filesMap {
-		var (
-			tmplName string
-			tmpl     string
-		)
+func GenerateFiles(templatesMap map[string]string, filesMap map[string]File, data any, output string) error {
+	mergedTemplates := map[string]string{}
 
-		if file.Tmpl == "" {
-			if tmplMaplValue, hasValue := templatesMap[fileName]; hasValue {
-				tmplName = tmplMaplValue.TemplateName
-				tmpl = string(tmplMaplValue.Template)
-			}
-		} else {
-			tmplName = fmt.Sprintf("%s-template", strings.ReplaceAll(fileName, ".", "-"))
-			tmpl = file.Tmpl
-		}
+	for filename, tmpl := range templatesMap {
+		mergedTemplates[filename] = tmpl
+	}
 
-		outputFile := fmt.Sprintf("%s/%s", output, fileName)
+	for filename, file := range filesMap {
+		mergedTemplates[filename] = file.Tmpl
+	}
 
-		err := BuildFile(data, tmplName, tmpl, outputFile)
+	for filename, fileTmpl := range mergedTemplates {
+		tmplName := fmt.Sprintf("%s-template", strings.ReplaceAll(filename, ".", "-"))
+
+		outputFile := path.Join(output, filename)
+
+		err := BuildFile(data, tmplName, fileTmpl, outputFile)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			fmt.Println(err)
+			// TODO: Log
+			// TODO: Apppend error
 		}
 
-		err = formatFileBasedOnExt(fileName, outputFile)
+		err = formatFileBasedOnExt(filename, outputFile)
 		if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
 			fmt.Println(err)
+			// TODO: Log
+			// TODO: Apppend error
 		}
 	}
 
+	// TODO: Return errors
 	return nil
 }
 

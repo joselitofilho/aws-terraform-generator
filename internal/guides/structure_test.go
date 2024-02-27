@@ -33,7 +33,6 @@ func TestGuideStructure(t *testing.T) {
 			} else {
 				require.ErrorIs(t, err, tc.targetErr)
 			}
-
 		})
 	}
 }

@@ -3,9 +3,12 @@ package sqs
 import (
 	_ "embed"
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
@@ -28,8 +31,11 @@ func (s *SQS) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
 	}
+
+	modPath := path.Join(s.output, "mod")
+	_ = os.MkdirAll(modPath, os.ModePerm)
 
 	tmplName := "sqs-tf-template"
 	result := ""
@@ -45,7 +51,7 @@ func (s *SQS) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, fmt.Sprintf("%s/mod", s.output), data)
+			err = generators.GenerateFiles(defaultTfTemplateFiles, filesConf, data, modPath)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -64,7 +70,7 @@ func (s *SQS) Build() error {
 	}
 
 	if result != "" {
-		outputFile := fmt.Sprintf("%s/mod/sqs.tf", s.output)
+		outputFile := path.Join(modPath, "sqs.tf")
 
 		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
 			return fmt.Errorf("%w", err)

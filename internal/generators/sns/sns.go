@@ -3,10 +3,13 @@ package sns
 import (
 	_ "embed"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
@@ -38,8 +41,11 @@ func (s *SNS) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
 	}
+
+	modPath := path.Join(s.output, "mod")
+	_ = os.MkdirAll(modPath, os.ModePerm)
 
 	tmplName := "sns-tf-template"
 	result := ""
@@ -52,29 +58,15 @@ func (s *SNS) Build() error {
 			BucketName: conf.BucketName,
 		}
 
-		if len(conf.Files) > 0 {
-			filesConf := generators.CreateFilesMap(conf.Files)
-
-			err = generators.GenerateFiles(defaultTemplatesMap, filesConf, fmt.Sprintf("%s/mod", s.output), data)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
-
-			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
-
-			continue
-		}
-
 		lambdaEvents := make([]ResourceData, 0, len(conf.Lambdas))
 
 		for _, lambda := range conf.Lambdas {
-			evt := ResourceData{
+			lambdaEvents = append(lambdaEvents, ResourceData{
 				Name:         lambda.Name,
 				Events:       fmt.Sprintf("%q", strings.Join(lambda.Events, ", ")),
 				FilterPrefix: lambda.FilterPrefix,
 				FilterSuffix: lambda.FilterSuffix,
-			}
-			lambdaEvents = append(lambdaEvents, evt)
+			})
 		}
 
 		data.Lambdas = lambdaEvents
@@ -93,6 +85,19 @@ func (s *SNS) Build() error {
 
 		data.SQSs = sqsEvents
 
+		if len(conf.Files) > 0 {
+			filesConf := generators.CreateFilesMap(conf.Files)
+
+			err = generators.GenerateFiles(defaultTfTemplateFiles, filesConf, data, modPath)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
+
+			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
+
+			continue
+		}
+
 		output, err := generators.Build(data, tmplName, string(snsTFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
@@ -102,7 +107,7 @@ func (s *SNS) Build() error {
 	}
 
 	if result != "" {
-		outputFile := fmt.Sprintf("%s/mod/sns.tf", s.output)
+		outputFile := path.Join(modPath, "sns.tf")
 
 		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
 			return fmt.Errorf("%w", err)
