@@ -61,7 +61,7 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 				yamlConfig: &config.Config{
 					Diagram: config.Diagram{
 						Lambda: config.DriagramLambda{
-							Source:   "../artifacts",
+							Source:   "../artefacts",
 							RoleName: "execute_lambda",
 							Runtime:  "go1.x",
 						},
@@ -77,7 +77,7 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 				Lambdas: []config.Lambda{
 					{
 						Name:        "myReceiver",
-						Source:      "../artifacts",
+						Source:      "../artefacts",
 						RoleName:    "execute_lambda",
 						Runtime:     "go1.x",
 						Description: "myReceiver lambda",

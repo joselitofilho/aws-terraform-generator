@@ -2,6 +2,7 @@ version: "3"
 
 vars:
   LINT_TIMEOUT: 5m
+  GOTEST_ARGS: -count=1 -v -failfast
 
 tasks:
   install:
@@ -17,8 +18,20 @@ tasks:
     cmds:
       - golangci-lint version
       - golangci-lint run -v --timeout="{{.LINT_TIMEOUT}}" {{.USER_WORKING_DIR}}/...
-  
+
   fmt:
     desc: "Format code"
     cmds:
       - goimports -w . && gofumpt -l -w .
+
+  tests:
+    desc: "Run all tests"
+    cmds:
+      - go test {{.GOTEST_ARGS}} -cover {{.USER_WORKING_DIR}}/...
+
+  coverage:
+    desc: "Run code coverage"
+    cmds:
+      - go test {{.GOTEST_ARGS}} -coverprofile=coverage.out -cover {{.USER_WORKING_DIR}}/...
+      - cat coverage.out | grep -v "mock" > coverage.nomocks.out
+      - go tool cover -func coverage.nomocks.out
