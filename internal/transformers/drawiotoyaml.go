@@ -17,17 +17,26 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	envars := map[string]map[string]string{}
 	snsMap := map[string]config.SNS{}
 
+	resourcesByTypeMap := buildResourcesByTypeMap(resources)
+
+	for _, sns := range resourcesByTypeMap[drawio.SNSType] {
+		snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
+	}
+
+	for i := range resourcesByTypeMap[drawio.APIGatewayType] {
+		apiGateway := resourcesByTypeMap[drawio.APIGatewayType][i]
+		apiGatewaysByID[apiGateway.ID()] = apiGateway
+	}
+
 	buildResourceRelationships(
 		resources, cronsByLambdaID, sqsTriggersByLambdaID, snsMap, apiGatewaysByID, endpointsByAPIGatewayID, envars)
 
-	resourcesByTypeMap := buildResourcesByTypeMap(resources)
-
 	lambdas, apiGatewayLambdas := buildLambdas(
-		resourcesByTypeMap, resources, envars, yamlConfig, cronsByLambdaID, sqsTriggersByLambdaID)
+		yamlConfig, resourcesByTypeMap, resources, envars, cronsByLambdaID, sqsTriggersByLambdaID)
 	apiGateways := buildAPIGateways(yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdas)
 	snss := buildSNSs(snsMap)
 	sqss := buildSQSs(resourcesByTypeMap)
-	buckets := buildBuckets(resourcesByTypeMap)
+	buckets := buildS3Buckets(resourcesByTypeMap)
 	restfulAPIs := buildRestfulAPIs(resourcesByTypeMap)
 
 	return &config.Config{
@@ -106,9 +115,9 @@ func buildResourceRelationships(
 }
 
 func buildLambdas(
+	yamlConfig *config.Config,
 	resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource,
 	resources *drawio.ResourceCollection, envars map[string]map[string]string,
-	yamlConfig *config.Config,
 	cronsByLambdaID map[string]drawio.Resource,
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
 ) (lambdas []config.Lambda, apiGatewayLambdas map[string][]config.APIGatewayLambda) {
@@ -119,29 +128,28 @@ func buildLambdas(
 		isAPIGatewayLambda := false
 
 		for _, rel := range resources.Relationships {
-			if rel.Target.ID() == lambda.ID() {
-				if rel.Source.ReseourceType() == drawio.APIGatewayType {
-					isAPIGatewayLambda = true
+			if rel.Target.ID() == lambda.ID() &&
+				rel.Source.ReseourceType() == drawio.APIGatewayType {
+				isAPIGatewayLambda = true
 
-					apiGatewayID := rel.Source.ID()
+				apiGatewayID := rel.Source.ID()
 
-					envarsList := []map[string]string{}
-					for key, value := range envars[lambda.ID()] {
-						envarsList = append(envarsList, map[string]string{key: value})
-					}
-
-					apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
-						Name:        lambda.Value(),
-						Source:      yamlConfig.Diagram.Lambda.Source,
-						RoleName:    yamlConfig.Diagram.Lambda.RoleName,
-						Runtime:     yamlConfig.Diagram.Lambda.Runtime,
-						Description: fmt.Sprintf("%s lambda", lambda.Value()),
-						Envars:      envarsList,
-						Verb:        strings.Split(rel.Source.Value(), " ")[0],
-						Path:        strings.Split(rel.Source.Value(), " ")[1],
-						Files:       defaultFiles,
-					})
+				var envarsList []map[string]string
+				for key, value := range envars[lambda.ID()] {
+					envarsList = append(envarsList, map[string]string{key: value})
 				}
+
+				apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
+					Name:        lambda.Value(),
+					Source:      yamlConfig.Diagram.Lambda.Source,
+					RoleName:    yamlConfig.Diagram.Lambda.RoleName,
+					Runtime:     yamlConfig.Diagram.Lambda.Runtime,
+					Description: fmt.Sprintf("%s lambda", lambda.Value()),
+					Envars:      envarsList,
+					Verb:        strings.Split(rel.Source.Value(), " ")[0],
+					Path:        strings.Split(rel.Source.Value(), " ")[1],
+					Files:       defaultFiles,
+				})
 			}
 
 			if isAPIGatewayLambda {
@@ -150,7 +158,7 @@ func buildLambdas(
 		}
 
 		if !isAPIGatewayLambda {
-			crons := []config.Cron{}
+			var crons []config.Cron
 			if cron, ok := cronsByLambdaID[lambda.ID()]; ok {
 				crons = append(crons, config.Cron{
 					ScheduleExpression: cron.Value(),
@@ -158,12 +166,12 @@ func buildLambdas(
 				})
 			}
 
-			envarsList := []map[string]string{}
+			var envarsList []map[string]string
 			for key, value := range envars[lambda.ID()] {
 				envarsList = append(envarsList, map[string]string{key: value})
 			}
 
-			sqsTriggers := []config.SQSTrigger{}
+			var sqsTriggers []config.SQSTrigger
 			for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
 				sqsTriggers = append(sqsTriggers, config.SQSTrigger{
 					SourceARN: fmt.Sprintf("aws_sqs_queue.%s_sqs.arn", strcase.ToSnake(sqsTrigger.Value())),
@@ -192,33 +200,26 @@ func buildAPIGateways(
 	apiGatewaysByID map[string]drawio.Resource,
 	endpointsByAPIGatewayID map[string]drawio.Resource,
 	apiGatewayLambdas map[string][]config.APIGatewayLambda,
-) []config.APIGateway {
-	apiGateways := []config.APIGateway{
-		{
+) (apiGateways []config.APIGateway) {
+	for id := range apiGatewaysByID {
+		var apiDomainValue string
+		if rsc, ok := endpointsByAPIGatewayID[id]; ok {
+			apiDomainValue = rsc.Value()
+		}
+
+		apiGateways = append(apiGateways, config.APIGateway{
 			StackName: yamlConfig.Diagram.StackName,
 			APIG:      true,
-		},
+			APIDomain: apiDomainValue,
+			Lambdas:   apiGatewayLambdas[id],
+		})
 	}
 
-	for id := range apiGatewaysByID {
-		apiGateways[0].APIDomain = endpointsByAPIGatewayID[id].Value()
-		apiGateways[0].Lambdas = append(apiGateways[0].Lambdas, apiGatewayLambdas[id]...)
-	}
 	return apiGateways
 }
 
-func buildSQSs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.SQS {
-	sqss := []config.SQS{}
-
-	for _, sqs := range resourcesByTypeMap[drawio.SQSType] {
-		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
-	}
-
-	return sqss
-}
-
-func buildBuckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.S3 {
-	buckets := []config.S3{}
+func buildS3Buckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.S3 {
+	var buckets []config.S3
 
 	for _, bucket := range resourcesByTypeMap[drawio.S3Type] {
 		buckets = append(buckets, config.S3{Name: bucket.Value(), ExpirationDays: 90})
@@ -227,8 +228,28 @@ func buildBuckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) 
 	return buckets
 }
 
+func buildSQSs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.SQS {
+	var sqss []config.SQS
+
+	for _, sqs := range resourcesByTypeMap[drawio.SQSType] {
+		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
+	}
+
+	return sqss
+}
+
+func buildSNSs(snsMap map[string]config.SNS) []config.SNS {
+	var snss []config.SNS
+
+	for _, sns := range snsMap {
+		snss = append(snss, sns)
+	}
+
+	return snss
+}
+
 func buildRestfulAPIs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.RestfulAPI {
-	restfulAPIs := []config.RestfulAPI{}
+	var restfulAPIs []config.RestfulAPI
 	restfulAPINames := map[string]struct{}{}
 
 	for _, restfulAPI := range resourcesByTypeMap[drawio.RestfulAPIType] {
@@ -240,14 +261,4 @@ func buildRestfulAPIs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resour
 	}
 
 	return restfulAPIs
-}
-
-func buildSNSs(snsMap map[string]config.SNS) []config.SNS {
-	snss := make([]config.SNS, 0, len(snsMap))
-
-	for _, sns := range snsMap {
-		snss = append(snss, sns)
-	}
-
-	return snss
 }

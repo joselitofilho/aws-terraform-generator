@@ -24,36 +24,25 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
+func buildLambdaVars(envars map[string]map[string]string, lambda, target drawio.Resource, variables []string) {
+	targetName := initLambdaEnvarsAndGetTargetName(envars, lambda, target)
+
+	for _, v := range variables {
+		envars[lambda.ID()][fmt.Sprintf("%s%s",
+			strcase.ToSNAKE(targetName), v)] = strcase.ToSnake(fmt.Sprintf("var.%s%s", targetName, v))
+	}
+}
+
 func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database drawio.Resource) {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
-
-	dbName := strings.ToLower(database.Value())
-
-	envars[lambda.ID()][fmt.Sprintf("%sDB_HOST",
-		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_host", strcase.ToSnake(dbName))
-	envars[lambda.ID()][fmt.Sprintf("%sDB_USER",
-		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_user", strcase.ToSnake(dbName))
-	envars[lambda.ID()][fmt.Sprintf("%sDB_PASSWORD_SECRET",
-		strcase.ToSNAKE(dbName))] = fmt.Sprintf("var.%sdb_password_secret", strcase.ToSnake(dbName))
+	buildLambdaVars(envars, lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"})
 }
 
 func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
-
-	restfulAPIName := strings.ToLower(restfulAPI.Value())
-
-	envars[lambda.ID()][fmt.Sprintf("%s_API_BASE_URL",
-		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_api_base_url", strcase.ToSnake(restfulAPIName))
-	envars[lambda.ID()][fmt.Sprintf("%s_HOST",
-		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_host", strcase.ToSnake(restfulAPIName))
-	envars[lambda.ID()][fmt.Sprintf("%s_USER",
-		strcase.ToSNAKE(restfulAPIName))] = fmt.Sprintf("var.%s_user", strcase.ToSnake(restfulAPIName))
+	buildLambdaVars(envars, lambda, restfulAPI, []string{"_API_BASE_URL", "_HOST", "_USER"})
 }
 
 func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawio.Resource) {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
-
-	bucketName := strings.ToLower(s3Bucket.Value())
+	bucketName := initLambdaEnvarsAndGetTargetName(envars, lambda, s3Bucket)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
@@ -63,9 +52,7 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 
 func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
 ) {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
-
-	sqsName := strings.ToLower(sqs.Value())
+	sqsName := initLambdaEnvarsAndGetTargetName(envars, lambda, sqs)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
 		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqsName))
@@ -109,8 +96,13 @@ func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
 	snsMap[sns.ID()] = snsConfig
 }
 
-func initEnvarsIfNecessaryByKey(target map[string]map[string]string, key string) {
-	if _, ok := target[key]; !ok {
-		target[key] = map[string]string{}
+func initEnvarsIfNecessaryByKey(envars map[string]map[string]string, key string) {
+	if _, ok := envars[key]; !ok {
+		envars[key] = map[string]string{}
 	}
+}
+
+func initLambdaEnvarsAndGetTargetName(envars map[string]map[string]string, lambda, target drawio.Resource) string {
+	initEnvarsIfNecessaryByKey(envars, lambda.ID())
+	return strings.ToLower(target.Value())
 }
