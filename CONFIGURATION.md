@@ -10,6 +10,7 @@ The configuration is organized into the following sections:
   - **Default Templates**: Default Terraform templates for creating stacks.
 - **API Gateways**: Configuration for API Gateways.
 - **Lambdas**: Configuration for lambda functions.
+- **Kinesis**: Configuration for Kinesis streams.
 - **SNS**: Configuration for SNS.
 - **SQS**: Configuration for SQS.
 - **Buckets**: Configuration for S3 buckets.
@@ -17,4 +18,4 @@ The configuration is organized into the following sections:
 
 ## Full example with comments
 
-[template.yaml](template.yaml)
+[fullexample.config.yaml](fullexample.config.yaml)
