@@ -7,11 +7,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"github.com/joselitofilho/aws-terraform-generator/internal/guides"
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 	"github.com/spf13/cobra"
 
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/joselitofilho/aws-terraform-generator/internal/guides"
 )
 
 const (
@@ -55,6 +56,8 @@ var rootCmd = &cobra.Command{
 
 `
 		fmt.Println(title)
+
+		surveyAsker := &surveyasker.RealSurveyAsker{}
 
 		shouldContinue := true
 		for shouldContinue {
@@ -119,7 +122,7 @@ var rootCmd = &cobra.Command{
 				_ = structureCmd.Flags().Set(flagOutput, answers.Output)
 				structureCmd.Run(structureCmd, []string{})
 			case optionGuideCode:
-				answers, err := guides.GuideCode(workdir, fileMap)
+				answers, err := guides.GuideCode(surveyAsker, workdir, fileMap)
 				if err != nil {
 					printErrorAndExit(err)
 				}

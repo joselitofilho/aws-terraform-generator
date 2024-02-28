@@ -3,7 +3,7 @@
 # AWS Terraform Generator
 
 [![GitHub tag](https://img.shields.io/github/release/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
-[![Code coverage](https://img.shields.io/badge/Coverage-79.7%25-yellow?style=for-the-badge)](#)
+[![Code coverage](https://img.shields.io/badge/Coverage-82.0%25-2ea44f?style=for-the-badge)](#)
 [![Contributions - Welcome](https://img.shields.io/badge/Contributions-Welcome-2ea44f?style=for-the-badge)](#contributing)
 [![License](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](#license)
 

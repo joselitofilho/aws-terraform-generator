@@ -23,6 +23,11 @@ tasks:
     desc: "Format code"
     cmds:
       - goimports -w . && gofumpt -l -w .
+  
+  mocks:
+    desc: "Generate mocks"
+    cmds:
+      - go generate -v ../...
 
   tests:
     desc: "Run all tests"

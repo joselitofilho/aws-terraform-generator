@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 )
 
 type CodeAnswers struct {
@@ -14,7 +16,7 @@ type CodeAnswers struct {
 	Output    string
 }
 
-func GuideCode(workdir string, fileMap map[string][]string) (*CodeAnswers, error) {
+func GuideCode(surveyAsker surveyasker.SurveyAsker, workdir string, fileMap map[string][]string) (*CodeAnswers, error) {
 	if len(fileMap["config"]) == 0 {
 		return nil, ErrDirDoesNotContainAnyConfigFile
 	}
@@ -26,7 +28,7 @@ func GuideCode(workdir string, fileMap map[string][]string) (*CodeAnswers, error
 
 	_, defaultStackName := path.Split(workdir)
 
-	if err := survey.Ask([]*survey.Question{
+	if err := surveyAsker.Ask([]*survey.Question{
 		{
 			Name: "stackName",
 			Prompt: &survey.Input{
@@ -47,7 +49,7 @@ func GuideCode(workdir string, fileMap map[string][]string) (*CodeAnswers, error
 		}
 	}
 
-	if err := survey.Ask([]*survey.Question{
+	if err := surveyAsker.Ask([]*survey.Question{
 		{
 			Name: "config",
 			Prompt: &survey.Select{
@@ -60,14 +62,17 @@ func GuideCode(workdir string, fileMap map[string][]string) (*CodeAnswers, error
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	answers.Config = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Config))
+	answers.Config = replaceDoubleSlash(path.Join(workdir, answers.Config))
 
-	if err := survey.AskOne(
-		&survey.Input{
-			Message: "Enter the output folder:",
-			Default: "./output",
+	if err := surveyAsker.Ask([]*survey.Question{
+		{
+			Name: "output",
+			Prompt: &survey.Input{
+				Message: "Enter the output folder:",
+				Default: "./output",
+			},
 		},
-		&answers.Output); err != nil {
+	}, &answers); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
