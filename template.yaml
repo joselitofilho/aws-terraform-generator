@@ -224,6 +224,20 @@ apigateways:
                   lambda.Start({{$.Name}}Lambda.run)
               }
 
+# Kinesis configurations include stream names, retention period and KMS.
+kinesis:
+  # Configuration for the myKinesis Kinesis Stream
+  - name: myKinesis
+    retention_period: 24 # Retention period in hours
+    kms_key_id: var.lambda_function_kms_key_arn # KMS key ID for encryption
+    files:
+      # Custom Terraform file for defining the Kinesis stream resource
+      - name: "custom.tf"
+        tmpl: |-
+          resource "aws_kinesis_stream" "{{ToSnake $.Name}}_kinesis" {
+            # Add your custom configuration for the Kinesis stream here
+          }
+
 # SQS configurations include queue names and maximum receive counts.
 sqs:
   # Configuration for the target SQS queue

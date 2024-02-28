@@ -33,8 +33,20 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
+func buildKinesisToLambda(kinesisTriggersByLambdaID map[string][]drawio.Resource, kinesis, lambda drawio.Resource) {
+	lambdaID := lambda.ID()
+	kinesisTriggersByLambdaID[lambdaID] = append(kinesisTriggersByLambdaID[lambdaID], kinesis)
+}
+
 func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database drawio.Resource) {
 	buildLambdaVars(envars, lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"})
+}
+
+func buildLambdaToKinesis(envars map[string]map[string]string, lambda, kinesis drawio.Resource) {
+	kinesisName := initLambdaEnvarsAndGetTargetName(envars, lambda, kinesis)
+
+	envars[lambda.ID()][fmt.Sprintf("%s_KINESIS_STREAM_URL",
+		strcase.ToSNAKE(kinesisName))] = fmt.Sprintf("aws_kinesis_stream.%s_kinesis.id", strcase.ToSnake(kinesisName))
 }
 
 func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
@@ -50,12 +62,22 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf(`"%s_files"`, strings.ToLower(strcase.ToSnake(lambda.Value())))
 }
 
-func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource,
-) {
+func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource) {
 	sqsName := initLambdaEnvarsAndGetTargetName(envars, lambda, sqs)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
 		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqsName))
+}
+
+func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
+	snsConfig, ok := snsMap[sns.ID()]
+	if !ok {
+		snsConfig = config.SNS{Name: sns.Value()}
+	}
+
+	snsConfig.BucketName = s3Bucket.Value()
+
+	snsMap[sns.ID()] = snsConfig
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns, lambda drawio.Resource) {
@@ -89,17 +111,6 @@ func buildSNSToSQS(snsMap map[string]config.SNS, sns, sqs drawio.Resource) {
 func buildSQSToLambda(sqsTriggersByLambdaID map[string][]drawio.Resource, sqs, lambda drawio.Resource) {
 	lambdaID := lambda.ID()
 	sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], sqs)
-}
-
-func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
-	snsConfig, ok := snsMap[sns.ID()]
-	if !ok {
-		snsConfig = config.SNS{Name: sns.Value()}
-	}
-
-	snsConfig.BucketName = s3Bucket.Value()
-
-	snsMap[sns.ID()] = snsConfig
 }
 
 func initEnvarsIfNecessaryByKey(envars map[string]map[string]string, key string) {

@@ -1,0 +1,8 @@
+// {{ToSpace $.Name}} Kinesis
+resource "aws_kinesis_stream" "{{ToSnake $.Name}}_kinesis" {
+  name             = "{{$.Name}}"
+  shard_count      = 1
+  retention_period = {{$.RetentionPeriod}}
+  {{if $.KMSEncription}}encryption_type  = "KMS"
+  kms_key_id       = {{$.KMSKeyID}}{{end}}
+}

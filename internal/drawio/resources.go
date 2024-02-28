@@ -110,6 +110,8 @@ func createResource(id, value, style string) Resource {
 		return &GenericResource{id: id, value: value, resourceType: DatabaseType}
 	case strings.Contains(style, "mxgraph.veeam2.restful_api"):
 		return &GenericResource{id: id, value: value, resourceType: RestfulAPIType}
+	case strings.Contains(style, "mxgraph.aws3.kinesis"):
+		return &GenericResource{id: id, value: value, resourceType: KinesisType}
 	default:
 		return nil
 	}

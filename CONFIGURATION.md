@@ -8,8 +8,8 @@ The configuration is organized into the following sections:
 - **Structure**:
   - **Stacks**: Configuration for different stacks.
   - **Default Templates**: Default Terraform templates for creating stacks.
-- **Lambdas**: Configuration for lambda functions.
 - **API Gateways**: Configuration for API Gateways.
+- **Lambdas**: Configuration for lambda functions.
 - **SNS**: Configuration for SNS.
 - **SQS**: Configuration for SQS.
 - **Buckets**: Configuration for S3 buckets.

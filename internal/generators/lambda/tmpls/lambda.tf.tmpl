@@ -49,8 +49,7 @@ resource "aws_lambda_event_source_mapping" "{{ToSnake $.Name}}_lambda_sqs_trigge
   batch_size       = 1
   enabled          = true
 }
-{{end}}{{end}}{{ $length := len $.Crons}}{{ if gt $length 0 }}
-  {{ range $i, $sqs := $.Crons }}
+{{end}}{{end}}{{ $length := len $.Crons}}{{ if gt $length 0 }}{{ range $i, $sqs := $.Crons }}
 // Trigger alarm for starting the {{$.Name}} lambda
 resource "aws_cloudwatch_event_rule" "{{ToSnake $.Name}}_cron" {
   name                = "run{{ToPascal $.Name}}"
@@ -70,5 +69,18 @@ resource "aws_lambda_permission" "{{ToSnake $.Name}}_allow_cron" {
   function_name = aws_lambda_function.{{ToSnake $.Name}}_lambda.arn
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.{{ToSnake $.Name}}_cron.arn
+}{{end}}{{end}}{{ $length := len $.KinesisTriggers}}{{ if gt $length 0 }}
+resource "aws_lambda_permission" "{{ToSnake $.Name}}_allow_kinesis" {
+  statement_id  = "AllowExecutionFromKinesis"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.{{ToSnake $.Name}}_lambda.function_name
+  principal     = "kinesis.amazonaws.com"
+}
+{{ range $i, $kinesis := $.KinesisTriggers }}
+resource "aws_lambda_event_source_mapping" "{{ToSnake $.Name}}_kinesis_mapping" {
+  event_source_arn  = {{.SourceARN}}
+  function_name     = aws_lambda_function.{{ToSnake $.Name}}_lambda.function_name
+  batch_size        = 10
+  starting_position = "TRIM_HORIZON"
 }
 {{end}}{{end}}

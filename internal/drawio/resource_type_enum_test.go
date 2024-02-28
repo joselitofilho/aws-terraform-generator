@@ -21,6 +21,7 @@ func TestResourceType_String(t *testing.T) {
 		{name: "S3", rt: S3Type, want: "S3"},
 		{name: "Database", rt: DatabaseType, want: "Database"},
 		{name: "RestfulAPI", rt: RestfulAPIType, want: "RestfulAPI"},
+		{name: "Kinesis", rt: KinesisType, want: "Kinesis"},
 		{name: "Unknown", rt: 999, want: "Unknown"},
 	}
 
@@ -50,6 +51,7 @@ func TestParseResourceType(t *testing.T) {
 		{name: "Parse S3", input: "S3", output: S3Type},
 		{name: "Parse Database", input: "Database", output: DatabaseType},
 		{name: "Parse RestfulAPI", input: "RestfulAPI", output: RestfulAPIType},
+		{name: "Parse Kinesis", input: "Kinesis", output: KinesisType},
 		{name: "Parse Unknown", input: "Unknown", output: UnknownType},
 		{name: "Parse lowercase", input: "sqs", output: SQSType},
 		{name: "Parse uppercase", input: "SNS", output: SNSType},

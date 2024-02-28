@@ -1,0 +1,8 @@
+kinesis:
+  - name: myKinesis
+    retention_period: 24
+    kms_key_id: var.lambda_function_kms_key_arn
+    files:
+      - name: "custom.tf"
+        tmpl: |-
+          resource "aws_kinesis_stream" "{{ToSnake $.Name}}_kinesis" {}

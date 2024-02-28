@@ -135,6 +135,12 @@ var rootCmd = &cobra.Command{
 				apigatewayCmd.Run(apigatewayCmd, []string{})
 				fmt.Println()
 
+				fmt.Println("→ Generating Kinesis code...")
+				_ = kinesisCmd.Flags().Set(flagConfig, answers.Config)
+				_ = kinesisCmd.Flags().Set(flagOutput, stackOutput)
+				kinesisCmd.Run(kinesisCmd, []string{})
+				fmt.Println()
+
 				fmt.Println("→ Generating Lambda code...")
 				_ = lambdaCmd.Flags().Set(flagConfig, answers.Config)
 				_ = lambdaCmd.Flags().Set(flagOutput, stackOutput)

@@ -51,6 +51,24 @@ Default temaplates:
 - [📜 lambda.tf.tmpl](./internal/generators/apigateway/tmpls/lambda.tf.tmpl)
 - [📜 main.go.tmpl](./internal/generators/apigateway/tmpls/main.go.tmpl)
 
+### Kinesis
+
+| Name            | Description                                                |
+| :-------------- | :--------------------------------------------------------- |
+| Name            | The name of the SQS queue.                                 |
+| RetentionPeriod | The duration for which records are retained.               |
+| KMSEncription   | Indicates whether server-side encryption is enabled using AWS Key Management Service (KMS). |
+| KMSKeyID        | The ID of the AWS Key Management Service (KMS) key used for encryption, if enabled. |
+
+Default temaplates:
+
+```
+📦 kinesis
+ ┣ 📂 tmpls
+ ┗ ┗ 📜 kinesis.tf.tmpl
+```
+- [📜 kinesis.tf.tmpl](./internal/generators/kinesis/tmpls/kinesis.tf.tmpl)
+
 ### Lambda
 
 | Name                | Description                                            |

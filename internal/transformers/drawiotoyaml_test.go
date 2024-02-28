@@ -19,6 +19,207 @@ var diagramConfig = &config.Config{
 	},
 }
 
+func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
+	type args struct {
+		yamlConfig *config.Config
+		resources  *drawio.ResourceCollection
+	}
+
+	endpointResource := drawio.NewGenericResource("id1", "https://my-domain.com", drawio.EndpointType)
+	apiGatewayResource := drawio.NewGenericResource("id2", "POST /examples", drawio.APIGatewayType)
+	lambdaResource := drawio.NewGenericResource("id3", "my-lambda", drawio.LambdaType)
+
+	tests := []struct {
+		name      string
+		args      args
+		want      *config.Config
+		targetErr error
+	}{
+		{
+			name: "only API Gateway",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources: []drawio.Resource{apiGatewayResource},
+				},
+			},
+			want: &config.Config{
+				APIGateways: []config.APIGateway{
+					{
+						StackName: "my-stack",
+						APIG:      true,
+					},
+				},
+			},
+		},
+		{
+			name: "API Gateway full example",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources: []drawio.Resource{
+						endpointResource,
+						apiGatewayResource,
+						lambdaResource,
+					},
+					Relationships: []drawio.Relationship{
+						{Source: endpointResource, Target: apiGatewayResource},
+						{Source: apiGatewayResource, Target: lambdaResource},
+					},
+				},
+			},
+			want: &config.Config{
+				APIGateways: []config.APIGateway{
+					{
+						StackName: "my-stack",
+						APIG:      true,
+						APIDomain: "https://my-domain.com",
+						Lambdas: []config.APIGatewayLambda{
+							{
+								Name:        "my-lambda",
+								Source:      "git@",
+								RoleName:    "execute_lambda",
+								Description: "my-lambda lambda",
+								Verb:        "POST",
+								Path:        "/examples",
+								Files: []config.File{
+									{Name: "lambda.go"}, {Name: "main.go"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+
+			if tc.targetErr == nil {
+				require.NoError(t, err)
+				require.Equal(t, tc.want, got)
+			} else {
+				require.ErrorIs(t, err, tc.targetErr)
+			}
+		})
+	}
+}
+
+func TestTransformDrawIOToYAML_Database(t *testing.T) {
+	type args struct {
+		yamlConfig *config.Config
+		resources  *drawio.ResourceCollection
+	}
+
+	database := drawio.NewGenericResource("id1", "myDatabase", drawio.DatabaseType)
+	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+
+	tests := []struct {
+		name      string
+		args      args
+		want      *config.Config
+		targetErr error
+	}{
+		{
+			name: "only database",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{database}},
+			},
+			want: &config.Config{},
+		},
+		{
+			name: "database receives data from a Lambda",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources:     []drawio.Resource{database, lambda},
+					Relationships: []drawio.Relationship{{Source: lambda, Target: database}},
+				},
+			},
+			want: &config.Config{
+				Lambdas: []config.Lambda{
+					{
+						Name:        "myReceiver",
+						Source:      "git@",
+						RoleName:    "execute_lambda",
+						Description: "myReceiver lambda",
+						Envars: []map[string]string{
+							{"MYDATABASEDB_HOST": "var.mydatabase_db_host"},
+							{"MYDATABASEDB_USER": "var.mydatabase_db_user"},
+							{"MYDATABASEDB_PASSWORD_SECRET": "var.mydatabase_db_password_secret"},
+						},
+						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
+					},
+				},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+
+			if tc.targetErr == nil {
+				require.NoError(t, err)
+				require.Equal(t, tc.want, got)
+			} else {
+				require.ErrorIs(t, err, tc.targetErr)
+			}
+		})
+	}
+}
+
+func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
+	type args struct {
+		yamlConfig *config.Config
+		resources  *drawio.ResourceCollection
+	}
+
+	kinesis := drawio.NewGenericResource("id1", "my-stream", drawio.KinesisType)
+
+	tests := []struct {
+		name      string
+		args      args
+		want      *config.Config
+		targetErr error
+	}{
+		{
+			name: "only Kinesis",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources: []drawio.Resource{kinesis},
+				},
+			},
+			want: &config.Config{
+				Kinesis: []config.Kinesis{{Name: "my-stream", RetentionPeriod: "24"}},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+
+			if tc.targetErr == nil {
+				require.NoError(t, err)
+				require.Equal(t, tc.want, got)
+			} else {
+				require.ErrorIs(t, err, tc.targetErr)
+			}
+		})
+	}
+}
+
 func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
@@ -30,6 +231,7 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 	sqs := drawio.NewGenericResource("id3", "my-queue", drawio.SQSType)
 	sns := drawio.NewGenericResource("id4", "my-notification", drawio.SNSType)
 	s3Bucket := drawio.NewGenericResource("id5", "my-bucket", drawio.S3Type)
+	kinesis := drawio.NewGenericResource("id6", "my-stream", drawio.KinesisType)
 
 	tests := []struct {
 		name      string
@@ -109,6 +311,29 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			},
 		},
 		{
+			name: "invoke a Lambda to receive messages from an Kinesis stream",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources:     []drawio.Resource{lambda, kinesis},
+					Relationships: []drawio.Relationship{{Source: kinesis, Target: lambda}},
+				},
+			},
+			want: &config.Config{
+				Lambdas: []config.Lambda{
+					{
+						Name:            "myReceiver",
+						Source:          "git@",
+						RoleName:        "execute_lambda",
+						Description:     "myReceiver lambda",
+						KinesisTriggers: []config.KinesisTrigger{{SourceARN: "aws_kinesis_stream.my_stream_kinesis.arn"}},
+						Files:           []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
+					},
+				},
+				Kinesis: []config.Kinesis{{Name: "my-stream", RetentionPeriod: "24"}},
+			},
+		},
+		{
 			name: "invoke a Lambda to receive messages from an SQS queue",
 			args: args{
 				yamlConfig: diagramConfig,
@@ -159,96 +384,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 					Lambdas:    []config.SNSResource{{Name: "myReceiver", Events: []string{"s3:ObjectCreated:*"}}},
 				}},
 				Buckets: []config.S3{{Name: "my-bucket", ExpirationDays: 90}},
-			},
-		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
-
-			if tc.targetErr == nil {
-				require.NoError(t, err)
-				require.Equal(t, tc.want, got)
-			} else {
-				require.ErrorIs(t, err, tc.targetErr)
-			}
-		})
-	}
-}
-
-func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
-	type args struct {
-		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
-	}
-
-	endpointResource := drawio.NewGenericResource("id1", "https://my-domain.com", drawio.EndpointType)
-	apiGatewayResource := drawio.NewGenericResource("id2", "POST /examples", drawio.APIGatewayType)
-	lambdaResource := drawio.NewGenericResource("id3", "my-lambda", drawio.LambdaType)
-
-	tests := []struct {
-		name      string
-		args      args
-		want      *config.Config
-		targetErr error
-	}{
-		{
-			name: "only API Gateway",
-			args: args{
-				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{apiGatewayResource},
-				},
-			},
-			want: &config.Config{
-				APIGateways: []config.APIGateway{
-					{
-						StackName: "my-stack",
-						APIG:      true,
-					},
-				},
-			},
-		},
-		{
-			name: "API Gateway full example",
-			args: args{
-				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{
-						endpointResource,
-						apiGatewayResource,
-						lambdaResource,
-					},
-					Relationships: []drawio.Relationship{
-						{Source: endpointResource, Target: apiGatewayResource},
-						{Source: apiGatewayResource, Target: lambdaResource},
-					},
-				},
-			},
-			want: &config.Config{
-				APIGateways: []config.APIGateway{
-					{
-						StackName: "my-stack",
-						APIG:      true,
-						APIDomain: "https://my-domain.com",
-						Lambdas: []config.APIGatewayLambda{
-							{
-								Name:        "my-lambda",
-								Source:      "git@",
-								RoleName:    "execute_lambda",
-								Description: "my-lambda lambda",
-								Verb:        "POST",
-								Path:        "/examples",
-								Files: []config.File{
-									{Name: "lambda.go"}, {Name: "main.go"},
-								},
-							},
-						},
-					},
-				},
 			},
 		},
 	}
@@ -540,73 +675,6 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 					},
 				},
 				RestfulAPIs: []config.RestfulAPI{{Name: "my-api"}},
-			},
-		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
-
-			if tc.targetErr == nil {
-				require.NoError(t, err)
-				require.Equal(t, tc.want, got)
-			} else {
-				require.ErrorIs(t, err, tc.targetErr)
-			}
-		})
-	}
-}
-
-func TestTransformDrawIOToYAML_Database(t *testing.T) {
-	type args struct {
-		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
-	}
-
-	database := drawio.NewGenericResource("id1", "myDatabase", drawio.DatabaseType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
-
-	tests := []struct {
-		name      string
-		args      args
-		want      *config.Config
-		targetErr error
-	}{
-		{
-			name: "only database",
-			args: args{
-				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{database}},
-			},
-			want: &config.Config{},
-		},
-		{
-			name: "database receives data from a Lambda",
-			args: args{
-				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{database, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: database}},
-				},
-			},
-			want: &config.Config{
-				Lambdas: []config.Lambda{
-					{
-						Name:        "myReceiver",
-						Source:      "git@",
-						RoleName:    "execute_lambda",
-						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MYDATABASEDB_HOST": "var.mydatabase_db_host"},
-							{"MYDATABASEDB_USER": "var.mydatabase_db_user"},
-							{"MYDATABASEDB_PASSWORD_SECRET": "var.mydatabase_db_password_secret"},
-						},
-						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
-					},
-				},
 			},
 		},
 	}

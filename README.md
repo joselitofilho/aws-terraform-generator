@@ -3,7 +3,7 @@
 # AWS Terraform Generator
 
 [![GitHub tag](https://img.shields.io/github/release/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
-[![Code coverage](https://img.shields.io/badge/Coverage-82.0%25-2ea44f?style=for-the-badge)](#)
+[![Code coverage](https://img.shields.io/badge/Coverage-81.5%25-2ea44f?style=for-the-badge)](#)
 [![Contributions - Welcome](https://img.shields.io/badge/Contributions-Welcome-2ea44f?style=for-the-badge)](#contributing)
 [![License](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](#license)
 
@@ -47,6 +47,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
     - APIGateway
     - Cron
     - Database
+    - Kinesis streams
     - Lambda
     - Restful API
     - SNS
@@ -137,9 +138,10 @@ $ aws-terraform-generator diagram -s mystack -c examples/diagram.config.yaml -d 
 $ aws-terraform-generator structure -c examples/structure.yaml -o ./output
 $ aws-terraform-generator apigateway -c examples/mystack.yaml -o ./output
 $ aws-terraform-generator lambda -c examples/mystack.yaml -o ./output/mystack
-$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack/mod
-$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack/mod
-$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack/mod
+$ aws-terraform-generator kinesis -c examples/mystack.yaml -o output/mystack
+$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack
+$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack
+$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack
 $ aws-terraform-generator --workdir ./examples
 ```
 

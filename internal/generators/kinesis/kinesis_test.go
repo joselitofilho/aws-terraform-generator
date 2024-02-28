@@ -1,4 +1,4 @@
-package sqs
+package kinesis
 
 import (
 	_ "embed"
@@ -16,7 +16,7 @@ var (
 	testOutput     = "./testoutput"
 )
 
-func TestSQS_Build(t *testing.T) {
+func TestKinesis_Build(t *testing.T) {
 	type fields struct {
 		configFileName string
 		output         string
@@ -33,7 +33,7 @@ func TestSQS_Build(t *testing.T) {
 		{
 			name: "happy path",
 			fields: fields{
-				configFileName: path.Join(testdataFolder, "sqs.config.yaml"),
+				configFileName: path.Join(testdataFolder, "kinesis.config.yaml"),
 				output:         happypathPath,
 			},
 			extraValidations: func(tb testing.TB, err error) {
@@ -42,8 +42,8 @@ func TestSQS_Build(t *testing.T) {
 				}
 
 				modPath := path.Join(happypathPath, "mod")
-				require.FileExists(tb, path.Join(modPath, "sqs.tf"))
-				require.FileExists(tb, path.Join(modPath, "target-sqs.tf"))
+				require.FileExists(tb, path.Join(modPath, "kinesis.tf"))
+				require.FileExists(tb, path.Join(modPath, "custom.tf"))
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestSQS_Build(t *testing.T) {
 		}()
 
 		t.Run(tc.name, func(t *testing.T) {
-			err := NewSQS(tc.fields.configFileName, tc.fields.output).Build()
+			err := NewKinesis(tc.fields.configFileName, tc.fields.output).Build()
 
 			require.ErrorIs(t, err, tc.targetErr)
 

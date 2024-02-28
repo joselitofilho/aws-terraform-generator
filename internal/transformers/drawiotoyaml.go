@@ -13,6 +13,7 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	apiGatewaysByID := map[string]drawio.Resource{}
 	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	cronsByLambdaID := map[string]drawio.Resource{}
+	kinesisTriggersByLambdaID := map[string][]drawio.Resource{}
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
 	envars := map[string]map[string]string{}
 	snsMap := map[string]config.SNS{}
@@ -29,11 +30,14 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	}
 
 	buildResourceRelationships(
-		resources, cronsByLambdaID, sqsTriggersByLambdaID, snsMap, apiGatewaysByID, endpointsByAPIGatewayID, envars)
+		resources, cronsByLambdaID, kinesisTriggersByLambdaID, sqsTriggersByLambdaID, snsMap, apiGatewaysByID,
+		endpointsByAPIGatewayID, envars)
 
 	lambdas, apiGatewayLambdas := buildLambdas(
-		yamlConfig, resourcesByTypeMap, resources, envars, cronsByLambdaID, sqsTriggersByLambdaID)
+		yamlConfig, resourcesByTypeMap, resources, envars, cronsByLambdaID,
+		kinesisTriggersByLambdaID, sqsTriggersByLambdaID)
 	apiGateways := buildAPIGateways(yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdas)
+	kinesis := buildKinesis(resourcesByTypeMap)
 	snss := buildSNSs(snsMap)
 	sqss := buildSQSs(resourcesByTypeMap)
 	buckets := buildS3Buckets(resourcesByTypeMap)
@@ -42,6 +46,7 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	return &config.Config{
 		Lambdas:     lambdas,
 		APIGateways: apiGateways,
+		Kinesis:     kinesis,
 		SNSs:        snss,
 		SQSs:        sqss,
 		Buckets:     buckets,
@@ -63,6 +68,7 @@ func buildResourcesByTypeMap(resources *drawio.ResourceCollection) map[drawio.Re
 func buildResourceRelationships(
 	resources *drawio.ResourceCollection,
 	cronsByLambdaID map[string]drawio.Resource,
+	kinesisTriggersByLambdaID map[string][]drawio.Resource,
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
 	snsMap map[string]config.SNS,
 	apiGatewaysByID map[string]drawio.Resource,
@@ -78,6 +84,8 @@ func buildResourceRelationships(
 			switch source.ReseourceType() {
 			case drawio.CronType:
 				buildCronToLambda(cronsByLambdaID, source, target)
+			case drawio.KinesisType:
+				buildKinesisToLambda(kinesisTriggersByLambdaID, source, target)
 			case drawio.SQSType:
 				buildSQSToLambda(sqsTriggersByLambdaID, source, target)
 			case drawio.SNSType:
@@ -97,6 +105,10 @@ func buildResourceRelationships(
 		case drawio.DatabaseType:
 			if source.ReseourceType() == drawio.LambdaType {
 				buildLambdaToDatabase(envars, source, target)
+			}
+		case drawio.KinesisType:
+			if source.ReseourceType() == drawio.LambdaType {
+				buildLambdaToKinesis(envars, source, target)
 			}
 		case drawio.RestfulAPIType:
 			if source.ReseourceType() == drawio.LambdaType {
@@ -119,6 +131,7 @@ func buildLambdas(
 	resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource,
 	resources *drawio.ResourceCollection, envars map[string]map[string]string,
 	cronsByLambdaID map[string]drawio.Resource,
+	kinesisTriggersByLambdaID map[string][]drawio.Resource,
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
 ) (lambdas []config.Lambda, apiGatewayLambdas map[string][]config.APIGatewayLambda) {
 	apiGatewayLambdas = map[string][]config.APIGatewayLambda{}
@@ -171,6 +184,13 @@ func buildLambdas(
 				envarsList = append(envarsList, map[string]string{key: value})
 			}
 
+			var kinesisTriggers []config.KinesisTrigger
+			for _, kinesisTrigger := range kinesisTriggersByLambdaID[lambda.ID()] {
+				kinesisTriggers = append(kinesisTriggers, config.KinesisTrigger{
+					SourceARN: fmt.Sprintf("aws_kinesis_stream.%s_kinesis.arn", strcase.ToSnake(kinesisTrigger.Value())),
+				})
+			}
+
 			var sqsTriggers []config.SQSTrigger
 			for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
 				sqsTriggers = append(sqsTriggers, config.SQSTrigger{
@@ -179,15 +199,16 @@ func buildLambdas(
 			}
 
 			lambdas = append(lambdas, config.Lambda{
-				Name:        lambda.Value(),
-				Source:      yamlConfig.Diagram.Lambda.Source,
-				RoleName:    yamlConfig.Diagram.Lambda.RoleName,
-				Runtime:     yamlConfig.Diagram.Lambda.Runtime,
-				Description: fmt.Sprintf("%s lambda", lambda.Value()),
-				Envars:      envarsList,
-				SQSTriggers: sqsTriggers,
-				Files:       defaultFiles,
-				Crons:       crons,
+				Name:            lambda.Value(),
+				Source:          yamlConfig.Diagram.Lambda.Source,
+				RoleName:        yamlConfig.Diagram.Lambda.RoleName,
+				Runtime:         yamlConfig.Diagram.Lambda.Runtime,
+				Description:     fmt.Sprintf("%s lambda", lambda.Value()),
+				Envars:          envarsList,
+				KinesisTriggers: kinesisTriggers,
+				SQSTriggers:     sqsTriggers,
+				Files:           defaultFiles,
+				Crons:           crons,
 			})
 		}
 	}
@@ -216,6 +237,16 @@ func buildAPIGateways(
 	}
 
 	return apiGateways
+}
+
+func buildKinesis(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.Kinesis {
+	var kinesis []config.Kinesis
+
+	for _, k := range resourcesByTypeMap[drawio.KinesisType] {
+		kinesis = append(kinesis, config.Kinesis{Name: k.Value(), RetentionPeriod: "24"})
+	}
+
+	return kinesis
 }
 
 func buildS3Buckets(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.S3 {

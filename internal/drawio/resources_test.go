@@ -192,6 +192,25 @@ func TestParseResources(t *testing.T) {
 			},
 		},
 		{
+			name: "Kinesis Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "10", Value: "myKinesis", Style: "mxgraph.aws3.kinesis"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("10", "myKinesis", KinesisType)},
+			},
+		},
+		{
 			name: "Empty MxFile",
 			args: args{
 				mxFile: &MxFile{

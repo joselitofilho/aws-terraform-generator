@@ -39,6 +39,13 @@ func (l *Lambda) Build() error {
 			}
 		}
 
+		kinesisTriggers := make([]KinesisTrigger, len(lambdaConf.KinesisTriggers))
+		for i := range lambdaConf.KinesisTriggers {
+			kinesisTriggers[i] = KinesisTrigger{
+				SourceARN: lambdaConf.KinesisTriggers[i].SourceARN,
+			}
+		}
+
 		sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
 		for i := range lambdaConf.SQSTriggers {
 			sqsTriggers[i] = SQSTrigger{
@@ -64,16 +71,17 @@ func (l *Lambda) Build() error {
 		}
 
 		data := Data{
-			Name:        lambdaConf.Name,
-			AsModule:    asModule,
-			Source:      lambdaConf.Source,
-			RoleName:    roleName,
-			Runtime:     lambdaConf.Runtime,
-			Description: lambdaConf.Description,
-			Envars:      envars,
-			SQSTriggers: sqsTriggers,
-			Crons:       crons,
-			Files:       filesConf,
+			Name:            lambdaConf.Name,
+			AsModule:        asModule,
+			Source:          lambdaConf.Source,
+			RoleName:        roleName,
+			Runtime:         lambdaConf.Runtime,
+			Description:     lambdaConf.Description,
+			Envars:          envars,
+			KinesisTriggers: kinesisTriggers,
+			SQSTriggers:     sqsTriggers,
+			Crons:           crons,
+			Files:           filesConf,
 		}
 
 		output := path.Join(l.output, "mod")
