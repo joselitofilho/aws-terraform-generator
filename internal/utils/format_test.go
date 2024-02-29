@@ -130,7 +130,7 @@ func TestGoFormat(t *testing.T) {
 			name: "when os.ReadFile fails should return an error",
 			setup: func(tb testing.TB) func() {
 				osReadFile = func(name string) ([]byte, error) {
-					require.Equal(t, tfFileName, name)
+					require.Equal(tb, tfFileName, name)
 					return nil, errDummy
 				}
 
@@ -147,7 +147,7 @@ func TestGoFormat(t *testing.T) {
 			name: "when format.Source fails should return an error",
 			setup: func(tb testing.TB) func() {
 				osReadFile = func(name string) ([]byte, error) {
-					require.Equal(t, tfFileName, name)
+					require.Equal(tb, tfFileName, name)
 					return tfContent, nil
 				}
 

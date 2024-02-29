@@ -103,7 +103,7 @@ var rootCmd = &cobra.Command{
 
 			switch commandName {
 			case optionGuideDiagram:
-				answers, err := guides.GuideDiagram(workdir, fileMap)
+				answers, err := guides.GuideDiagram(surveyAsker, workdir, fileMap)
 				if err != nil {
 					printErrorAndExit(err)
 				}
@@ -113,7 +113,7 @@ var rootCmd = &cobra.Command{
 				_ = diagramCmd.Flags().Set(flagOutput, answers.Output)
 				diagramCmd.Run(diagramCmd, []string{})
 			case optionGuideInitialStructure:
-				answers, err := guides.GuideStructure(workdir, fileMap)
+				answers, err := guides.GuideStructure(surveyAsker, workdir, fileMap)
 				if err != nil {
 					printErrorAndExit(err)
 				}

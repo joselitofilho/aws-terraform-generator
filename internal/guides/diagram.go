@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 )
 
 type DiagramAnswers struct {
@@ -13,7 +15,7 @@ type DiagramAnswers struct {
 	Output  string
 }
 
-func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers, error) {
+func GuideDiagram(surveyAsker surveyasker.Asker, workdir string, fileMap map[string][]string) (*DiagramAnswers, error) {
 	if len(fileMap["diagram"]) == 0 {
 		return nil, ErrDirDoesNotContainAnyDiagramFile
 	}
@@ -37,7 +39,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 		}
 	}
 
-	if err := survey.Ask([]*survey.Question{
+	if err := surveyAsker.Ask([]*survey.Question{
 		{
 			Name: "diagram",
 			Prompt: &survey.Select{
@@ -58,7 +60,7 @@ func GuideDiagram(workdir string, fileMap map[string][]string) (*DiagramAnswers,
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	if err := survey.AskOne(
+	if err := surveyAsker.AskOne(
 		&survey.Input{
 			Message: "Enter the output file:",
 			Default: replaceDoubleSlash(fmt.Sprintf("%s/%s.yaml",

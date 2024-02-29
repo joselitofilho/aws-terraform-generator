@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 )
 
 type StructureAnswers struct {
@@ -12,7 +14,9 @@ type StructureAnswers struct {
 	Output string
 }
 
-func GuideStructure(workdir string, fileMap map[string][]string) (*StructureAnswers, error) {
+func GuideStructure(
+	surveyAsker surveyasker.Asker, workdir string, fileMap map[string][]string,
+) (*StructureAnswers, error) {
 	if len(fileMap["config"]) == 0 {
 		return nil, ErrDirDoesNotContainAnyConfigFile
 	}
@@ -29,22 +33,17 @@ func GuideStructure(workdir string, fileMap map[string][]string) (*StructureAnsw
 		}
 	}
 
-	if err := survey.Ask([]*survey.Question{
-		{
-			Name: "config",
-			Prompt: &survey.Select{
-				Message: "Choose a config:",
-				Default: defaultConfigOption,
-				Options: configOptions,
-			},
-		},
-	}, &answers); err != nil {
+	if err := surveyAsker.AskOne(&survey.Select{
+		Message: "Choose a config:",
+		Default: defaultConfigOption,
+		Options: configOptions,
+	}, &answers.Config); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
 	answers.Config = replaceDoubleSlash(fmt.Sprintf("%s/%s", workdir, answers.Config))
 
-	if err := survey.AskOne(
+	if err := surveyAsker.AskOne(
 		&survey.Input{
 			Message: "Enter the output folder:",
 			Default: "./output",

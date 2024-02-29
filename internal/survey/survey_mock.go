@@ -12,35 +12,35 @@ package survey
 import (
 	reflect "reflect"
 
-	v2 "github.com/AlecAivazis/survey/v2"
+	survey "github.com/AlecAivazis/survey/v2"
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockSurveyAsker is a mock of SurveyAsker interface.
-type MockSurveyAsker struct {
+// MockAsker is a mock of Asker interface.
+type MockAsker struct {
 	ctrl     *gomock.Controller
-	recorder *MockSurveyAskerMockRecorder
+	recorder *MockAskerMockRecorder
 }
 
-// MockSurveyAskerMockRecorder is the mock recorder for MockSurveyAsker.
-type MockSurveyAskerMockRecorder struct {
-	mock *MockSurveyAsker
+// MockAskerMockRecorder is the mock recorder for MockAsker.
+type MockAskerMockRecorder struct {
+	mock *MockAsker
 }
 
-// NewMockSurveyAsker creates a new mock instance.
-func NewMockSurveyAsker(ctrl *gomock.Controller) *MockSurveyAsker {
-	mock := &MockSurveyAsker{ctrl: ctrl}
-	mock.recorder = &MockSurveyAskerMockRecorder{mock}
+// NewMockAsker creates a new mock instance.
+func NewMockAsker(ctrl *gomock.Controller) *MockAsker {
+	mock := &MockAsker{ctrl: ctrl}
+	mock.recorder = &MockAskerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSurveyAsker) EXPECT() *MockSurveyAskerMockRecorder {
+func (m *MockAsker) EXPECT() *MockAskerMockRecorder {
 	return m.recorder
 }
 
 // Ask mocks base method.
-func (m *MockSurveyAsker) Ask(questions []*v2.Question, answers any, opts ...v2.AskOpt) error {
+func (m *MockAsker) Ask(questions []*survey.Question, answers any, opts ...survey.AskOpt) error {
 	m.ctrl.T.Helper()
 	varargs := []any{questions, answers}
 	for _, a := range opts {
@@ -52,14 +52,14 @@ func (m *MockSurveyAsker) Ask(questions []*v2.Question, answers any, opts ...v2.
 }
 
 // Ask indicates an expected call of Ask.
-func (mr *MockSurveyAskerMockRecorder) Ask(questions, answers any, opts ...any) *gomock.Call {
+func (mr *MockAskerMockRecorder) Ask(questions, answers any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{questions, answers}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ask", reflect.TypeOf((*MockSurveyAsker)(nil).Ask), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ask", reflect.TypeOf((*MockAsker)(nil).Ask), varargs...)
 }
 
 // AskOne mocks base method.
-func (m *MockSurveyAsker) AskOne(p v2.Prompt, response any, opts ...v2.AskOpt) error {
+func (m *MockAsker) AskOne(p survey.Prompt, response any, opts ...survey.AskOpt) error {
 	m.ctrl.T.Helper()
 	varargs := []any{p, response}
 	for _, a := range opts {
@@ -71,8 +71,8 @@ func (m *MockSurveyAsker) AskOne(p v2.Prompt, response any, opts ...v2.AskOpt) e
 }
 
 // AskOne indicates an expected call of AskOne.
-func (mr *MockSurveyAskerMockRecorder) AskOne(p, response any, opts ...any) *gomock.Call {
+func (mr *MockAskerMockRecorder) AskOne(p, response any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{p, response}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskOne", reflect.TypeOf((*MockSurveyAsker)(nil).AskOne), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskOne", reflect.TypeOf((*MockAsker)(nil).AskOne), varargs...)
 }

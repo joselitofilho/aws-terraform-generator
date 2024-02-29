@@ -28,16 +28,10 @@ func GuideCode(surveyAsker surveyasker.Asker, workdir string, fileMap map[string
 
 	_, defaultStackName := path.Split(workdir)
 
-	if err := surveyAsker.Ask([]*survey.Question{
-		{
-			Name: "stackName",
-			Prompt: &survey.Input{
-				Message: "Enter the stack name:",
-				Default: defaultStackName,
-			},
-			Validate: survey.Required,
-		},
-	}, &answers); err != nil {
+	if err := surveyAsker.AskOne(&survey.Input{
+		Message: "Enter the stack name:",
+		Default: defaultStackName,
+	}, &answers.StackName); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
@@ -49,32 +43,24 @@ func GuideCode(surveyAsker surveyasker.Asker, workdir string, fileMap map[string
 		}
 	}
 
-	if err := surveyAsker.Ask([]*survey.Question{
-		{
-			Name: "config",
-			Prompt: &survey.Select{
-				Message: "Choose a config:",
-				Default: defaultConfigOption,
-				Options: configOptions,
-			},
-		},
-	}, &answers); err != nil {
+	if err := surveyAsker.AskOne(&survey.Select{
+		Message: "Choose a config:",
+		Default: defaultConfigOption,
+		Options: configOptions,
+	}, &answers.Config); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
 	answers.Config = replaceDoubleSlash(path.Join(workdir, answers.Config))
 
-	if err := surveyAsker.Ask([]*survey.Question{
-		{
-			Name: "output",
-			Prompt: &survey.Input{
-				Message: "Enter the output folder:",
-				Default: "./output",
-			},
-		},
-	}, &answers); err != nil {
+	if err := surveyAsker.AskOne(&survey.Input{
+		Message: "Enter the output folder:",
+		Default: "./output",
+	}, &answers.Output); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
+
+	answers.Output = replaceDoubleSlash(answers.Output)
 
 	return &answers, nil
 }
