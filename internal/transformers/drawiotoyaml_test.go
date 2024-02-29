@@ -82,9 +82,6 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 								Description: "my-lambda lambda",
 								Verb:        "POST",
 								Path:        "/examples",
-								Files: []config.File{
-									{Name: "lambda.go"}, {Name: "main.go"},
-								},
 							},
 						},
 					},
@@ -153,7 +150,6 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 							{"MYDATABASEDB_USER": "var.mydatabase_db_user"},
 							{"MYDATABASEDB_PASSWORD_SECRET": "var.mydatabase_db_password_secret"},
 						},
-						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 			},
@@ -183,6 +179,7 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 	}
 
 	kinesis := drawio.NewGenericResource("id1", "my-stream", drawio.KinesisType)
+	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -199,6 +196,30 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 				},
 			},
 			want: &config.Config{
+				Kinesis: []config.Kinesis{{Name: "my-stream", RetentionPeriod: "24"}},
+			},
+		},
+		{
+			name: "enqueue a message to an Kinesis stream published by Lambda",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources:     []drawio.Resource{kinesis, lambda},
+					Relationships: []drawio.Relationship{{Source: lambda, Target: kinesis}},
+				},
+			},
+			want: &config.Config{
+				Lambdas: []config.Lambda{
+					{
+						Name:        "myReceiver",
+						Source:      "git@",
+						RoleName:    "execute_lambda",
+						Description: "myReceiver lambda",
+						Envars: []map[string]string{
+							{"MY_STREAM_KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name"},
+						},
+					},
+				},
 				Kinesis: []config.Kinesis{{Name: "my-stream", RetentionPeriod: "24"}},
 			},
 		},
@@ -254,7 +275,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Files:       []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 			},
@@ -283,7 +303,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Runtime:     "go1.x",
 						Description: "myReceiver lambda",
-						Files:       []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 			},
@@ -305,7 +324,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
 						Crons:       []config.Cron{{ScheduleExpression: "cron(0 2 * * ? *)", IsEnabled: "true"}},
-						Files:       []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 			},
@@ -327,7 +345,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						RoleName:        "execute_lambda",
 						Description:     "myReceiver lambda",
 						KinesisTriggers: []config.KinesisTrigger{{SourceARN: "aws_kinesis_stream.my_stream_kinesis.arn"}},
-						Files:           []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				Kinesis: []config.Kinesis{{Name: "my-stream", RetentionPeriod: "24"}},
@@ -350,7 +367,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
 						SQSTriggers: []config.SQSTrigger{{SourceARN: "aws_sqs_queue.my_queue_sqs.arn"}},
-						Files:       []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				SQSs: []config.SQS{{Name: "my-queue", MaxReceiveCount: 10}},
@@ -375,7 +391,6 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Files:       []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				SNSs: []config.SNS{{
@@ -451,7 +466,6 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 							{"MY_BUCKET_S3_BUCKET": "aws_s3_bucket.my_bucket_bucket.bucket"},
 							{"MY_BUCKET_S3_DIRECTORY": `"my_receiver_files"`},
 						},
-						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				Buckets: []config.S3{{Name: "my-bucket", ExpirationDays: 90}},
@@ -521,9 +535,8 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
 						Envars: []map[string]string{
-							{"MY_QUEUE_SQS_QUEUE_URL": "aws_sqs_queue.my_queue_sqs.id"},
+							{"MY_QUEUE_SQS_QUEUE_URL": "aws_sqs_queue.my_queue_sqs.name"},
 						},
-						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				SQSs: []config.SQS{{Name: "my-queue", MaxReceiveCount: 10}},
@@ -671,7 +684,6 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 							{"MY_API_HOST": "var.my_api_host"},
 							{"MY_API_USER": "var.my_api_user"},
 						},
-						Files: []config.File{{Name: "lambda.go"}, {Name: "main.go"}},
 					},
 				},
 				RestfulAPIs: []config.RestfulAPI{{Name: "my-api"}},

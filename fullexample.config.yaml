@@ -160,7 +160,7 @@ lambdas:
         DOCDB_HOST: var.docdb_host
         DOCDB_USER: var.docdb_user
         DOCDB_PASSWORD_SECRET: var.docdb_password_secret
-        SQS_QUEUE_URL: aws_sqs_queue.target_sqs.id
+        SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
     # SQS triggers for lambda function
     sqs-triggers:
       - source_arn: aws_sqs_queue.source_sqs.arn

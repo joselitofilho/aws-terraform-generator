@@ -75,7 +75,7 @@ func TestYAML_Parse(t *testing.T) {
 				RoleName:    "execute_lambda",
 				Runtime:     "go1.x",
 				Description: "Trigger on schedule and initiate the execution of example receiver",
-				Envars:      []map[string]string{{"SQS_QUEUE_URL": "aws_sqs_queue.target_sqs.id"}},
+				Envars:      []map[string]string{{"SQS_QUEUE_URL": "aws_sqs_queue.target_sqs.name"}},
 				SQSTriggers: []SQSTrigger{{SourceARN: "aws_sqs_queue.source_sqs.arn"}},
 				Crons:       []Cron{{ScheduleExpression: "cron(0 1 * * ? *)", IsEnabled: "var.trigger_enabled"}},
 				Files: []File{{
