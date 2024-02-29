@@ -26,7 +26,7 @@ func (a *APIGateway) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorerrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
 	}
 
 	for i := range yamlConfig.APIGateways {

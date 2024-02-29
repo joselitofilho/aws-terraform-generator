@@ -39,7 +39,7 @@ func TestGuideCode(t *testing.T) {
 					"config": {"diagram.yaml"},
 				},
 			},
-			prepareMocks: func(fsa *FakeSurveyAsker) {},
+			prepareMocks: func(_ *FakeSurveyAsker) {},
 			want: &CodeAnswers{
 				StackName: "teststack",
 				Config:    "testoutput/teststask/diagram.yaml",
@@ -68,7 +68,7 @@ type FakeSurveyAsker struct {
 	callCount int
 }
 
-func (f *FakeSurveyAsker) Ask(questions []*survey.Question, response interface{}, opts ...survey.AskOpt) error {
+func (f *FakeSurveyAsker) Ask(questions []*survey.Question, response any, _ ...survey.AskOpt) error {
 	f.callCount++
 
 	ans := response.(*CodeAnswers)
@@ -89,6 +89,6 @@ func (f *FakeSurveyAsker) Ask(questions []*survey.Question, response interface{}
 }
 
 // AskOne asks a single survey question using the actual survey library.
-func (f *FakeSurveyAsker) AskOne(prompt survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
+func (f *FakeSurveyAsker) AskOne(_ survey.Prompt, _ any, _ ...survey.AskOpt) error {
 	return nil
 }

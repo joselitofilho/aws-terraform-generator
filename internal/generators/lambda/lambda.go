@@ -26,7 +26,7 @@ func (l *Lambda) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
 
 	for i := range yamlConfig.Lambdas {

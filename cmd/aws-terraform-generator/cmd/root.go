@@ -57,7 +57,7 @@ var rootCmd = &cobra.Command{
 `
 		fmt.Println(title)
 
-		surveyAsker := &surveyasker.RealSurveyAsker{}
+		surveyAsker := &surveyasker.RealAsker{}
 
 		shouldContinue := true
 		for shouldContinue {

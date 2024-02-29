@@ -33,7 +33,7 @@ func (k *Kinesis) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
 
 	modPath := path.Join(k.output, "mod")

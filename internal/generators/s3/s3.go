@@ -30,7 +30,7 @@ func (s *S3) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
 
 	modPath := path.Join(s.output, "mod")
@@ -71,7 +71,7 @@ func (s *S3) Build() error {
 	if result != "" {
 		outputFile := path.Join(modPath, "s3.tf")
 
-		err = generators.GenerateFile(defaultTfTemplateFiles, tmplName, result, outputFile, Data{})
+		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, result, outputFile, Data{})
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

@@ -7,7 +7,7 @@
 [![Contributions - Welcome](https://img.shields.io/badge/Contributions-Welcome-2ea44f?style=for-the-badge)](#contributing)
 [![License](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](#license)
 
-[![Made with Golang](https://img.shields.io/badge/Golang->=1.19.4-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
+[![Made with Golang](https://img.shields.io/badge/Golang->=1.21.6-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
 [![Using Terraform](https://img.shields.io/badge/Terraform->=3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")
 [![Using Diagrams](https://img.shields.io/badge/Diagrams-orange?logo=&logoColor=white&style=for-the-badge)](https://app.diagrams.net/ "Go to Diagram homepage")
 

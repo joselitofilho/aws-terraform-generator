@@ -56,12 +56,12 @@ func TestS3_Build(t *testing.T) {
 		},
 	}
 
+	defer func() {
+		_ = os.RemoveAll(testOutput)
+	}()
+
 	for i := range tests {
 		tc := tests[i]
-
-		defer func() {
-			_ = os.RemoveAll(testOutput)
-		}()
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := NewS3(tc.fields.configFileName, tc.fields.output).Build()

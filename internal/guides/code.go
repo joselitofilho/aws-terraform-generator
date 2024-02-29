@@ -16,7 +16,7 @@ type CodeAnswers struct {
 	Output    string
 }
 
-func GuideCode(surveyAsker surveyasker.SurveyAsker, workdir string, fileMap map[string][]string) (*CodeAnswers, error) {
+func GuideCode(surveyAsker surveyasker.Asker, workdir string, fileMap map[string][]string) (*CodeAnswers, error) {
 	if len(fileMap["config"]) == 0 {
 		return nil, ErrDirDoesNotContainAnyConfigFile
 	}
