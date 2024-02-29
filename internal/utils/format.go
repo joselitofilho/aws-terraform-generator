@@ -7,10 +7,19 @@ import (
 	"os/exec"
 )
 
-func TerraformFormat(folder string) error {
-	cmd := exec.Command("terraform", "fmt", folder)
+var (
+	terraformCommand func(string) error = func(folder string) error {
+		_, err := exec.Command("terraform", "fmt", folder).Output()
+		return err
+	}
 
-	_, err := cmd.Output()
+	osReadFile   = os.ReadFile
+	formatSource = format.Source
+	osWriteFile  = os.WriteFile
+)
+
+func TerraformFormat(folder string) error {
+	err := terraformCommand(folder)
 	if err != nil {
 		return fmt.Errorf("please consider to install terraform. Terraform format fails: %w", err)
 	}
@@ -18,18 +27,18 @@ func TerraformFormat(folder string) error {
 	return nil
 }
 
-func GoFormat(fileName string) error {
-	inputFileContent, err := os.ReadFile(fileName)
+func GoFormat(filename string) error {
+	inputFileContent, err := osReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("error opening input file: %w", err)
 	}
 
-	formattedContent, err := format.Source(inputFileContent)
+	formattedContent, err := formatSource(inputFileContent)
 	if err != nil {
 		return fmt.Errorf("error formatting source code: %w", err)
 	}
 
-	err = os.WriteFile(fileName, formattedContent, os.ModePerm)
+	err = osWriteFile(filename, formattedContent, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error writing to output file: %w", err)
 	}
