@@ -2,7 +2,6 @@ package lambda
 
 import (
 	_ "embed"
-	"os"
 	"path"
 	"testing"
 
@@ -62,9 +61,9 @@ func TestLambda_Build(t *testing.T) {
 	for i := range tests {
 		tc := tests[i]
 
-		defer func() {
-			_ = os.RemoveAll(testOutput)
-		}()
+		// defer func() {
+		// 	_ = os.RemoveAll(testOutput)
+		// }()
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := NewLambda(tc.fields.configFileName, tc.fields.output).Build()

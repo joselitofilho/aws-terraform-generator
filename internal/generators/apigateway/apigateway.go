@@ -32,11 +32,11 @@ func (a *APIGateway) Build() error {
 	for i := range yamlConfig.APIGateways {
 		apiConf := yamlConfig.APIGateways[i]
 
-		output := path.Join(a.output, apiConf.StackName, "mod")
-		_ = os.MkdirAll(output, os.ModePerm)
+		outputMod := path.Join(a.output, apiConf.StackName, "mod")
+		_ = os.MkdirAll(outputMod, os.ModePerm)
 
 		if apiConf.APIG {
-			outputFile := path.Join(output, filenameTfAPIG)
+			outputFile := path.Join(outputMod, filenameTfAPIG)
 
 			data := Data{
 				StackName: apiConf.StackName,
@@ -85,19 +85,18 @@ func (a *APIGateway) Build() error {
 			}
 
 			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
-			outputFile := path.Join(output, fileName)
 
-			err = generators.GenerateFile(defaultTfTemplateFiles, fileName, "", outputFile, lambdaData)
+			err = generators.GenerateFiles(map[string]string{fileName: string(lambdaTFTmpl)}, nil, lambdaData, outputMod)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("Terraform '%s' has been generated successfully\n", fileName)
+			fmt.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
 
-			output := path.Join(a.output, apiConf.StackName, "lambda", lambdaConf.Name)
-			_ = os.MkdirAll(output, os.ModePerm)
+			outputLambda := path.Join(a.output, apiConf.StackName, "lambda", lambdaConf.Name)
+			_ = os.MkdirAll(outputLambda, os.ModePerm)
 
-			err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, output)
+			err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, outputLambda)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}

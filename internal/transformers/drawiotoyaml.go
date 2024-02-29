@@ -135,7 +135,6 @@ func buildLambdas(
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
 ) (lambdas []config.Lambda, apiGatewayLambdas map[string][]config.APIGatewayLambda) {
 	apiGatewayLambdas = map[string][]config.APIGatewayLambda{}
-	defaultFiles := []config.File{{Name: "lambda.go"}, {Name: "main.go"}}
 
 	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
 		isAPIGatewayLambda := false
@@ -161,7 +160,6 @@ func buildLambdas(
 					Envars:      envarsList,
 					Verb:        strings.Split(rel.Source.Value(), " ")[0],
 					Path:        strings.Split(rel.Source.Value(), " ")[1],
-					Files:       defaultFiles,
 				})
 			}
 
@@ -207,7 +205,6 @@ func buildLambdas(
 				Envars:          envarsList,
 				KinesisTriggers: kinesisTriggers,
 				SQSTriggers:     sqsTriggers,
-				Files:           defaultFiles,
 				Crons:           crons,
 			})
 		}

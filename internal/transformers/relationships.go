@@ -46,7 +46,7 @@ func buildLambdaToKinesis(envars map[string]map[string]string, lambda, kinesis d
 	kinesisName := initLambdaEnvarsAndGetTargetName(envars, lambda, kinesis)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_KINESIS_STREAM_URL",
-		strcase.ToSNAKE(kinesisName))] = fmt.Sprintf("aws_kinesis_stream.%s_kinesis.id", strcase.ToSnake(kinesisName))
+		strcase.ToSNAKE(kinesisName))] = fmt.Sprintf("aws_kinesis_stream.%s_kinesis.name", strcase.ToSnake(kinesisName))
 }
 
 func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
@@ -66,7 +66,7 @@ func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Re
 	sqsName := initLambdaEnvarsAndGetTargetName(envars, lambda, sqs)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
-		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.id", strcase.ToSnake(sqsName))
+		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.name", strcase.ToSnake(sqsName))
 }
 
 func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
