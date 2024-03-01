@@ -104,7 +104,7 @@ $ cp ./example/structure.config.yaml mystack/structure.config.yaml
 **Step 6**: Run the generator guide to assist you.
 
 ```bash
-$ aws-terraform-generator --wordir mystack
+$ aws-terraform-generator --workdir mystack
 ```
 
 Output:
