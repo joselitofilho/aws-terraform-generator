@@ -22,8 +22,6 @@ func TestKinesis_Build(t *testing.T) {
 		output         string
 	}
 
-	happypathPath := path.Join(testOutput, "happypath")
-
 	tests := []struct {
 		name             string
 		fields           fields
@@ -31,19 +29,33 @@ func TestKinesis_Build(t *testing.T) {
 		targetErr        error
 	}{
 		{
-			name: "happy path",
+			name: "one kinesis with extra file",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "kinesis.config.yaml"),
-				output:         happypathPath,
+				output:         path.Join(testOutput, "one"),
 			},
 			extraValidations: func(tb testing.TB, err error) {
 				if err != nil {
 					return
 				}
 
-				modPath := path.Join(happypathPath, "mod")
+				modPath := path.Join(testOutput, "one", "mod")
 				require.FileExists(tb, path.Join(modPath, "kinesis.tf"))
 				require.FileExists(tb, path.Join(modPath, "custom.tf"))
+			},
+		},
+		{
+			name: "multiple kinesis",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "kinesis.config.multiple.yaml"),
+				output:         path.Join(testOutput, "multiple"),
+			},
+			extraValidations: func(tb testing.TB, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "kinesis.tf"))
 			},
 		},
 		{

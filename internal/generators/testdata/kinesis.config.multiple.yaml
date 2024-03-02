@@ -1,0 +1,6 @@
+kinesis:
+  - name: myKinesis
+    retention_period: 24
+    kms_key_id: var.lambda_function_kms_key_arn
+  - name: myAnotherKinesis
+    retention_period: 60
