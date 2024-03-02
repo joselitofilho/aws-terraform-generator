@@ -9,7 +9,7 @@ import (
 type Resource interface {
 	ID() string
 	Value() string
-	ReseourceType() ResourceType
+	ResourceType() ResourceType
 }
 
 // GenericResource represents a generic resource.
@@ -22,9 +22,9 @@ type GenericResource struct {
 func NewGenericResource(id, value string, resourceType ResourceType) *GenericResource {
 	return &GenericResource{id: id, value: value, resourceType: resourceType}
 }
-func (r *GenericResource) ID() string                  { return r.id }
-func (r *GenericResource) Value() string               { return r.value }
-func (r *GenericResource) ReseourceType() ResourceType { return r.resourceType }
+func (r *GenericResource) ID() string                 { return r.id }
+func (r *GenericResource) Value() string              { return r.value }
+func (r *GenericResource) ResourceType() ResourceType { return r.resourceType }
 
 // Relationship struct representing the relationship between resources.
 type Relationship struct {
