@@ -3,13 +3,12 @@
 # AWS Terraform Generator
 
 [![GitHub tag](https://img.shields.io/github/release/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/joselitofilho/aws-terraform-generator?style=for-the-badge)](https://goreportcard.com/report/github.com/joselitofilho/aws-terraform-generator)
 [![Code coverage](https://img.shields.io/badge/Coverage-93.3%25-2ea44f?style=for-the-badge)](#)
-[![Contributions - Welcome](https://img.shields.io/badge/Contributions-Welcome-2ea44f?style=for-the-badge)](#contributing)
-[![License](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](#license)
 
-[![Made with Golang](https://img.shields.io/badge/Golang->=1.21.6-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
-[![Using Terraform](https://img.shields.io/badge/Terraform->=3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")
-[![Using Diagrams](https://img.shields.io/badge/Diagrams-orange?logo=&logoColor=white&style=for-the-badge)](https://app.diagrams.net/ "Go to Diagram homepage")
+[![Made with Golang](https://img.shields.io/badge/Golang-1.21.6-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
+[![Using Terraform](https://img.shields.io/badge/Terraform-3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")
+[![Using Diagrams](https://img.shields.io/badge/diagrams.net-orange?logo=&logoColor=white&style=for-the-badge)](https://app.diagrams.net/ "Go to Diagrams homepage")
 
 [![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/joselitofilho)
 
@@ -161,7 +160,7 @@ For code generation, we are using the standard Golang library [text/template](ht
 
 ## Contributing
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request.
+Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to create an [issue](https://github.com/joselitofilho/aws-terraform-generator/issues) or submit a pull request. Your contribution is much appreciated.
 
 ## License
 
