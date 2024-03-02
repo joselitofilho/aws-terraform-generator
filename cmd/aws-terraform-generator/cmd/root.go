@@ -185,7 +185,6 @@ func Execute() {
 	}
 }
 
-//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.Flags().StringP(flagWorkdir, "", ".",
 		"Path to the directory where diagrams and configuration files are stored for the project. For example: ./example")

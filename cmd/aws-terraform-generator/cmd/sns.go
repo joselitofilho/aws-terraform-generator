@@ -28,7 +28,6 @@ var snsCmd = &cobra.Command{
 	},
 }
 
-//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(snsCmd)
 

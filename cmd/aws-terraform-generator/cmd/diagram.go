@@ -74,7 +74,6 @@ func build(diagram, configFile, output string) error {
 	return nil
 }
 
-//nolint:gochecknoinits // That is the way the cobra library operates
 func init() {
 	rootCmd.AddCommand(diagramCmd)
 
