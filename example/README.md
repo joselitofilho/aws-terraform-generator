@@ -1,6 +1,6 @@
 # example
 
-<div style="text-align:center"><img src="example.drawio.png" /></div>
+<div style="text-align:center"><img src="example.drawio.svg" /></div>
 
 - [diagram.drawio.xml](diagram.drawio.xml)
 - [structure.yaml](structure.yaml)

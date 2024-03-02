@@ -1,12 +1,22 @@
 resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {
   bucket = "${var.client}-${var.environment}-{{$.Name}}"
-  acl    = "private"
+}
 
-  {{ if gt $.ExpirationDays 0 }}lifecycle_rule {
-    id      = "{{$.Name}}-expiry"
-    enabled = true
+resource "aws_s3_bucket_acl" "{{ToSnake $.Name}}__acl" {
+  bucket = aws_s3_bucket.{{ToSnake $.Name}}_bucket.id
+  acl    = "private"
+}
+{{ if gt $.ExpirationDays 0 }}
+resource "aws_s3_bucket_lifecycle_configuration" "bucket-config" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "log"
+
     expiration {
       days = {{$.ExpirationDays}}
     }
-  }{{end}}
-}
+
+    status = "Enabled"
+  }
+}{{end}}
