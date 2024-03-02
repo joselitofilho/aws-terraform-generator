@@ -70,41 +70,26 @@ func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Re
 }
 
 func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns drawio.Resource) {
-	snsConfig, ok := snsMap[sns.ID()]
-	if !ok {
-		snsConfig = config.SNS{Name: sns.Value()}
-	}
-
+	snsConfig := snsMap[sns.ID()]
 	snsConfig.BucketName = s3Bucket.Value()
-
 	snsMap[sns.ID()] = snsConfig
 }
 
 func buildSNSToLambda(snsMap map[string]config.SNS, sns, lambda drawio.Resource) {
-	snsConfig, ok := snsMap[sns.ID()]
-	if !ok {
-		snsConfig = config.SNS{Name: sns.Value()}
-	}
-
+	snsConfig := snsMap[sns.ID()]
 	snsConfig.Lambdas = append(snsConfig.Lambdas, config.SNSResource{
 		Name:   lambda.Value(),
 		Events: []string{"s3:ObjectCreated:*"},
 	})
-
 	snsMap[sns.ID()] = snsConfig
 }
 
 func buildSNSToSQS(snsMap map[string]config.SNS, sns, sqs drawio.Resource) {
-	snsConfig, ok := snsMap[sns.ID()]
-	if !ok {
-		snsConfig = config.SNS{Name: sns.Value()}
-	}
-
+	snsConfig := snsMap[sns.ID()]
 	snsConfig.SQSs = append(snsConfig.SQSs, config.SNSResource{
 		Name:   sqs.Value(),
 		Events: []string{"s3:ObjectCreated:*"},
 	})
-
 	snsMap[sns.ID()] = snsConfig
 }
 
