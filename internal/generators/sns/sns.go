@@ -88,14 +88,12 @@ func (s *SNS) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(defaultTfTemplateFiles, filesConf, data, modPath)
+			err = generators.GenerateFiles(nil, filesConf, data, modPath)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
 			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
-
-			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(snsTFTmpl))
@@ -103,7 +101,7 @@ func (s *SNS) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		result = fmt.Sprintf("%s\n%s", result, output)
+		result = fmt.Sprintf("%s%s", result, output)
 	}
 
 	if result != "" {

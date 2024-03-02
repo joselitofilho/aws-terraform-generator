@@ -1,0 +1,17 @@
+sns:
+  - name: sns-Lambda
+    bucket_name: my-bucket
+    lambdas:
+      - name: exampleReceiver
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+  - name: sns-sqs
+    bucket_name: my-other-bucket
+    sqs:
+      - name: target
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"

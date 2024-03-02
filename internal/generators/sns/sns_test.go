@@ -22,8 +22,6 @@ func TestSNS_Build(t *testing.T) {
 		output         string
 	}
 
-	happypathPath := path.Join(testOutput, "happypath")
-
 	tests := []struct {
 		name             string
 		fields           fields
@@ -31,19 +29,33 @@ func TestSNS_Build(t *testing.T) {
 		targetErr        error
 	}{
 		{
-			name: "happy path",
+			name: "one sns with extra file",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sns.config.yaml"),
-				output:         happypathPath,
+				output:         path.Join(testOutput, "one"),
 			},
 			extraValidations: func(tb testing.TB, err error) {
 				if err != nil {
 					return
 				}
 
-				modPath := path.Join(happypathPath, "mod")
+				modPath := path.Join(testOutput, "one", "mod")
 				require.FileExists(tb, path.Join(modPath, "example-sns.tf"))
 				require.FileExists(tb, path.Join(modPath, "sns.tf"))
+			},
+		},
+		{
+			name: "multiple sns",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sns.config.multiple.yaml"),
+				output:         path.Join(testOutput, "multiple"),
+			},
+			extraValidations: func(tb testing.TB, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "sns.tf"))
 			},
 		},
 		{

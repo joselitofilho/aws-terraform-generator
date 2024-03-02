@@ -6,9 +6,7 @@ resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}
     events    = [{{.Events}}]
     {{ $length := len .FilterPrefix}}{{ if gt $length 0 }}filter_prefix = "{{.FilterPrefix}}"{{end}}
     {{ $length := len .FilterSuffix}}{{ if gt $length 0 }}filter_suffix = "{{.FilterSuffix}}"{{end}}
-  }
-  {{end}}
-  {{range $.Lambdas}}
+  }{{end}}{{range $.Lambdas}}
   lambda_function {
     lambda_function_arn = aws_lambda_function.{{ToSnake .Name}}_lambda.arn
     events              = [{{.Events}}]
@@ -18,8 +16,7 @@ resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}
   {{end}}
   {{ $length := len $.Lambdas}}{{ if gt $length 0 }}depends_on = [
     {{range $.Lambdas}}aws_lambda_permission.lambda_permission_from_{{ToSnake .Name}}_to_{{ToSnake $.BucketName}}_bucket,
-    {{end}}
-  ]{{end}}
+    {{end}}]{{end}}
 }
 {{ $length := len $.SQSs}}{{ if gt $length 0 }}
 resource "aws_iam_role_policy" "s3_to_sqs_policy_{{ToSnake $.Name}}" {
@@ -37,7 +34,7 @@ resource "aws_iam_role_policy" "s3_to_sqs_policy_{{ToSnake $.Name}}" {
         ],
         Condition = {
           ArnLike = {
-            "aws:SourceArn" = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}_bucket"
+            "aws:SourceArn" = aws_s3_bucket.{{ToSnake $.BucketName}}_bucket.arn
           }
         }
       }
@@ -68,6 +65,6 @@ resource "aws_lambda_permission" "lambda_permission_{{ToSnake .Name}}_and_{{ToSn
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.{{ToSnake .Name}}_lambda.function_name
   principal     = "s3.amazonaws.com"
-  source_arn    = "arn:aws:s3:::${var.client}-${var.environment}-{{$.BucketName}}_bucket"
+  source_arn    = aws_s3_bucket.{{ToSnake $.BucketName}}_bucket.arn
 }
 {{end}}
