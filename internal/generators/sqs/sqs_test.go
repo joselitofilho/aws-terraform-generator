@@ -22,8 +22,6 @@ func TestSQS_Build(t *testing.T) {
 		output         string
 	}
 
-	happypathPath := path.Join(testOutput, "happypath")
-
 	tests := []struct {
 		name             string
 		fields           fields
@@ -31,19 +29,33 @@ func TestSQS_Build(t *testing.T) {
 		targetErr        error
 	}{
 		{
-			name: "happy path",
+			name: "one sqs with extra file",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sqs.config.yaml"),
-				output:         happypathPath,
+				output:         path.Join(testOutput, "one"),
 			},
 			extraValidations: func(tb testing.TB, err error) {
 				if err != nil {
 					return
 				}
 
-				modPath := path.Join(happypathPath, "mod")
+				modPath := path.Join(testOutput, "one", "mod")
 				require.FileExists(tb, path.Join(modPath, "sqs.tf"))
 				require.FileExists(tb, path.Join(modPath, "target-sqs.tf"))
+			},
+		},
+		{
+			name: "multiple sqs",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sqs.config.multiple.yaml"),
+				output:         path.Join(testOutput, "miltiple"),
+			},
+			extraValidations: func(tb testing.TB, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "sqs.tf"))
 			},
 		},
 		{
