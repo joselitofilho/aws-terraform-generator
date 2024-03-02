@@ -16,6 +16,10 @@ linters-settings:
   funlen:
     lines: -1 # the number of lines (code + empty lines) is not a right metric and leads to code without empty line or one-liner.
     statements: 50
+  gocognit:
+    # Minimal code complexity to report.
+    # Default: 30 (but we recommend 10-20)
+    min-complexity: 10
   goconst:
     min-len: 2
     min-occurrences: 3
@@ -33,6 +37,22 @@ linters-settings:
       - whyNoLint
   gocyclo:
     min-complexity: 15
+  godot:
+    # Comments to be checked: `declarations`, `toplevel`, or `all`.
+    # Default: declarations
+    scope: all
+    # List of regexps for excluding particular comment lines from check.
+    # Default: []
+    exclude:
+      # Exclude todo and fixme comments.
+      - "FIXME:"
+      - "TODO:"
+    # Check that each sentence ends with a period.
+    # Default: true
+    period: true
+    # Check that each sentence starts with a capital letter.
+    # Default: false
+    capital: false
   gofmt:
     rewrite-rules:
       - pattern: "interface{}"
@@ -161,9 +181,11 @@ linters:
     - funlen
     - gocheckcompilerdirectives
     - gochecknoinits
+    # - gocognit
     - goconst
     - gocritic
     - gocyclo
+    - godot
     - gofmt
     - goimports
     - gomnd
@@ -190,8 +212,6 @@ linters:
   # don't enable:
   # - asciicheck
   # - gochecknoglobals
-  # - gocognit
-  # - godot
   # - godox
   # - goerr113
   # - nestif

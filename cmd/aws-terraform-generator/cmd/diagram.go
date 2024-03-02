@@ -12,7 +12,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
-// diagramCmd represents the structure command
+// diagramCmd represents the structure command.
 var diagramCmd = &cobra.Command{
 	Use:   "diagram",
 	Short: "Manage Diagram",

@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/s3"
 )
 
-// s3Cmd represents the sqs command
+// s3Cmd represents the sqs command.
 var s3Cmd = &cobra.Command{
 	Use:   "s3",
 	Short: "Manage S3",

@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/sqs"
 )
 
-// sqsCmd represents the sqs command
+// sqsCmd represents the sqs command.
 var sqsCmd = &cobra.Command{
 	Use:   "sqs",
 	Short: "Manage SQS",

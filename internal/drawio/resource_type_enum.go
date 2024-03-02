@@ -2,35 +2,35 @@ package drawio
 
 import "strings"
 
-// ResourceType represents the type of a resource
+// ResourceType represents the type of a resource.
 type ResourceType int
 
 const (
-	// APIGatewayType represents the API Gateway resource type
+	// APIGatewayType represents the API Gateway resource type.
 	APIGatewayType ResourceType = iota
-	// CronType represents the Cron resource type
+	// CronType represents the Cron resource type.
 	CronType
-	// DatabaseType represents the Database resource type
+	// DatabaseType represents the Database resource type.
 	DatabaseType
-	// EndpointType represents the Endpoint resource type
+	// EndpointType represents the Endpoint resource type.
 	EndpointType
-	// KinesisType represents the Kinesis resource type
+	// KinesisType represents the Kinesis resource type.
 	KinesisType
-	// LambdaType represents the Lambda resource type
+	// LambdaType represents the Lambda resource type.
 	LambdaType
-	// RestfulAPIType represents the Restful API resource type
+	// RestfulAPIType represents the Restful API resource type.
 	RestfulAPIType
-	// S3Type represents the S3 resource type
+	// S3Type represents the S3 resource type.
 	S3Type
-	// SNSType represents the SNS resource type
+	// SNSType represents the SNS resource type.
 	SNSType
-	// SQSType represents the SQS resource type
+	// SQSType represents the SQS resource type.
 	SQSType
-	// UnknownType represents an unknown resource type
+	// UnknownType represents an unknown resource type.
 	UnknownType
 )
 
-// String returns the string representation of a ResourceType
+// String returns the string representation of a ResourceType.
 func (rt ResourceType) String() string {
 	switch rt {
 	case APIGatewayType:
@@ -58,7 +58,7 @@ func (rt ResourceType) String() string {
 	}
 }
 
-// ParseResourceType parses a ResourceType from a string
+// ParseResourceType parses a ResourceType from a string.
 func ParseResourceType(s string) ResourceType {
 	switch strings.ToLower(s) {
 	case "apigateway":

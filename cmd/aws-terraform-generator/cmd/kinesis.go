@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/kinesis"
 )
 
-// kinesisCmd represents the sqs command
+// kinesisCmd represents the sqs command.
 var kinesisCmd = &cobra.Command{
 	Use:   "kinesis",
 	Short: "Manage Kinesis streams",

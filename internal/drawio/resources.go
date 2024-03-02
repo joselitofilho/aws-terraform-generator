@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-// Resource interface for all resource types
+// Resource interface for all resource types.
 type Resource interface {
 	ID() string
 	Value() string
 	ReseourceType() ResourceType
 }
 
-// GenericResource represents a generic resource
+// GenericResource represents a generic resource.
 type GenericResource struct {
 	id           string
 	value        string
@@ -26,35 +26,35 @@ func (r *GenericResource) ID() string                  { return r.id }
 func (r *GenericResource) Value() string               { return r.value }
 func (r *GenericResource) ReseourceType() ResourceType { return r.resourceType }
 
-// Relationship struct representing the relationship between resources
+// Relationship struct representing the relationship between resources.
 type Relationship struct {
 	Source Resource
 	Target Resource
 }
 
-// ResourceCollection represents a collection of resources and their relationships
+// ResourceCollection represents a collection of resources and their relationships.
 type ResourceCollection struct {
 	Resources     []Resource
 	Relationships []Relationship
 }
 
-// NewResourceCollection creates a new ResourceCollection
+// NewResourceCollection creates a new ResourceCollection.
 func NewResourceCollection() *ResourceCollection {
 	return &ResourceCollection{}
 }
 
-// AddResource adds a resource to the collection
+// AddResource adds a resource to the collection.
 func (rc *ResourceCollection) AddResource(resource Resource) {
 	rc.Resources = append(rc.Resources, resource)
 }
 
-// AddRelationship adds a relationship to the collection
+// AddRelationship adds a relationship to the collection.
 func (rc *ResourceCollection) AddRelationship(source, target Resource) {
 	relationship := Relationship{Source: source, Target: target}
 	rc.Relationships = append(rc.Relationships, relationship)
 }
 
-// ParseResources parses resources from the MxFile
+// ParseResources parses resources from the MxFile.
 func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 	resources := NewResourceCollection()
 
@@ -87,7 +87,7 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 	return resources, nil
 }
 
-// createResource creates a resource based on cell data
+// createResource creates a resource based on cell data.
 func createResource(id, value, style string) Resource {
 	reDatabase := regexp.MustCompile(`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|` +
 		`mxgraph.aws4.documentdb_with_mongodb_compatibility`)

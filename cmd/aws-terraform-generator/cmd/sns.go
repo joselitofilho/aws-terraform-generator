@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/sns"
 )
 
-// snsCmd represents the sqs command
+// snsCmd represents the sqs command.
 var snsCmd = &cobra.Command{
 	Use:   "sns",
 	Short: "Manage SNS",

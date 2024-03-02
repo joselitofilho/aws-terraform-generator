@@ -24,7 +24,7 @@ func Build(data any, templateName, templateContent string) (string, error) {
 		return "", fmt.Errorf("%w", err)
 	}
 
-	// Execute the template with the data and capture the output in a buffer
+	// Execute the template with the data and capture the output in a buffer.
 	var output bytes.Buffer
 
 	err = tmpl.Execute(&output, data)
@@ -41,7 +41,7 @@ func BuildFile(data any, templateName, templateContent, outputPath string) error
 		return fmt.Errorf("%w", err)
 	}
 
-	// Execute the template with the data and write the output to a file
+	// Execute the template with the data and write the output to a file.
 	output, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("%w", err)
@@ -127,7 +127,7 @@ func GenerateFiles(templatesMap map[string]string, filesMap map[string]File, dat
 	return nil
 }
 
-// buildAndParseTemplate Create a new template and parse the template content
+// buildAndParseTemplate Create a new template and parse the template content.
 func buildAndParseTemplate(name, content string) (*template.Template, error) {
 	tmpl, err := template.New(name).
 		Funcs(template.FuncMap{

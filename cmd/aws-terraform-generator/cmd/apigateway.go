@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/apigateway"
 )
 
-// apigatewayCmd represents the apigateway command
+// apigatewayCmd represents the apigateway command.
 var apigatewayCmd = &cobra.Command{
 	Use:   "apigateway",
 	Short: "Manage APIGateway",

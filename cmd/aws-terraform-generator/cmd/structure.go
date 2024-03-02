@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/structure"
 )
 
-// structureCmd represents the structure command
+// structureCmd represents the structure command.
 var structureCmd = &cobra.Command{
 	Use:   "structure",
 	Short: "Manage Structure",

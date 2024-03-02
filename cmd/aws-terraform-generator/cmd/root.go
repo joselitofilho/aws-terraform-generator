@@ -35,7 +35,7 @@ var (
 	fmtRed = color.New(color.FgHiRed)
 )
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "aws-terraform-generator",
 	Short: "AWS terraform generator",
@@ -61,16 +61,16 @@ var rootCmd = &cobra.Command{
 
 		shouldContinue := true
 		for shouldContinue {
-			// Create a map to store file extensions and their respective files
+			// Create a map to store file extensions and their respective files.
 			fileMap := make(map[string][]string)
 
-			// Read files in the current directory
+			// Read files in the current directory.
 			files, err := os.ReadDir(workdir)
 			if err != nil {
 				printErrorAndExit(fmt.Errorf("error reading directory: %w", err))
 			}
 
-			// Iterate through the files and populate the map
+			// Iterate through the files and populate the map.
 			for _, file := range files {
 				if !file.IsDir() {
 					ext := strings.ToLower(path.Ext(file.Name()))

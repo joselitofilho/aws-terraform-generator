@@ -7,7 +7,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/lambda"
 )
 
-// lambdaCmd represents the lambda command
+// lambdaCmd represents the lambda command.
 var lambdaCmd = &cobra.Command{
 	Use:   "lambda",
 	Short: "Manage Lambda",
