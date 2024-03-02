@@ -32,25 +32,22 @@ func buildLambdas(
 	cronsByLambdaID map[string]drawio.Resource,
 	kinesisTriggersByLambdaID map[string][]drawio.Resource,
 	sqsTriggersByLambdaID map[string][]drawio.Resource,
-) (lambdas []config.Lambda, apiGatewayLambdas map[string][]config.APIGatewayLambda) {
-	apiGatewayLambdas = map[string][]config.APIGatewayLambda{}
+) (lambdas []config.Lambda, apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda) {
+	apiGatewayLambdasByAPIGatewayID = map[string][]config.APIGatewayLambda{}
+	apiGatewayLambdaIDs := map[string]struct{}{}
 
-	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
-		isAPIGatewayLambda := false
+	for _, rel := range resources.Relationships {
+		isAPIGatewayLambda := rel.Target.ResourceType() == drawio.LambdaType &&
+			rel.Source.ResourceType() == drawio.APIGatewayType
 
-		for _, rel := range resources.Relationships {
-			if rel.Target.ID() == lambda.ID() &&
-				rel.Source.ResourceType() == drawio.APIGatewayType {
-				isAPIGatewayLambda = true
+		if isAPIGatewayLambda {
+			lambda := rel.Target
+			apiGatewayID := rel.Source.ID()
 
-				apiGatewayID := rel.Source.ID()
+			envarsList := buildEnvarsList(envars, lambda)
 
-				var envarsList []map[string]string
-				for key, value := range envars[lambda.ID()] {
-					envarsList = append(envarsList, map[string]string{key: value})
-				}
-
-				apiGatewayLambdas[apiGatewayID] = append(apiGatewayLambdas[apiGatewayID], config.APIGatewayLambda{
+			apiGatewayLambdasByAPIGatewayID[apiGatewayID] = append(
+				apiGatewayLambdasByAPIGatewayID[apiGatewayID], config.APIGatewayLambda{
 					Name:        lambda.Value(),
 					Source:      yamlConfig.Diagram.Lambda.Source,
 					RoleName:    yamlConfig.Diagram.Lambda.RoleName,
@@ -60,54 +57,78 @@ func buildLambdas(
 					Verb:        strings.Split(rel.Source.Value(), " ")[0],
 					Path:        strings.Split(rel.Source.Value(), " ")[1],
 				})
-			}
 
-			if isAPIGatewayLambda {
-				break
-			}
-		}
-
-		if !isAPIGatewayLambda {
-			var crons []config.Cron
-			if cron, ok := cronsByLambdaID[lambda.ID()]; ok {
-				crons = append(crons, config.Cron{
-					ScheduleExpression: cron.Value(),
-					IsEnabled:          "true",
-				})
-			}
-
-			var envarsList []map[string]string
-			for key, value := range envars[lambda.ID()] {
-				envarsList = append(envarsList, map[string]string{key: value})
-			}
-
-			var kinesisTriggers []config.KinesisTrigger
-			for _, kinesisTrigger := range kinesisTriggersByLambdaID[lambda.ID()] {
-				kinesisTriggers = append(kinesisTriggers, config.KinesisTrigger{
-					SourceARN: fmt.Sprintf("aws_kinesis_stream.%s_kinesis.arn", strcase.ToSnake(kinesisTrigger.Value())),
-				})
-			}
-
-			var sqsTriggers []config.SQSTrigger
-			for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
-				sqsTriggers = append(sqsTriggers, config.SQSTrigger{
-					SourceARN: fmt.Sprintf("aws_sqs_queue.%s_sqs.arn", strcase.ToSnake(sqsTrigger.Value())),
-				})
-			}
-
-			lambdas = append(lambdas, config.Lambda{
-				Name:            lambda.Value(),
-				Source:          yamlConfig.Diagram.Lambda.Source,
-				RoleName:        yamlConfig.Diagram.Lambda.RoleName,
-				Runtime:         yamlConfig.Diagram.Lambda.Runtime,
-				Description:     fmt.Sprintf("%s lambda", lambda.Value()),
-				Envars:          envarsList,
-				KinesisTriggers: kinesisTriggers,
-				SQSTriggers:     sqsTriggers,
-				Crons:           crons,
-			})
+			apiGatewayLambdaIDs[lambda.ID()] = struct{}{}
 		}
 	}
 
-	return lambdas, apiGatewayLambdas
+	for _, lambda := range resourcesByTypeMap[drawio.LambdaType] {
+		if _, ok := apiGatewayLambdaIDs[lambda.ID()]; ok {
+			continue
+		}
+
+		crons := buildCrons(cronsByLambdaID, lambda)
+		envarsList := buildEnvarsList(envars, lambda)
+		kinesisTriggers := buildKinesisTriggers(kinesisTriggersByLambdaID, lambda)
+		sqsTriggers := buildSQSTriggers(sqsTriggersByLambdaID, lambda)
+
+		lambdas = append(lambdas, config.Lambda{
+			Name:            lambda.Value(),
+			Source:          yamlConfig.Diagram.Lambda.Source,
+			RoleName:        yamlConfig.Diagram.Lambda.RoleName,
+			Runtime:         yamlConfig.Diagram.Lambda.Runtime,
+			Description:     fmt.Sprintf("%s lambda", lambda.Value()),
+			Envars:          envarsList,
+			KinesisTriggers: kinesisTriggers,
+			SQSTriggers:     sqsTriggers,
+			Crons:           crons,
+		})
+	}
+
+	return lambdas, apiGatewayLambdasByAPIGatewayID
+}
+
+func buildCrons(cronsByLambdaID map[string]drawio.Resource, lambda drawio.Resource) []config.Cron {
+	var crons []config.Cron
+	if cron, ok := cronsByLambdaID[lambda.ID()]; ok {
+		crons = append(crons, config.Cron{
+			ScheduleExpression: cron.Value(),
+			IsEnabled:          "true",
+		})
+	}
+
+	return crons
+}
+
+func buildEnvarsList(envars map[string]map[string]string, lambda drawio.Resource) []map[string]string {
+	var envarsList []map[string]string
+	for key, value := range envars[lambda.ID()] {
+		envarsList = append(envarsList, map[string]string{key: value})
+	}
+
+	return envarsList
+}
+
+func buildKinesisTriggers(
+	kinesisTriggersByLambdaID map[string][]drawio.Resource, lambda drawio.Resource,
+) []config.KinesisTrigger {
+	var kinesisTriggers []config.KinesisTrigger
+	for _, kinesisTrigger := range kinesisTriggersByLambdaID[lambda.ID()] {
+		kinesisTriggers = append(kinesisTriggers, config.KinesisTrigger{
+			SourceARN: fmt.Sprintf("aws_kinesis_stream.%s_kinesis.arn", strcase.ToSnake(kinesisTrigger.Value())),
+		})
+	}
+
+	return kinesisTriggers
+}
+
+func buildSQSTriggers(sqsTriggersByLambdaID map[string][]drawio.Resource, lambda drawio.Resource) []config.SQSTrigger {
+	var sqsTriggers []config.SQSTrigger
+	for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
+		sqsTriggers = append(sqsTriggers, config.SQSTrigger{
+			SourceARN: fmt.Sprintf("aws_sqs_queue.%s_sqs.arn", strcase.ToSnake(sqsTrigger.Value())),
+		})
+	}
+
+	return sqsTriggers
 }

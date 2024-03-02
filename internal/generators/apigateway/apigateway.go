@@ -57,59 +57,66 @@ func (a *APIGateway) Build() error {
 		}
 
 		for j := range apiConf.Lambdas {
-			lambdaConf := apiConf.Lambdas[j]
-
-			envars := map[string]string{}
-
-			for i := range lambdaConf.Envars {
-				for key, value := range lambdaConf.Envars[i] {
-					envars[key] = value
-				}
-			}
-
-			filesConf := generators.CreateFilesMap(lambdaConf.Files)
-
-			asModule := strings.Contains(lambdaConf.Source, "git@")
-
-			roleName := lambdaConf.RoleName
-			if roleName == "" {
-				roleName = "iam_for_lambda"
-			}
-
-			lambdaData := LambdaData{
-				Name:        lambdaConf.Name,
-				AsModule:    asModule,
-				Source:      lambdaConf.Source,
-				RoleName:    roleName,
-				Runtime:     lambdaConf.Runtime,
-				StackName:   apiConf.StackName,
-				Description: lambdaConf.Description,
-				Envars:      envars,
-				Verb:        lambdaConf.Verb,
-				Path:        lambdaConf.Path,
-				Files:       filesConf,
-			}
-
-			fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
-
-			err = generators.GenerateFiles(map[string]string{fileName: string(lambdaTFTmpl)}, nil, lambdaData, outputMod)
+			err := buildLambdaFiles(&apiConf.Lambdas[j], apiConf.StackName, outputMod, a.output)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
-
-			fmt.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
-
-			outputLambda := path.Join(a.output, apiConf.StackName, "lambda", lambdaConf.Name)
-			_ = os.MkdirAll(outputLambda, os.ModePerm)
-
-			err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, outputLambda)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
-
-			fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
 		}
 	}
+
+	return nil
+}
+
+func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, outputTf, output string) error {
+	envars := map[string]string{}
+
+	for i := range lambdaConf.Envars {
+		for key, value := range lambdaConf.Envars[i] {
+			envars[key] = value
+		}
+	}
+
+	filesConf := generators.CreateFilesMap(lambdaConf.Files)
+
+	asModule := strings.Contains(lambdaConf.Source, "git@")
+
+	roleName := lambdaConf.RoleName
+	if roleName == "" {
+		roleName = "iam_for_lambda"
+	}
+
+	lambdaData := LambdaData{
+		Name:        lambdaConf.Name,
+		AsModule:    asModule,
+		Source:      lambdaConf.Source,
+		RoleName:    roleName,
+		Runtime:     lambdaConf.Runtime,
+		StackName:   stackName,
+		Description: lambdaConf.Description,
+		Envars:      envars,
+		Verb:        lambdaConf.Verb,
+		Path:        lambdaConf.Path,
+		Files:       filesConf,
+	}
+
+	fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
+
+	err := generators.GenerateFiles(map[string]string{fileName: string(lambdaTFTmpl)}, nil, lambdaData, outputTf)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	fmt.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
+
+	outputLambda := path.Join(output, stackName, "lambda", lambdaConf.Name)
+	_ = os.MkdirAll(outputLambda, os.ModePerm)
+
+	err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, outputLambda)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
 
 	return nil
 }

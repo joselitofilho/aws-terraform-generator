@@ -30,10 +30,11 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID,
 		snsMap)
 
-	lambdas, apiGatewayLambdas := buildLambdas(
+	lambdas, apiGatewayLambdasByAPIGatewayID := buildLambdas(
 		yamlConfig, resourcesByTypeMap, resources, envars, cronsByLambdaID,
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID)
-	apiGateways := buildAPIGateways(yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdas)
+	apiGateways := buildAPIGateways(
+		yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdasByAPIGatewayID)
 	kinesis := buildKinesis(resourcesByTypeMap)
 	snss := buildSNSs(snsMap)
 	sqss := buildSQSs(resourcesByTypeMap)

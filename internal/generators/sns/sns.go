@@ -57,32 +57,8 @@ func (s *SNS) Build() error {
 			BucketName: conf.BucketName,
 		}
 
-		lambdaEvents := make([]ResourceData, 0, len(conf.Lambdas))
-
-		for _, lambda := range conf.Lambdas {
-			lambdaEvents = append(lambdaEvents, ResourceData{
-				Name:         lambda.Name,
-				Events:       fmt.Sprintf("%q", strings.Join(lambda.Events, ", ")),
-				FilterPrefix: lambda.FilterPrefix,
-				FilterSuffix: lambda.FilterSuffix,
-			})
-		}
-
-		data.Lambdas = lambdaEvents
-
-		sqsEvents := make([]ResourceData, 0, len(conf.SQSs))
-
-		for _, sqs := range conf.SQSs {
-			evt := ResourceData{
-				Name:         sqs.Name,
-				Events:       fmt.Sprintf("%q", strings.Join(sqs.Events, ", ")),
-				FilterPrefix: sqs.FilterPrefix,
-				FilterSuffix: sqs.FilterSuffix,
-			}
-			sqsEvents = append(sqsEvents, evt)
-		}
-
-		data.SQSs = sqsEvents
+		data.Lambdas = buildLambdaResources(&conf)
+		data.SQSs = buildSQSResources(&conf)
 
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
@@ -115,4 +91,32 @@ func (s *SNS) Build() error {
 	}
 
 	return nil
+}
+
+func buildLambdaResources(conf *config.SNS) []ResourceData {
+	lambdaEvents := make([]ResourceData, 0, len(conf.Lambdas))
+	for _, lambda := range conf.Lambdas {
+		lambdaEvents = append(lambdaEvents, ResourceData{
+			Name:         lambda.Name,
+			Events:       fmt.Sprintf("%q", strings.Join(lambda.Events, ", ")),
+			FilterPrefix: lambda.FilterPrefix,
+			FilterSuffix: lambda.FilterSuffix,
+		})
+	}
+
+	return lambdaEvents
+}
+
+func buildSQSResources(conf *config.SNS) []ResourceData {
+	sqsEvents := make([]ResourceData, 0, len(conf.SQSs))
+	for _, sqs := range conf.SQSs {
+		sqsEvents = append(sqsEvents, ResourceData{
+			Name:         sqs.Name,
+			Events:       fmt.Sprintf("%q", strings.Join(sqs.Events, ", ")),
+			FilterPrefix: sqs.FilterPrefix,
+			FilterSuffix: sqs.FilterSuffix,
+		})
+	}
+
+	return sqsEvents
 }

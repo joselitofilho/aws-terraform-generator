@@ -181,7 +181,7 @@ linters:
     - funlen
     - gocheckcompilerdirectives
     - gochecknoinits
-    # - gocognit
+    - gocognit
     - goconst
     - gocritic
     - gocyclo

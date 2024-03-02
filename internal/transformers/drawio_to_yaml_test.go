@@ -409,12 +409,8 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
 
-			if tc.targetErr == nil {
-				require.NoError(t, err)
-				require.Equal(t, tc.want, got)
-			} else {
-				require.ErrorIs(t, err, tc.targetErr)
-			}
+			require.ErrorIs(t, err, tc.targetErr)
+			require.Equal(t, tc.want, got)
 		})
 	}
 }

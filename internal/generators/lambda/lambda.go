@@ -40,27 +40,9 @@ func (l *Lambda) Build() error {
 			}
 		}
 
-		kinesisTriggers := make([]KinesisTrigger, len(lambdaConf.KinesisTriggers))
-		for i := range lambdaConf.KinesisTriggers {
-			kinesisTriggers[i] = KinesisTrigger{
-				SourceARN: lambdaConf.KinesisTriggers[i].SourceARN,
-			}
-		}
-
-		sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
-		for i := range lambdaConf.SQSTriggers {
-			sqsTriggers[i] = SQSTrigger{
-				SourceARN: lambdaConf.SQSTriggers[i].SourceARN,
-			}
-		}
-
-		crons := make([]Cron, len(lambdaConf.Crons))
-		for i := range lambdaConf.Crons {
-			crons[i] = Cron{
-				ScheduleExpression: lambdaConf.Crons[i].ScheduleExpression,
-				IsEnabled:          lambdaConf.Crons[i].IsEnabled,
-			}
-		}
+		crons := buildCrons(&lambdaConf)
+		kinesisTriggers := buildKinesisTriggers(&lambdaConf)
+		sqsTriggers := buildSQSTriggers(&lambdaConf)
 
 		filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
@@ -109,4 +91,38 @@ func (l *Lambda) Build() error {
 	}
 
 	return nil
+}
+
+func buildCrons(lambdaConf *config.Lambda) []Cron {
+	crons := make([]Cron, len(lambdaConf.Crons))
+	for i := range lambdaConf.Crons {
+		crons[i] = Cron{
+			ScheduleExpression: lambdaConf.Crons[i].ScheduleExpression,
+			IsEnabled:          lambdaConf.Crons[i].IsEnabled,
+		}
+	}
+
+	return crons
+}
+
+func buildKinesisTriggers(lambdaConf *config.Lambda) []KinesisTrigger {
+	kinesisTriggers := make([]KinesisTrigger, len(lambdaConf.KinesisTriggers))
+	for i := range lambdaConf.KinesisTriggers {
+		kinesisTriggers[i] = KinesisTrigger{
+			SourceARN: lambdaConf.KinesisTriggers[i].SourceARN,
+		}
+	}
+
+	return kinesisTriggers
+}
+
+func buildSQSTriggers(lambdaConf *config.Lambda) []SQSTrigger {
+	sqsTriggers := make([]SQSTrigger, len(lambdaConf.SQSTriggers))
+	for i := range lambdaConf.SQSTriggers {
+		sqsTriggers[i] = SQSTrigger{
+			SourceARN: lambdaConf.SQSTriggers[i].SourceARN,
+		}
+	}
+
+	return sqsTriggers
 }

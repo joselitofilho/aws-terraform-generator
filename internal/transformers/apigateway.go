@@ -17,7 +17,7 @@ func buildAPIGateways(
 	yamlConfig *config.Config,
 	apiGatewaysByID map[string]drawio.Resource,
 	endpointsByAPIGatewayID map[string]drawio.Resource,
-	apiGatewayLambdas map[string][]config.APIGatewayLambda,
+	apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda,
 ) (apiGateways []config.APIGateway) {
 	for id := range apiGatewaysByID {
 		var apiDomainValue string
@@ -29,7 +29,7 @@ func buildAPIGateways(
 			StackName: yamlConfig.Diagram.StackName,
 			APIG:      true,
 			APIDomain: apiDomainValue,
-			Lambdas:   apiGatewayLambdas[id],
+			Lambdas:   apiGatewayLambdasByAPIGatewayID[id],
 		})
 	}
 
