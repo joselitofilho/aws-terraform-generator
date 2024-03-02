@@ -29,6 +29,7 @@ func (s *Structure) Build() error {
 	}
 
 	defaultTemplatesMap := map[string]string{}
+
 	for i := range yamlConfig.Structure.DefaultTemplates {
 		for k, v := range yamlConfig.Structure.DefaultTemplates[i] {
 			defaultTemplatesMap[k] = v

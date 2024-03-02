@@ -64,6 +64,7 @@ func CreateFilesMap(files []config.File) map[string]File {
 			Imports: files[i].Imports,
 		}
 	}
+
 	return filesConf
 }
 
@@ -111,16 +112,14 @@ func GenerateFiles(templatesMap map[string]string, filesMap map[string]File, dat
 
 		err := BuildFile(data, tmplName, fileTmpl, outputFile)
 		if err != nil {
+			// TODO: Append error
 			fmt.Println(err)
-			// TODO: Log
-			// TODO: Apppend error
 		}
 
 		err = formatFileBasedOnExt(filename, outputFile)
 		if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
+			// TODO: Append error
 			fmt.Println(err)
-			// TODO: Log
-			// TODO: Apppend error
 		}
 	}
 

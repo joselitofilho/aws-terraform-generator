@@ -78,6 +78,7 @@ func TestTerraformFormat(t *testing.T) {
 			err := TerraformFormat(tc.args.folder)
 
 			require.ErrorIs(t, err, tc.targetErr)
+
 			if tc.expectedErrMsg != "" {
 				require.Equal(t, tc.expectedErrMsg, err.Error())
 			}

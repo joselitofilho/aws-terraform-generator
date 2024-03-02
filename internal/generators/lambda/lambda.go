@@ -33,6 +33,7 @@ func (l *Lambda) Build() error {
 		lambdaConf := yamlConfig.Lambdas[i]
 
 		envars := map[string]string{}
+
 		for i := range lambdaConf.Envars {
 			for key, value := range lambdaConf.Envars[i] {
 				envars[key] = value

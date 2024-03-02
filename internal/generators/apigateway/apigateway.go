@@ -55,6 +55,7 @@ func (a *APIGateway) Build() error {
 			lambdaConf := apiConf.Lambdas[j]
 
 			envars := map[string]string{}
+
 			for i := range lambdaConf.Envars {
 				for key, value := range lambdaConf.Envars[i] {
 					envars[key] = value

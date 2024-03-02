@@ -27,6 +27,7 @@ func GuideStructure(
 	answers := StructureAnswers{}
 
 	var defaultConfigOption int
+
 	for i := range configOptions {
 		if strings.Contains(configOptions[i], "structure.config") {
 			defaultConfigOption = i

@@ -77,6 +77,7 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 		if cell.Source != "" && cell.Target != "" {
 			source := resourcesMap[cell.Source]
 			target := resourcesMap[cell.Target]
+
 			if source != nil && target != nil {
 				resources.AddRelationship(source, target)
 			}

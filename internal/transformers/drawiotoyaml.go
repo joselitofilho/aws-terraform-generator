@@ -278,6 +278,7 @@ func buildSNSs(snsMap map[string]config.SNS) []config.SNS {
 
 func buildRestfulAPIs(resourcesByTypeMap map[drawio.ResourceType][]drawio.Resource) []config.RestfulAPI {
 	var restfulAPIs []config.RestfulAPI
+
 	restfulAPINames := map[string]struct{}{}
 
 	for _, restfulAPI := range resourcesByTypeMap[drawio.RestfulAPIType] {

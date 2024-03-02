@@ -33,6 +33,7 @@ func GuideDiagram(surveyAsker surveyasker.Asker, workdir string, fileMap map[str
 	answers := DiagramAnswers{}
 
 	var defaultConfigOption int
+
 	for i := range configOptions {
 		if strings.Contains(configOptions[i], "diagram.config") {
 			defaultConfigOption = i

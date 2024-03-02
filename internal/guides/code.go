@@ -36,6 +36,7 @@ func GuideCode(surveyAsker surveyasker.Asker, workdir string, fileMap map[string
 	}
 
 	var defaultConfigOption int
+
 	for i := range configOptions {
 		if strings.Contains(configOptions[i], "diagram.yaml") ||
 			strings.Contains(configOptions[i], "diagram.yml") {
