@@ -1,4 +1,3 @@
-//nolint:dupl // That is a false positive
 package cmd
 
 import (
