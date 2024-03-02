@@ -159,7 +159,7 @@ linters:
     - errorlint
     - exportloopref
     - funlen
-    # - gocheckcompilerdirectives
+    - gocheckcompilerdirectives
     - gochecknoinits
     - goconst
     - gocritic
