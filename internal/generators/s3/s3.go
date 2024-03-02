@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
@@ -37,7 +38,7 @@ func (s *S3) Build() error {
 	_ = os.MkdirAll(modPath, os.ModePerm)
 
 	tmplName := "s3-tf-template"
-	result := ""
+	result := make([]string, 0, len(yamlConfig.Buckets))
 
 	for i := range yamlConfig.Buckets {
 		conf := yamlConfig.Buckets[i]
@@ -58,18 +59,18 @@ func (s *S3) Build() error {
 			fmt.Printf("S3 '%s' has been generated successfully\n", conf.Name)
 		}
 
-		outputData, err := generators.Build(data, tmplName, string(s3TFTmpl))
+		output, err := generators.Build(data, tmplName, string(s3TFTmpl))
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
-		result = fmt.Sprintf("%s%s", result, outputData)
+		result = append(result, output)
 	}
 
-	if result != "" {
+	if len(result) > 0 {
 		outputFile := path.Join(modPath, "s3.tf")
 
-		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, result, outputFile, Data{})
+		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, strings.Join(result, "\n"), outputFile, Data{})
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

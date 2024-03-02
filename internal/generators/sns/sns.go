@@ -48,7 +48,7 @@ func (s *SNS) Build() error {
 	_ = os.MkdirAll(modPath, os.ModePerm)
 
 	tmplName := "sns-tf-template"
-	result := ""
+	result := make([]string, 0, len(yamlConfig.SNSs))
 
 	for i := range yamlConfig.SNSs {
 		conf := yamlConfig.SNSs[i]
@@ -101,13 +101,13 @@ func (s *SNS) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		result = fmt.Sprintf("%s%s", result, output)
+		result = append(result, output)
 	}
 
-	if result != "" {
+	if len(result) > 0 {
 		outputFile := path.Join(modPath, "sns.tf")
 
-		if err := generators.BuildFile(Data{}, tmplName, result, outputFile); err != nil {
+		if err := generators.BuildFile(Data{}, tmplName, strings.Join(result, "\n"), outputFile); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 

@@ -58,8 +58,7 @@ resource "aws_iam_role" "s3_to_sqs_role_{{ToSnake $.Name}}" {
     ]
   })
 }
-{{end}}
-{{range $.Lambdas}}
+{{end}}{{range $.Lambdas}}
 resource "aws_lambda_permission" "lambda_permission_{{ToSnake .Name}}_and_{{ToSnake $.BucketName}}" {
   statement_id  = "AllowExecutionFrom{{ToCamel $.BucketName}}"
   action        = "lambda:InvokeFunction"

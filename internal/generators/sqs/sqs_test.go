@@ -48,7 +48,7 @@ func TestSQS_Build(t *testing.T) {
 			name: "multiple sqs",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sqs.config.multiple.yaml"),
-				output:         path.Join(testOutput, "miltiple"),
+				output:         path.Join(testOutput, "multiple"),
 			},
 			extraValidations: func(tb testing.TB, err error) {
 				if err != nil {
