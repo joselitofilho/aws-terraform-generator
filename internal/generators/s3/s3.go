@@ -50,14 +50,12 @@ func (s *S3) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(defaultTfTemplateFiles, filesConf, data, modPath)
+			err = generators.GenerateFiles(nil, filesConf, data, modPath)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
 			fmt.Printf("S3 '%s' has been generated successfully\n", conf.Name)
-
-			continue
 		}
 
 		outputData, err := generators.Build(data, tmplName, string(s3TFTmpl))
@@ -65,7 +63,7 @@ func (s *S3) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		result = fmt.Sprintf("%s\n%s", result, outputData)
+		result = fmt.Sprintf("%s%s", result, outputData)
 	}
 
 	if result != "" {

@@ -1,0 +1,5 @@
+buckets:
+  - name: my-first-bucket
+  - name: my-second-bucket
+    expiration-days: 90
+  - name: my-third-bucket

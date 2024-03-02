@@ -67,7 +67,7 @@ If you're using [diagrams](https://app.diagrams.net/), you can also generate the
 
 If you have any questions or suggestions, feel free to create an [issue](https://github.com/joselitofilho/aws-terraform-generator/issues). Your contribution is much appreciated.
 
-<div style="text-align:center"><img src="images/general-overview.svg" /></div>
+<div style="text-align:center"><img src="assets/general-overview.svg" /></div>
 
 ## Recommended step by step
 
