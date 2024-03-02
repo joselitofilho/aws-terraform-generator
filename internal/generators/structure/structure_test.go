@@ -2,6 +2,7 @@ package structure
 
 import (
 	_ "embed"
+	"os"
 	"path"
 	"testing"
 
@@ -73,6 +74,10 @@ func TestStructure_Build(t *testing.T) {
 			targetErr: generatorserrs.ErrYAMLParse,
 		},
 	}
+
+	defer func() {
+		_ = os.RemoveAll(testOutput)
+	}()
 
 	for i := range tests {
 		tc := tests[i]

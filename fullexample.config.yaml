@@ -161,6 +161,9 @@ lambdas:
         DOCDB_USER: var.docdb_user
         DOCDB_PASSWORD_SECRET: var.docdb_password_secret
         SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+    # Kinesis triggers for lambda function
+    kinesis-triggers:
+      - source_arn: aws_kinesis_stream.mykinesis_kinesis.arn
     # SQS triggers for lambda function
     sqs-triggers:
       - source_arn: aws_sqs_queue.source_sqs.arn

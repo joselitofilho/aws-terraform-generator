@@ -10,7 +10,6 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
-	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type Data struct {
@@ -107,12 +106,9 @@ func (s *SNS) Build() error {
 	if len(result) > 0 {
 		outputFile := path.Join(modPath, "sns.tf")
 
-		if err := generators.BuildFile(Data{}, tmplName, strings.Join(result, "\n"), outputFile); err != nil {
+		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, strings.Join(result, "\n"), outputFile, Data{})
+		if err != nil {
 			return fmt.Errorf("%w", err)
-		}
-
-		if err := utils.TerraformFormat(outputFile); err != nil {
-			fmt.Println(err)
 		}
 
 		fmt.Println("SNS has been generated successfully")

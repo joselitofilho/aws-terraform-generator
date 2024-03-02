@@ -29,17 +29,22 @@ func (a *APIGateway) Build() error {
 		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
 	}
 
+	apigHasAlreadyGeneratedByStack := map[string]struct{}{}
+
 	for i := range yamlConfig.APIGateways {
 		apiConf := yamlConfig.APIGateways[i]
+		stackName := apiConf.StackName
 
-		outputMod := path.Join(a.output, apiConf.StackName, "mod")
+		outputMod := path.Join(a.output, stackName, "mod")
 		_ = os.MkdirAll(outputMod, os.ModePerm)
 
-		if apiConf.APIG {
+		if _, ok := apigHasAlreadyGeneratedByStack[stackName]; !ok && apiConf.APIG {
+			apigHasAlreadyGeneratedByStack[stackName] = struct{}{}
+
 			outputFile := path.Join(outputMod, filenameTfAPIG)
 
 			data := Data{
-				StackName: apiConf.StackName,
+				StackName: stackName,
 				APIDomain: apiConf.APIDomain,
 			}
 

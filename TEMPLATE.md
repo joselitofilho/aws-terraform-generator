@@ -80,6 +80,8 @@ Default temaplates:
 | Runtime             | Identifier of the Lambda runtime.                      |
 | Description         | Description of the Lambda.                             |
 | Envars              | Environment variables associated with the Lambda.      |
+| KinesisTriggers     | List of Kinesis triggers associated with the Lambda.   |
+| ┗ SourceARN         | The Amazon Resource Name (ARN) of the kinesis stream.  |
 | SQSTriggers         | List of SQS triggers associated with the Lambda.       |
 | ┗ SourceARN         | The Amazon Resource Name (ARN) of the SQS queue.       |
 | Crons               | List of cron jobs associated with the Lambda.          |

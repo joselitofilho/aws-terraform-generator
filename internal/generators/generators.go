@@ -35,27 +35,6 @@ func Build(data any, templateName, templateContent string) (string, error) {
 	return output.String(), nil
 }
 
-func BuildFile(data any, templateName, templateContent, outputPath string) error {
-	tmpl, err := buildAndParseTemplate(templateName, templateContent)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	// Execute the template with the data and write the output to a file.
-	output, err := os.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-	defer output.Close()
-
-	err = tmpl.Execute(output, data)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	return nil
-}
-
 func CreateFilesMap(files []config.File) map[string]File {
 	filesConf := map[string]File{}
 	for i := range files {
@@ -80,7 +59,7 @@ func GenerateFile(templatesMap map[string]string, fileName, fileTmpl, outputFile
 		tmpl = fileTmpl
 	}
 
-	err := BuildFile(data, tmplName, tmpl, outputFile)
+	err := buildFile(data, tmplName, tmpl, outputFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -110,7 +89,7 @@ func GenerateFiles(templatesMap map[string]string, filesMap map[string]File, dat
 
 		outputFile := path.Join(output, filename)
 
-		err := BuildFile(data, tmplName, fileTmpl, outputFile)
+		err := buildFile(data, tmplName, fileTmpl, outputFile)
 		if err != nil {
 			// TODO: Append error
 			fmt.Println(err)
@@ -147,6 +126,27 @@ func buildAndParseTemplate(name, content string) (*template.Template, error) {
 	}
 
 	return tmpl, nil
+}
+
+func buildFile(data any, templateName, templateContent, outputPath string) error {
+	tmpl, err := buildAndParseTemplate(templateName, templateContent)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	// Execute the template with the data and write the output to a file.
+	output, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	defer output.Close()
+
+	err = tmpl.Execute(output, data)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	return nil
 }
 
 func formatFileBasedOnExt(fileName, outputFile string) error {
