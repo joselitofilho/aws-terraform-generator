@@ -57,6 +57,8 @@ func (s *SQS) Build() error {
 			}
 
 			fmt.Printf("SQS '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(sqsTFTmpl))

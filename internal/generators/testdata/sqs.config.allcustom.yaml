@@ -1,0 +1,13 @@
+sqs:
+  - name: target
+    max_receive_count: 15
+    files:
+      - name: "target-sqs.tf"
+        tmpl: |-
+          resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
+  - name: source
+    max_receive_count: 10
+    files:
+      - name: "source-sqs.tf"
+        tmpl: |-
+          resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}

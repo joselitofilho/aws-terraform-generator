@@ -25,37 +25,54 @@ func TestSQS_Build(t *testing.T) {
 	tests := []struct {
 		name             string
 		fields           fields
-		extraValidations func(testing.TB, error)
+		extraValidations func(testing.TB, string, error)
 		targetErr        error
 	}{
 		{
-			name: "one sqs with extra file",
+			name: "default templates for multiple sqs",
 			fields: fields{
-				configFileName: path.Join(testdataFolder, "sqs.config.yaml"),
-				output:         path.Join(testOutput, "one"),
+				configFileName: path.Join(testdataFolder, "sqs.config.multiple.yaml"),
+				output:         path.Join(testOutput, "multiple"),
 			},
-			extraValidations: func(tb testing.TB, err error) {
+			extraValidations: func(tb testing.TB, output string, err error) {
 				if err != nil {
 					return
 				}
 
-				modPath := path.Join(testOutput, "one", "mod")
+				require.FileExists(tb, path.Join(output, "mod", "sqs.tf"))
+			},
+		},
+		{
+			name: "at least one sqs customizing",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sqs.config.custom.yaml"),
+				output:         path.Join(testOutput, "one"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(output, "mod")
 				require.FileExists(tb, path.Join(modPath, "sqs.tf"))
 				require.FileExists(tb, path.Join(modPath, "target-sqs.tf"))
 			},
 		},
 		{
-			name: "multiple sqs",
+			name: "all custom sqs",
 			fields: fields{
-				configFileName: path.Join(testdataFolder, "sqs.config.multiple.yaml"),
-				output:         path.Join(testOutput, "multiple"),
+				configFileName: path.Join(testdataFolder, "sqs.config.allcustom.yaml"),
+				output:         path.Join(testOutput, "all"),
 			},
-			extraValidations: func(tb testing.TB, err error) {
+			extraValidations: func(tb testing.TB, output string, err error) {
 				if err != nil {
 					return
 				}
 
-				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "sqs.tf"))
+				modPath := path.Join(output, "mod")
+				require.NoFileExists(tb, path.Join(modPath, "sqs.tf"))
+				require.FileExists(tb, path.Join(modPath, "target-sqs.tf"))
+				require.FileExists(tb, path.Join(modPath, "source-sqs.tf"))
 			},
 		},
 		{
@@ -81,7 +98,7 @@ func TestSQS_Build(t *testing.T) {
 			require.ErrorIs(t, err, tc.targetErr)
 
 			if tc.extraValidations != nil {
-				tc.extraValidations(t, err)
+				tc.extraValidations(t, tc.fields.output, err)
 			}
 		})
 	}
