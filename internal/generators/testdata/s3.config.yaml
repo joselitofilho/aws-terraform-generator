@@ -1,0 +1,7 @@
+buckets:
+  - name: my-bucket
+    expiration-days: 90
+    files:
+      - name: "my-bucket-s3.tf"
+        tmpl: |-
+          resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
