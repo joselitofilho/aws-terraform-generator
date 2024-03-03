@@ -12,6 +12,7 @@ tasks:
       - go install go.uber.org/mock/mockgen@latest
       - go install golang.org/x/tools/cmd/goimports@latest
       - go install mvdan.cc/gofumpt@v0.4.0
+      - echo "==> To format terraform files, please install terraform"
 
   lint:
     desc: "Run golangci-lint"
