@@ -1,0 +1,25 @@
+sns:
+  - name: with-lambda
+    bucket_name: my-bucket
+    lambdas:
+      - name: exampleReceiver
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+    files:
+      - name: "with-lambda-sns.tf"
+        tmpl: |-
+          resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
+  - name: with-sqs
+    bucket_name: my-bucket
+    sqs:
+      - name: target
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+    files:
+      - name: "with-sqs-sns.tf"
+        tmpl: |-
+          resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}

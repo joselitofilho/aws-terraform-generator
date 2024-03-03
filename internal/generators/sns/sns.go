@@ -69,6 +69,8 @@ func (s *SNS) Build() error {
 			}
 
 			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(snsTFTmpl))

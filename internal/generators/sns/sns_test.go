@@ -25,37 +25,54 @@ func TestSNS_Build(t *testing.T) {
 	tests := []struct {
 		name             string
 		fields           fields
-		extraValidations func(testing.TB, error)
+		extraValidations func(testing.TB, string, error)
 		targetErr        error
 	}{
 		{
-			name: "one sns with extra file",
-			fields: fields{
-				configFileName: path.Join(testdataFolder, "sns.config.yaml"),
-				output:         path.Join(testOutput, "one"),
-			},
-			extraValidations: func(tb testing.TB, err error) {
-				if err != nil {
-					return
-				}
-
-				modPath := path.Join(testOutput, "one", "mod")
-				require.FileExists(tb, path.Join(modPath, "example-sns.tf"))
-				require.FileExists(tb, path.Join(modPath, "sns.tf"))
-			},
-		},
-		{
-			name: "multiple sns",
+			name: "default templates for multiple sns",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sns.config.multiple.yaml"),
 				output:         path.Join(testOutput, "multiple"),
 			},
-			extraValidations: func(tb testing.TB, err error) {
+			extraValidations: func(tb testing.TB, output string, err error) {
 				if err != nil {
 					return
 				}
 
-				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "sns.tf"))
+				require.FileExists(tb, path.Join(output, "mod", "sns.tf"))
+			},
+		},
+		{
+			name: "at least one sns customizing",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sns.config.custom.yaml"),
+				output:         path.Join(testOutput, "one"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(output, "mod")
+				require.FileExists(tb, path.Join(modPath, "with-lambda-sns.tf"))
+				require.FileExists(tb, path.Join(modPath, "sns.tf"))
+			},
+		},
+		{
+			name: "all custom sns",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sns.config.allcustom.yaml"),
+				output:         path.Join(testOutput, "all"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(output, "mod")
+				require.NoFileExists(tb, path.Join(modPath, "sns.tf"))
+				require.FileExists(tb, path.Join(modPath, "with-lambda-sns.tf"))
+				require.FileExists(tb, path.Join(modPath, "with-sqs-sns.tf"))
 			},
 		},
 		{
@@ -81,7 +98,7 @@ func TestSNS_Build(t *testing.T) {
 			require.ErrorIs(t, err, tc.targetErr)
 
 			if tc.extraValidations != nil {
-				tc.extraValidations(t, err)
+				tc.extraValidations(t, tc.fields.output, err)
 			}
 		})
 	}
