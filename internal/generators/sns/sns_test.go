@@ -43,7 +43,7 @@ func TestSNS_Build(t *testing.T) {
 			},
 		},
 		{
-			name: "at least one sns customizing",
+			name: "at least one sns customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sns.config.custom.yaml"),
 				output:         path.Join(testOutput, "one"),

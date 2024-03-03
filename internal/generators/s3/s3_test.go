@@ -43,7 +43,7 @@ func TestS3_Build(t *testing.T) {
 			},
 		},
 		{
-			name: "at least one s3 customizing",
+			name: "at least one s3 customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "s3.config.custom.yaml"),
 				output:         path.Join(testOutput, "one"),

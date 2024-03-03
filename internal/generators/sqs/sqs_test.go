@@ -43,7 +43,7 @@ func TestSQS_Build(t *testing.T) {
 			},
 		},
 		{
-			name: "at least one sqs customizing",
+			name: "at least one sqs customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sqs.config.custom.yaml"),
 				output:         path.Join(testOutput, "one"),

@@ -43,7 +43,7 @@ func TestKinesis_Build(t *testing.T) {
 			},
 		},
 		{
-			name: "at least one kinesis customizing",
+			name: "at least one kinesis customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "kinesis.config.custom.yaml"),
 				output:         path.Join(testOutput, "one"),
