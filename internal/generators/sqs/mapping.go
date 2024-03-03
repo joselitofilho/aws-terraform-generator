@@ -4,9 +4,11 @@ import (
 	_ "embed"
 )
 
+const filenameSQStf = "sqs.tf"
+
 //go:embed tmpls/sqs.tf.tmpl
-var sqsTFTmpl []byte
+var tmplSQStf []byte
 
 var defaultTfTemplateFiles = map[string]string{
-	"sqs.tf": string(sqsTFTmpl),
+	filenameSQStf: string(tmplSQStf),
 }

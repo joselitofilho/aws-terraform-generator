@@ -11,6 +11,6 @@ type Stack struct {
 }
 
 type Structure struct {
-	Stacks           []Stack         `yaml:"stacks"`
-	DefaultTemplates []DefaultConfig `yaml:"default_templates,omitempty"`
+	Stacks           []Stack               `yaml:"stacks"`
+	DefaultTemplates []FilenameTemplateMap `yaml:"default_templates,omitempty"`
 }

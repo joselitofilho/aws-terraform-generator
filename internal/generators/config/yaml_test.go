@@ -171,7 +171,7 @@ func TestYAML_Parse(t *testing.T) {
 						},
 					},
 				}},
-				DefaultTemplates: []DefaultConfig{{"main.tf": `# Terraform backend and required providers configuration`}},
+				DefaultTemplates: []FilenameTemplateMap{{"main.tf": `# Terraform backend and required providers configuration`}},
 			}},
 		},
 		{

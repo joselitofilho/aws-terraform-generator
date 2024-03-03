@@ -28,13 +28,7 @@ func (s *Structure) Build() error {
 		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
 
-	defaultTemplatesMap := map[string]string{}
-
-	for i := range yamlConfig.Structure.DefaultTemplates {
-		for k, v := range yamlConfig.Structure.DefaultTemplates[i] {
-			defaultTemplatesMap[k] = v
-		}
-	}
+	defaultTemplatesMap := generators.CreateTemplatesMap(yamlConfig.Structure.DefaultTemplates)
 
 	for i := range yamlConfig.Structure.Stacks {
 		conf := yamlConfig.Structure.Stacks[i]

@@ -43,6 +43,20 @@ func TestSQS_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "override default template for multiple sqs",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sqs.config.override.default.tmpls.yaml"),
+				output:         path.Join(testOutput, "override"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(output, "mod", "sqs.tf"))
+			},
+		},
+		{
 			name: "at least one sqs customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sqs.config.custom.yaml"),

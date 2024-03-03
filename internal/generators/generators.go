@@ -47,6 +47,18 @@ func CreateFilesMap(files []config.File) map[string]File {
 	return filesConf
 }
 
+func CreateTemplatesMap(filenameTemplatesList []config.FilenameTemplateMap) map[string]string {
+	templatesMap := map[string]string{}
+
+	for i := range filenameTemplatesList {
+		for filename, tmpl := range filenameTemplatesList[i] {
+			templatesMap[filename] = tmpl
+		}
+	}
+
+	return templatesMap
+}
+
 func GenerateFile(templatesMap map[string]string, fileName, fileTmpl, outputFile string, data any) error {
 	var (
 		tmpl     string

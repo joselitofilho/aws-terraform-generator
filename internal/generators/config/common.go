@@ -1,6 +1,6 @@
 package config
 
-type DefaultConfig map[string]string
+type FilenameTemplateMap map[string]string
 
 type File struct {
 	Name    string   `yaml:"name"`

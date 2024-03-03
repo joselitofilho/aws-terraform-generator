@@ -1,0 +1,10 @@
+override_default_templates:
+  sqs:
+    - sqs.tf: |-
+        resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
+
+sqs:
+  - name: target
+    max_receive_count: 15
+  - name: source
+    max_receive_count: 10

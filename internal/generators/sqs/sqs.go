@@ -10,6 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type Data struct {
@@ -37,8 +38,10 @@ func (s *SQS) Build() error {
 	modPath := path.Join(s.output, "mod")
 	_ = os.MkdirAll(modPath, os.ModePerm)
 
-	tmplName := "sqs-tf-template"
 	result := make([]string, 0, len(yamlConfig.SQSs))
+
+	templates := utils.MergeStringMap(
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SQSs), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.SQSs {
 		conf := yamlConfig.SQSs[i]
@@ -61,7 +64,7 @@ func (s *SQS) Build() error {
 			continue
 		}
 
-		output, err := generators.Build(data, tmplName, string(sqsTFTmpl))
+		output, err := generators.Build(data, "sqs-tf-template", templates[filenameSQStf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -70,9 +73,9 @@ func (s *SQS) Build() error {
 	}
 
 	if len(result) > 0 {
-		outputFile := path.Join(modPath, "sqs.tf")
+		outputFile := path.Join(modPath, filenameSQStf)
 
-		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, strings.Join(result, "\n"), outputFile, Data{})
+		err := generators.GenerateFile(nil, filenameSQStf, strings.Join(result, "\n"), outputFile, Data{})
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
