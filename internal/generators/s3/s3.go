@@ -10,6 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type Data struct {
@@ -37,8 +38,10 @@ func (s *S3) Build() error {
 	modPath := path.Join(s.output, "mod")
 	_ = os.MkdirAll(modPath, os.ModePerm)
 
-	tmplName := "s3-tf-template"
 	result := make([]string, 0, len(yamlConfig.Buckets))
+
+	templates := utils.MergeStringMap(
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.S3Buckets), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.Buckets {
 		conf := yamlConfig.Buckets[i]
@@ -61,7 +64,7 @@ func (s *S3) Build() error {
 			continue
 		}
 
-		output, err := generators.Build(data, tmplName, string(s3TFTmpl))
+		output, err := generators.Build(data, "s3-tf-template", templates[filenameS3tf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -70,9 +73,9 @@ func (s *S3) Build() error {
 	}
 
 	if len(result) > 0 {
-		outputFile := path.Join(modPath, "s3.tf")
+		outputFile := path.Join(modPath, filenameS3tf)
 
-		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, strings.Join(result, "\n"), outputFile, Data{})
+		err := generators.GenerateFile(nil, filenameS3tf, strings.Join(result, "\n"), outputFile, Data{})
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}

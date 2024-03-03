@@ -43,6 +43,20 @@ func TestS3_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "override default template for multiple s3",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "s3.config.override.default.tmpls.yaml"),
+				output:         path.Join(testOutput, "override"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(output, "mod", "s3.tf"))
+			},
+		},
+		{
 			name: "at least one s3 customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "s3.config.custom.yaml"),

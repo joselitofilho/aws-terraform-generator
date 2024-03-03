@@ -4,9 +4,11 @@ import (
 	_ "embed"
 )
 
+const filenameS3tf = "s3.tf"
+
 //go:embed tmpls/s3.tf.tmpl
-var s3TFTmpl []byte
+var tmplS3tf []byte
 
 var defaultTfTemplateFiles = map[string]string{
-	"s3.tf": string(s3TFTmpl),
+	filenameS3tf: string(tmplS3tf),
 }

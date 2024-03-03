@@ -1,0 +1,10 @@
+override_default_templates:
+  bucket:
+    - s3.tf: |-
+        resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
+
+buckets:
+  - name: my-first-bucket
+  - name: my-second-bucket
+    expiration-days: 90
+  - name: my-third-bucket
