@@ -1,0 +1,24 @@
+override_default_templates:
+  lambda:
+    - lambda.go: |-
+        package main
+    - lambda.tf: |-
+        resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {}
+    - main.go: |-
+        package main
+
+lambdas:
+  - name: exampleReceiver
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
+    role_name: execute_lambda
+    runtime: go1.x
+    description: "Trigger on schedule and initiate the execution of example receiver"
+    envars:
+      - SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+    kinesis-triggers:
+      - source_arn: aws_kinesis_stream.source_mykinesis_kinesis.arn
+    sqs-triggers:
+      - source_arn: aws_sqs_queue.source_sqs.arn
+    crons:
+      - schedule_expression: cron(0 1 * * ? *)
+        is_enabled: var.trigger_enabled

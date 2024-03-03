@@ -59,6 +59,18 @@ func CreateTemplatesMap(filenameTemplatesList []config.FilenameTemplateMap) map[
 	return templatesMap
 }
 
+func FilterTemplatesMap(filter string, templatesMap map[string]string) map[string]string {
+	filtred := map[string]string{}
+
+	for filename, tmpl := range templatesMap {
+		if strings.Contains(filename, filter) {
+			filtred[filename] = tmpl
+		}
+	}
+
+	return filtred
+}
+
 func GenerateFile(templatesMap map[string]string, fileName, fileTmpl, outputFile string, data any) error {
 	var (
 		tmpl     string

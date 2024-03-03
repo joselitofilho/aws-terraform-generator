@@ -10,6 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type Lambda struct {
@@ -28,6 +29,14 @@ func (l *Lambda) Build() error {
 	if err != nil {
 		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
+
+	tfTemplates := utils.MergeStringMap(
+		generators.FilterTemplatesMap(".tf", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)),
+		defaultTfTemplatesMap)
+
+	goTemplates := utils.MergeStringMap(
+		generators.FilterTemplatesMap(".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)),
+		defaultGoTemplatesMap)
 
 	for i := range yamlConfig.Lambdas {
 		lambdaConf := yamlConfig.Lambdas[i]
@@ -72,7 +81,7 @@ func (l *Lambda) Build() error {
 
 		outputFile := path.Join(output, lambdaConf.Name+".tf")
 
-		err = generators.GenerateFile(defaultTfTemplatesMap, filenameTfLambda, "", outputFile, data)
+		err = generators.GenerateFile(tfTemplates, filenameTfLambda, "", outputFile, data)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -82,7 +91,7 @@ func (l *Lambda) Build() error {
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		err = generators.GenerateFiles(defaultGoTemplatesMap, filesConf, data, output)
+		err = generators.GenerateFiles(goTemplates, filesConf, data, output)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
