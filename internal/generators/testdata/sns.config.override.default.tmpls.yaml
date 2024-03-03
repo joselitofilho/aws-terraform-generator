@@ -1,0 +1,22 @@
+override_default_templates:
+  sns:
+    - sns.tf: |-
+        resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
+
+sns:
+  - name: sns-Lambda
+    bucket_name: my-bucket
+    lambdas:
+      - name: exampleReceiver
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+  - name: sns-sqs
+    bucket_name: my-other-bucket
+    sqs:
+      - name: target
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"

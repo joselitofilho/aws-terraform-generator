@@ -43,6 +43,20 @@ func TestSNS_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "override default template for multiple sns",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "sns.config.override.default.tmpls.yaml"),
+				output:         path.Join(testOutput, "override"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(output, "mod", "sns.tf"))
+			},
+		},
+		{
 			name: "at least one sns customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "sns.config.custom.yaml"),

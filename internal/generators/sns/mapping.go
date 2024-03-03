@@ -4,9 +4,11 @@ import (
 	_ "embed"
 )
 
+const filenameSNStf = "sns.tf"
+
 //go:embed tmpls/sns.tf.tmpl
-var snsTFTmpl []byte
+var tmplSNStf []byte
 
 var defaultTfTemplateFiles = map[string]string{
-	"sns.tf": string(snsTFTmpl),
+	filenameSNStf: string(tmplSNStf),
 }
