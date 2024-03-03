@@ -43,6 +43,20 @@ func TestKinesis_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "override default template for multiple kinesis",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "kinesis.config.override.default.tmpls.yaml"),
+				output:         path.Join(testOutput, "override"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				require.FileExists(tb, path.Join(output, "mod", "kinesis.tf"))
+			},
+		},
+		{
 			name: "at least one kinesis customising",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "kinesis.config.custom.yaml"),

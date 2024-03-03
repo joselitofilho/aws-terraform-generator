@@ -4,9 +4,11 @@ import (
 	_ "embed"
 )
 
+const filenameKinesisTf = "kinesis.tf"
+
 //go:embed tmpls/kinesis.tf.tmpl
-var kinesisTFTmpl []byte
+var tmplKinesisTf []byte
 
 var defaultTfTemplateFiles = map[string]string{
-	"kinesis.tf": string(kinesisTFTmpl),
+	filenameKinesisTf: string(tmplKinesisTf),
 }

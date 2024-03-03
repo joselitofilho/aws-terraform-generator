@@ -10,6 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type Data struct {
@@ -39,8 +40,10 @@ func (k *Kinesis) Build() error {
 	modPath := path.Join(k.output, "mod")
 	_ = os.MkdirAll(modPath, os.ModePerm)
 
-	tmplName := "kinesis-tf-template"
 	result := make([]string, 0, len(yamlConfig.Kinesis))
+
+	templates := utils.MergeStringMap(
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Kinesis), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.Kinesis {
 		conf := yamlConfig.Kinesis[i]
@@ -65,7 +68,7 @@ func (k *Kinesis) Build() error {
 			continue
 		}
 
-		output, err := generators.Build(data, tmplName, string(kinesisTFTmpl))
+		output, err := generators.Build(data, "kinesis-tf-template", templates[filenameKinesisTf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -74,9 +77,9 @@ func (k *Kinesis) Build() error {
 	}
 
 	if len(result) > 0 {
-		outputFile := path.Join(modPath, "kinesis.tf")
+		outputFile := path.Join(modPath, filenameKinesisTf)
 
-		err := generators.GenerateFile(defaultTfTemplateFiles, tmplName, strings.Join(result, "\n"), outputFile, Data{})
+		err := generators.GenerateFile(nil, filenameKinesisTf, strings.Join(result, "\n"), outputFile, Data{})
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
