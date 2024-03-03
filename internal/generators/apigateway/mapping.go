@@ -13,24 +13,19 @@ const (
 
 var (
 	//go:embed tmpls/apig.tf.tmpl
-	apigTFTmpl []byte
+	tmplAPIGtf []byte
 
 	//go:embed tmpls/lambda.go.tmpl
-	lambdaGoTmpl []byte
+	tmplLambdaGo []byte
 
 	//go:embed tmpls/lambda.tf.tmpl
-	lambdaTFTmpl []byte
+	tmplLambdaTf []byte
 
 	//go:embed tmpls/main.go.tmpl
-	mainGoTmpl []byte
+	tmplMainGo []byte
 )
 
-var defaultTfTemplateFiles = map[string]string{
-	filenameTfAPIG:   string(apigTFTmpl),
-	filenameTfLambda: string(lambdaTFTmpl),
-}
-
 var defaultGoTemplateFiles = map[string]string{
-	filenameGoLambda: string(lambdaGoTmpl),
-	filenameGoMain:   string(mainGoTmpl),
+	filenameGoLambda: string(tmplLambdaGo),
+	filenameGoMain:   string(tmplMainGo),
 }

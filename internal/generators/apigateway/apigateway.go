@@ -10,6 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
 
 type APIGateway struct {
@@ -28,6 +29,18 @@ func (a *APIGateway) Build() error {
 	if err != nil {
 		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
 	}
+
+	apigTfTemplate := utils.MergeStringMap(generators.FilterTemplatesMap(
+		filenameTfAPIG, generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
+	), map[string]string{filenameTfAPIG: string(tmplAPIGtf)})[filenameTfAPIG]
+
+	lambdaTfTemplate := utils.MergeStringMap(generators.FilterTemplatesMap(
+		filenameTfLambda, generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
+	), map[string]string{filenameTfLambda: string(tmplLambdaTf)})[filenameTfLambda]
+
+	goTemplates := utils.MergeStringMap(generators.FilterTemplatesMap(
+		".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
+	), defaultGoTemplateFiles)
 
 	apigHasAlreadyGeneratedByStack := map[string]struct{}{}
 
@@ -48,7 +61,7 @@ func (a *APIGateway) Build() error {
 				APIDomain: apiConf.APIDomain,
 			}
 
-			err = generators.GenerateFile(defaultTfTemplateFiles, filenameTfAPIG, "", outputFile, data)
+			err = generators.GenerateFile(nil, filenameTfAPIG, apigTfTemplate, outputFile, data)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -57,7 +70,8 @@ func (a *APIGateway) Build() error {
 		}
 
 		for j := range apiConf.Lambdas {
-			err := buildLambdaFiles(&apiConf.Lambdas[j], apiConf.StackName, outputMod, a.output)
+			err := buildLambdaFiles(&apiConf.Lambdas[j], apiConf.StackName, lambdaTfTemplate, outputMod, a.output,
+				goTemplates)
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
@@ -67,7 +81,9 @@ func (a *APIGateway) Build() error {
 	return nil
 }
 
-func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, outputTf, output string) error {
+func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTemplate, outputMod, output string,
+	goTemplates map[string]string,
+) error {
 	envars := map[string]string{}
 
 	for i := range lambdaConf.Envars {
@@ -100,8 +116,9 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, outputTf, 
 	}
 
 	fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
+	outputLambdaTfFile := path.Join(outputMod, fileName)
 
-	err := generators.GenerateFiles(map[string]string{fileName: string(lambdaTFTmpl)}, nil, lambdaData, outputTf)
+	err := generators.GenerateFile(nil, fileName, lambdaTfTemplate, outputLambdaTfFile, lambdaData)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -111,7 +128,7 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, outputTf, 
 	outputLambda := path.Join(output, stackName, "lambda", lambdaConf.Name)
 	_ = os.MkdirAll(outputLambda, os.ModePerm)
 
-	err = generators.GenerateFiles(defaultGoTemplateFiles, filesConf, lambdaData, outputLambda)
+	err = generators.GenerateFiles(goTemplates, filesConf, lambdaData, outputLambda)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

@@ -1,0 +1,25 @@
+override_default_templates:
+  apigateway:
+    - apig.tf: |-
+        resource "aws_apigatewayv2_api" "{{$.StackName}}_api" {}
+    - lambda.go: |-
+        package main
+    - lambda.tf: |-
+        resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {}
+    - main.go: |-
+        package main
+
+apigateways:
+  - stack_name: teststack
+    api_domain: teststack-api.domain-${var.environment}.com
+    apig: true
+    lambdas:
+      - name: exampleAPIReceiver
+        source: git@github.com:username/terraform-aws-lambda?ref=reference
+        role_name: execute_lambda
+        runtime: go1.x
+        description: Trigger the example API receiver via API Gateway
+        verb: POST
+        path: /v1/examples
+        envars:
+          - MYVAR: MYVAR_VALUE
