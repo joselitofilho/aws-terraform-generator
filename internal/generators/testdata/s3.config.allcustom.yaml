@@ -1,0 +1,17 @@
+buckets:
+  - name: my-first-bucket
+    files:
+      - name: "my-first-bucket-s3.tf"
+        tmpl: |-
+          resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
+  - name: my-second-bucket
+    expiration-days: 90
+    files:
+      - name: "my-second-bucket-s3.tf"
+        tmpl: |-
+          resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
+  - name: my-third-bucket
+    files:
+      - name: "my-third-bucket-s3.tf"
+        tmpl: |-
+          resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}

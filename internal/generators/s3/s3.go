@@ -57,6 +57,8 @@ func (s *S3) Build() error {
 			}
 
 			fmt.Printf("S3 '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(s3TFTmpl))
