@@ -30,17 +30,18 @@ func (a *APIGateway) Build() error {
 		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
 	}
 
-	apigTfTemplate := utils.MergeStringMap(generators.FilterTemplatesMap(
-		filenameTfAPIG, generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
-	), map[string]string{filenameTfAPIG: string(tmplAPIGtf)})[filenameTfAPIG]
+	apigTfTemplate := utils.MergeStringMap(map[string]string{filenameTfAPIG: string(tmplAPIGtf)},
+		generators.FilterTemplatesMap(filenameTfAPIG,
+			generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway)),
+	)[filenameTfAPIG]
 
-	lambdaTfTemplate := utils.MergeStringMap(generators.FilterTemplatesMap(
-		filenameTfLambda, generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
-	), map[string]string{filenameTfLambda: string(tmplLambdaTf)})[filenameTfLambda]
+	lambdaTfTemplate := utils.MergeStringMap(map[string]string{filenameTfLambda: string(tmplLambdaTf)},
+		generators.FilterTemplatesMap(
+			filenameTfLambda, generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway)),
+	)[filenameTfLambda]
 
-	goTemplates := utils.MergeStringMap(generators.FilterTemplatesMap(
-		".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway),
-	), defaultGoTemplateFiles)
+	goTemplates := utils.MergeStringMap(defaultGoTemplateFiles, generators.FilterTemplatesMap(".go",
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.APIGateway)))
 
 	apigHasAlreadyGeneratedByStack := map[string]struct{}{}
 

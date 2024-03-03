@@ -41,6 +41,14 @@ func TestMergeStringMap(t *testing.T) {
 			},
 			want: map[string]string{"a": "1", "b": "2", "c": "3"},
 		},
+		{
+			name: "right overrides left",
+			args: args{
+				left:  map[string]string{"a": "1", "b": "2"},
+				right: map[string]string{"b": "22", "c": "3"},
+			},
+			want: map[string]string{"a": "1", "b": "22", "c": "3"},
+		},
 	}
 
 	for i := range tests {

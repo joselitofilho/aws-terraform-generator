@@ -30,13 +30,11 @@ func (l *Lambda) Build() error {
 		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
 	}
 
-	tfTemplates := utils.MergeStringMap(
-		generators.FilterTemplatesMap(".tf", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)),
-		defaultTfTemplatesMap)
+	tfTemplates := utils.MergeStringMap(defaultTfTemplatesMap,
+		generators.FilterTemplatesMap(".tf", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)))
 
-	goTemplates := utils.MergeStringMap(
-		generators.FilterTemplatesMap(".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)),
-		defaultGoTemplatesMap)
+	goTemplates := utils.MergeStringMap(defaultGoTemplatesMap,
+		generators.FilterTemplatesMap(".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)))
 
 	for i := range yamlConfig.Lambdas {
 		lambdaConf := yamlConfig.Lambdas[i]

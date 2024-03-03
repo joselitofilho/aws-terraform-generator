@@ -42,8 +42,8 @@ func (k *Kinesis) Build() error {
 
 	result := make([]string, 0, len(yamlConfig.Kinesis))
 
-	templates := utils.MergeStringMap(
-		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Kinesis), defaultTfTemplateFiles)
+	templates := utils.MergeStringMap(defaultTfTemplateFiles,
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Kinesis))
 
 	for i := range yamlConfig.Kinesis {
 		conf := yamlConfig.Kinesis[i]
