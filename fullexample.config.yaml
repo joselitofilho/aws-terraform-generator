@@ -1,5 +1,41 @@
-# Diagram configurations include modules to specify the URL pointing to the GitHub
-# repository for the resources module.
+# Configuration for overriding default templates.
+override_default_templates:
+  # Templates for API Gateway
+  apigateway:
+    - apig.tf: |-
+        # Terraform configuration for API Gateway
+    - lambda.go: |-
+        # Lambda function code
+    - lambda.tf: |-
+        # Terraform configuration for Lambda function
+    - main.go: |-
+        # Main function code
+  # Templates for Kinesis stream
+  kinesis:
+    - kinesis.tf: |-
+        # Terraform configuration for Kinesis stream
+  # Templates for Lambda function
+  lambda:
+    - lambda.go: |-
+        # Lambda function code
+    - lambda.tf: |-
+        # Terraform configuration for Lambda function
+    - main.go: |-
+        # Main function code
+  # Templates for S3 bucket
+  bucket:
+    - s3.tf: |-
+        # Terraform configuration for S3 bucket
+  # Templates for SNS
+  sns:
+    - sns.tf: |-
+        # Terraform configuration for SNS topic
+  # Templates for SQS
+  sqs:
+    - sqs.tf: |-
+        # Terraform configuration for SQS queue
+
+# Diagram configurations include modules to specify the URL pointing to the GitHub repository for the resources module.
 diagram:
   stack_name: mystack
   lambda:

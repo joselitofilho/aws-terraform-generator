@@ -4,6 +4,7 @@
 
 The configuration is organized into the following sections:
 
+- **Override default templates**: Configuration for overriding default templates.
 - **Diagram**: Configuration for diagram.
 - **Structure**:
   - **Stacks**: Configuration for different stacks.
