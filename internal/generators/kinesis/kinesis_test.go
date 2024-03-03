@@ -25,37 +25,54 @@ func TestKinesis_Build(t *testing.T) {
 	tests := []struct {
 		name             string
 		fields           fields
-		extraValidations func(testing.TB, error)
+		extraValidations func(testing.TB, string, error)
 		targetErr        error
 	}{
 		{
-			name: "one kinesis with extra file",
-			fields: fields{
-				configFileName: path.Join(testdataFolder, "kinesis.config.yaml"),
-				output:         path.Join(testOutput, "one"),
-			},
-			extraValidations: func(tb testing.TB, err error) {
-				if err != nil {
-					return
-				}
-
-				modPath := path.Join(testOutput, "one", "mod")
-				require.FileExists(tb, path.Join(modPath, "kinesis.tf"))
-				require.FileExists(tb, path.Join(modPath, "custom.tf"))
-			},
-		},
-		{
-			name: "multiple kinesis",
+			name: "default templates for multiple kinesis",
 			fields: fields{
 				configFileName: path.Join(testdataFolder, "kinesis.config.multiple.yaml"),
 				output:         path.Join(testOutput, "multiple"),
 			},
-			extraValidations: func(tb testing.TB, err error) {
+			extraValidations: func(tb testing.TB, output string, err error) {
 				if err != nil {
 					return
 				}
 
-				require.FileExists(tb, path.Join(testOutput, "multiple", "mod", "kinesis.tf"))
+				require.FileExists(tb, path.Join(output, "mod", "kinesis.tf"))
+			},
+		},
+		{
+			name: "at least one kinesis customizing",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "kinesis.config.custom.yaml"),
+				output:         path.Join(testOutput, "one"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(output, "mod")
+				require.FileExists(tb, path.Join(modPath, "kinesis.tf"))
+				require.FileExists(tb, path.Join(modPath, "myKinesis.tf"))
+			},
+		},
+		{
+			name: "all custom kinesis",
+			fields: fields{
+				configFileName: path.Join(testdataFolder, "kinesis.config.allcustom.yaml"),
+				output:         path.Join(testOutput, "all"),
+			},
+			extraValidations: func(tb testing.TB, output string, err error) {
+				if err != nil {
+					return
+				}
+
+				modPath := path.Join(output, "mod")
+				require.NoFileExists(tb, path.Join(modPath, "kinesis.tf"))
+				require.FileExists(tb, path.Join(modPath, "myKinesis.tf"))
+				require.FileExists(tb, path.Join(modPath, "myAnotherKinesis.tf"))
 			},
 		},
 		{
@@ -81,7 +98,7 @@ func TestKinesis_Build(t *testing.T) {
 			require.ErrorIs(t, err, tc.targetErr)
 
 			if tc.extraValidations != nil {
-				tc.extraValidations(t, err)
+				tc.extraValidations(t, tc.fields.output, err)
 			}
 		})
 	}

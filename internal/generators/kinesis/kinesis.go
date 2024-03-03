@@ -61,6 +61,8 @@ func (k *Kinesis) Build() error {
 			}
 
 			fmt.Printf("Kinesis '%s' has been generated successfully\n", conf.Name)
+
+			continue
 		}
 
 		output, err := generators.Build(data, tmplName, string(kinesisTFTmpl))
