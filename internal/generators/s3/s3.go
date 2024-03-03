@@ -41,7 +41,7 @@ func (s *S3) Build() error {
 	result := make([]string, 0, len(yamlConfig.Buckets))
 
 	templates := utils.MergeStringMap(
-		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.S3Buckets), defaultTfTemplateFiles)
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.S3Bucket), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.Buckets {
 		conf := yamlConfig.Buckets[i]

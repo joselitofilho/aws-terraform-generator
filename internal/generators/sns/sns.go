@@ -50,7 +50,7 @@ func (s *SNS) Build() error {
 	result := make([]string, 0, len(yamlConfig.SNSs))
 
 	templates := utils.MergeStringMap(
-		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SNSs), defaultTfTemplateFiles)
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SNS), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.SNSs {
 		conf := yamlConfig.SNSs[i]

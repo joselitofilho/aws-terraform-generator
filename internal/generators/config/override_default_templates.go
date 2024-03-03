@@ -1,8 +1,8 @@
 package config
 
 type OverrideDefaultTemplates struct {
-	Kinesis   []FilenameTemplateMap `yaml:"kinesis,omitempty"`
-	S3Buckets []FilenameTemplateMap `yaml:"bucket,omitempty"`
-	SNSs      []FilenameTemplateMap `yaml:"sns,omitempty"`
-	SQSs      []FilenameTemplateMap `yaml:"sqs,omitempty"`
+	Kinesis  []FilenameTemplateMap `yaml:"kinesis,omitempty"`
+	S3Bucket []FilenameTemplateMap `yaml:"bucket,omitempty"`
+	SNS      []FilenameTemplateMap `yaml:"sns,omitempty"`
+	SQS      []FilenameTemplateMap `yaml:"sqs,omitempty"`
 }

@@ -41,7 +41,7 @@ func (s *SQS) Build() error {
 	result := make([]string, 0, len(yamlConfig.SQSs))
 
 	templates := utils.MergeStringMap(
-		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SQSs), defaultTfTemplateFiles)
+		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SQS), defaultTfTemplateFiles)
 
 	for i := range yamlConfig.SQSs {
 		conf := yamlConfig.SQSs[i]
