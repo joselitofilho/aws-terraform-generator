@@ -2,41 +2,53 @@
 override_default_templates:
   # Templates for API Gateway
   apigateway:
+    # Terraform configuration for API Gateway
     - apig.tf: |-
-        # Terraform configuration for API Gateway
+        resource "aws_apigatewayv2_api" "{{$.StackName}}_api" {}
+    # Lambda function code
     - lambda.go: |-
-        # Lambda function code
+        type {{$.Name}}Lambda struct {}
+    # Terraform configuration for Lambda function
     - lambda.tf: |-
-        # Terraform configuration for Lambda function
+        resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {}
+    # Main function code
     - main.go: |-
-        # Main function code
+        func main() {}
   # Templates for Kinesis stream
   kinesis:
+    # Terraform configuration for Kinesis stream
     - kinesis.tf: |-
-        # Terraform configuration for Kinesis stream
+        resource "aws_kinesis_stream" "{{ToSnake $.Name}}_kinesis" {}
   # Templates for Lambda function
   lambda:
+    # Lambda function code
     - lambda.go: |-
-        # Lambda function code
+        type {{$.Name}}Lambda struct {}
+    # Terraform configuration for Lambda function
     - lambda.tf: |-
-        # Terraform configuration for Lambda function
+        resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {}
+    # Main function code
     - main.go: |-
-        # Main function code
+        func main() {}
   # Templates for S3 bucket
   bucket:
+    # Terraform configuration for S3 bucket
     - s3.tf: |-
-        # Terraform configuration for S3 bucket
+        resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
   # Templates for SNS
   sns:
+    # Terraform configuration for SNS topic
     - sns.tf: |-
-        # Terraform configuration for SNS topic
+        resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
   # Templates for SQS
   sqs:
+    # Terraform configuration for SQS queue
     - sqs.tf: |-
-        # Terraform configuration for SQS queue
+        resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
 
 # Diagram configurations include modules to specify the URL pointing to the GitHub repository for the resources module.
 diagram:
+  # To specify the stack name for the diagram
   stack_name: mystack
   lambda:
     # URL pointing to the GitHub repository for the Lambda module
@@ -44,7 +56,9 @@ diagram:
     # Replace "terraform-aws-lambda" with the actual repository name
     # Replace "reference" with the actual reference (branch, tag, or commit)
     source: git@github.com:username/terraform-aws-lambda?ref=reference
+    # The name of the IAM role that will be assumed by the Lambda function
     role_name: execute_lambda
+    # The runtime environment for the Lambda function (e.g., Python, Node.js, Go)
     runtime: go1.x
 
 # Structure for stacks with multiple environments
@@ -179,61 +193,35 @@ structure:
           type = string
         }
 
-# Lambda configurations include lambda function names, descriptions, environment variables, SQS triggers,
-# cron schedules, and code configurations.
-lambdas:
-  # Configuration for the exampleReceiver lambda function
-  - name: exampleReceiver
-    source: git@github.com:username/terraform-aws-lambda?ref=reference
-    role_name: execute_lambda
-    runtime: go1.x
-    description: "Trigger on schedule and initiate the execution of example receiver"
-    # Environment variables
-    envars:
-      - MYAPI_API_BASE_URL: var.myapi_api_base_url
-        MYAPI_USER: var.myapi_user
-        MYAPI_PASSWORD_SECRET: aws_secretsmanager_secret.myapi_password.name
-        DOCDB_HOST: var.docdb_host
-        DOCDB_USER: var.docdb_user
-        DOCDB_PASSWORD_SECRET: var.docdb_password_secret
-        SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
-    # Kinesis triggers for lambda function
-    kinesis-triggers:
-      - source_arn: aws_kinesis_stream.mykinesis_kinesis.arn
-    # SQS triggers for lambda function
-    sqs-triggers:
-      - source_arn: aws_sqs_queue.source_sqs.arn
-    # Cron schedule for lambda function
-    crons:
-      - schedule_expression: cron(0 1 * * ? *)
-        is_enabled: var.trigger_enabled
-    # Optional. List of files that we can customize
-    files:
-      - name: lambda.go
-        # Optional. We can specify what imports we want to add in the output GoLang file.
-        imports:
-          - "github.com/mylogging/logging"
-        # Optional. We can specify the template for the output GoLang file.
-        tmpl: |-
-          package main
-
 # API Gateway configurations include stack names, API domain names, lambda associations, and code configurations.
 apigateways:
-  # Stack configuration for the mystack API Gateway
+  # To specify the stack name for the API Gateway
   - stack_name: mystack
+    # The domain for the API Gateway
     api_domain: mystack-api.domain-${var.environment}.com
+    # Indicates whether an API Gateway should be provisioned or not
     apig: true
     # Lambdas associated with the mystack API Gateway
     lambdas:
       - name: exampleAPIReceiver
+        # URL pointing to the GitHub repository for the Lambda module
+        # Replace "username" with the actual GitHub username
+        # Replace "terraform-aws-lambda" with the actual repository name
+        # Replace "reference" with the actual reference (branch, tag, or commit)
         source: git@github.com:username/terraform-aws-lambda?ref=reference
+        # The name of the IAM role that will be assumed by the Lambda function
         role_name: execute_lambda
+        # The runtime environment for the Lambda function (e.g., Python, Node.js, Go)
         runtime: go1.x
+        # Description of the Lambda function
         description: Trigger the example API receiver via API Gateway
+        # HTTP verb for the API Gateway endpoint
         verb: POST
+        # The path for the API Gateway endpoint
         path: /v1/examples
+        # Environment variables for the Lambda function
         envars:
-          - MYVAR: MYVAR_VALUE
+          MYVAR: MYVAR_VALUE
         # File configuration for the lambda associated with the API Gateway
         files:
           - name: lambda.go
@@ -251,7 +239,7 @@ apigateways:
               )
           - name: main.go
             # Optional. We can specify the template for the output GoLang file.
-            tmpl: |- 
+            tmpl: |-
               package main
 
               import(
@@ -263,15 +251,64 @@ apigateways:
                   lambda.Start({{$.Name}}Lambda.run)
               }
 
+# Lambda configurations include lambda function names, descriptions, environment variables, SQS triggers,
+# cron schedules, and code configurations.
+lambdas:
+  # Name of the Lambda function
+  - name: exampleReceiver
+    # URL pointing to the GitHub repository for the Lambda module
+    # Replace "username" with the actual GitHub username
+    # Replace "terraform-aws-lambda" with the actual repository name
+    # Replace "reference" with the actual reference (branch, tag, or commit)
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
+    # The name of the IAM role that will be assumed by the Lambda function
+    role_name: execute_lambda
+    # The runtime environment for the Lambda function (e.g., Python, Node.js, Go)
+    runtime: go1.x
+    # Description of the Lambda function
+    description: "Trigger on schedule and initiate the execution of example receiver"
+    # Environment variables for the Lambda function
+    envars:
+      MYAPI_API_BASE_URL: var.myapi_api_base_url
+      MYAPI_USER: var.myapi_user
+      MYAPI_PASSWORD_SECRET: aws_secretsmanager_secret.myapi_password.name
+      DOCDB_HOST: var.docdb_host
+      DOCDB_USER: var.docdb_user
+      DOCDB_PASSWORD_SECRET: var.docdb_password_secret
+      SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+    # Kinesis triggers for the Lambda function
+    kinesis-triggers:
+      - source_arn: aws_kinesis_stream.mykinesis_kinesis.arn
+    # SQS triggers for the Lambda function
+    sqs-triggers:
+      - source_arn: aws_sqs_queue.source_sqs.arn
+    # Cron schedule for the Lambda function
+    crons:
+      - schedule_expression: cron(0 1 * * ? *)
+        # Whether the trigger is enabled or not
+        is_enabled: var.trigger_enabled
+    # Optional. List of files that we can customize
+    files:
+      - name: lambda.go
+        # Optional. We can specify what imports we want to add in the output GoLang file.
+        imports:
+          - "github.com/mylogging/logging"
+        # Optional. We can specify the template for the output GoLang file.
+        tmpl: |-
+          package main
+
 # Kinesis configurations include stream names, retention period and KMS.
 kinesis:
-  # Configuration for the myKinesis Kinesis Stream
+  # Name of the Kinesis stream
   - name: myKinesis
-    retention_period: 24 # Retention period in hours
-    kms_key_id: var.lambda_function_kms_key_arn # KMS key ID for encryption
+    # Retention period for the Kinesis stream in hours
+    retention_period: 24
+    # KMS key ID for encryption
+    kms_key_id: var.lambda_function_kms_key_arn
+    # Custom Terraform file for defining the Kinesis stream resource
     files:
-      # Custom Terraform file for defining the Kinesis stream resource
       - name: "custom.tf"
+        # Template for the custom Terraform file
         tmpl: |-
           resource "aws_kinesis_stream" "{{ToSnake $.Name}}_kinesis" {
             # Add your custom configuration for the Kinesis stream here
@@ -279,20 +316,24 @@ kinesis:
 
 # SQS configurations include queue names and maximum receive counts.
 sqs:
-  # Configuration for the target SQS queue
+  # Name of the SQS queue
   - name: target
+    # Maximum number of times a message can be received from the queue before it's moved to the dead-letter queue
     max_receive_count: 15
     # Optional. List of files that we can customize
     files:
       - name: "target-sqs.tf"
+        # Template for the Terraform file defining the target SQS queue resource
         tmpl: |-
           resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
   # Configuration for the source SQS queue
   - name: source
+    # Maximum number of times a message can be received from the queue before it's moved to the dead-letter queue
     max_receive_count: 10
 
-# SNS configuration section
+# SNS configuration section.
 sns:
+  # Name of the SNS notification
   - name: example
     # Name of the S3 bucket
     bucket_name: my-bucket
@@ -319,20 +360,24 @@ sns:
     # Optional. List of files that we can customize
     files:
       - name: "example-sns.tf"
+        # Template for the Terraform file defining S3 bucket notification configuration
         tmpl: |-
           resource "aws_s3_bucket_notification" "s3_bucket_notification_{{ToSnake $.Name}}" {}
 
 # S3 bucket configurations include bucket names, object keys, and source paths.
 buckets:
-  # Configuration for the my-bucket S3 bucket
+  # Name of the S3 bucket
   - name: my-bucket
+    # Expiration period for objects in the bucket (in days)
     expiration-days: 90
-    files: # Optional. List of files that we can customize
+    # Optional. List of files that we can customize
+    files:
       - name: "my-bucket-s3.tf"
+        # Template for the Terraform file defining the S3 bucket resource
         tmpl: |-
           resource "aws_s3_bucket" "{{ToSnake $.Name}}_bucket" {}
 
 # RESTful API configurations include API names.
 restfulapis:
-  # Configuration for the MyAPI RESTful API
+  # Name of the RESTful API
   - name: MyAPI
