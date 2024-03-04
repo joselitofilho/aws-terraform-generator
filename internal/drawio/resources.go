@@ -89,30 +89,37 @@ func ParseResources(mxFile *MxFile) (*ResourceCollection, error) {
 
 // createResource creates a resource based on cell data.
 func createResource(id, value, style string) Resource {
+	reAPIGateway := regexp.MustCompile("mxgraph.aws3.api_gateway|mxgraph.aws4.api_gateway")
 	reDatabase := regexp.MustCompile(`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|` +
 		`mxgraph.aws4.documentdb_with_mongodb_compatibility`)
+	reKinesis := regexp.MustCompile(`mxgraph.aws3.kinesis|mxgraph.aws4.kinesis`)
+	resLambda := regexp.MustCompile(`mxgraph.aws3.lambda|mxgraph.aws4.lambda`)
+	resRestfulAPI := regexp.MustCompile(`mxgraph.veeam2.restful_api|mxgraph.veeam.2d.restful_apis`)
+	reS3 := regexp.MustCompile(`mxgraph.aws3.s3|mxgraph.aws4.s3`)
+	reSQS := regexp.MustCompile(`mxgraph.aws3.sqs|mxgraph.aws4.sqs`)
+	reSNS := regexp.MustCompile(`mxgraph.aws3.sns|mxgraph.aws4.sns`)
 
 	switch {
-	case strings.Contains(style, "mxgraph.aws3.lambda"):
-		return &GenericResource{id: id, value: value, resourceType: LambdaType}
-	case strings.Contains(style, "mxgraph.aws3.sqs"):
-		return &GenericResource{id: id, value: value, resourceType: SQSType}
-	case strings.Contains(style, "mxgraph.aws3.sns"):
-		return &GenericResource{id: id, value: value, resourceType: SNSType}
+	case reAPIGateway.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: APIGatewayType}
 	case strings.Contains(style, "mxgraph.aws4.event_time_based"):
 		return &GenericResource{id: id, value: value, resourceType: CronType}
-	case strings.Contains(style, "mxgraph.aws3.api_gateway"):
-		return &GenericResource{id: id, value: value, resourceType: APIGatewayType}
-	case strings.Contains(style, "mxgraph.aws4.endpoint"):
-		return &GenericResource{id: id, value: value, resourceType: EndpointType}
-	case strings.Contains(style, "mxgraph.aws3.s3"):
-		return &GenericResource{id: id, value: value, resourceType: S3Type}
 	case reDatabase.MatchString(style):
 		return &GenericResource{id: id, value: value, resourceType: DatabaseType}
-	case strings.Contains(style, "mxgraph.veeam2.restful_api"):
-		return &GenericResource{id: id, value: value, resourceType: RestfulAPIType}
-	case strings.Contains(style, "mxgraph.aws3.kinesis"):
+	case strings.Contains(style, "mxgraph.aws4.endpoint"):
+		return &GenericResource{id: id, value: value, resourceType: EndpointType}
+	case reKinesis.MatchString(style):
 		return &GenericResource{id: id, value: value, resourceType: KinesisType}
+	case resLambda.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: LambdaType}
+	case resRestfulAPI.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: RestfulAPIType}
+	case reS3.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: S3Type}
+	case reSQS.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: SQSType}
+	case reSNS.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: SNSType}
 	default:
 		return nil
 	}
