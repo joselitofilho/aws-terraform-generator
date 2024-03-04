@@ -92,6 +92,7 @@ func createResource(id, value, style string) Resource {
 	reAPIGateway := regexp.MustCompile("mxgraph.aws3.api_gateway|mxgraph.aws4.api_gateway")
 	reDatabase := regexp.MustCompile(`mxgraph.flowchart.database|mxgraph.aws3.dynamo_db|mxgraph.aws4.database|` +
 		`mxgraph.aws4.documentdb_with_mongodb_compatibility`)
+	reGoogleBQ := regexp.MustCompile("mxgraph.gcp2.big_query|google_bigquery")
 	reKinesis := regexp.MustCompile(`mxgraph.aws3.kinesis|mxgraph.aws4.kinesis`)
 	resLambda := regexp.MustCompile(`mxgraph.aws3.lambda|mxgraph.aws4.lambda`)
 	resRestfulAPI := regexp.MustCompile(`mxgraph.veeam2.restful_api|mxgraph.veeam.2d.restful_apis`)
@@ -108,6 +109,8 @@ func createResource(id, value, style string) Resource {
 		return &GenericResource{id: id, value: value, resourceType: DatabaseType}
 	case strings.Contains(style, "mxgraph.aws4.endpoint"):
 		return &GenericResource{id: id, value: value, resourceType: EndpointType}
+	case reGoogleBQ.MatchString(style):
+		return &GenericResource{id: id, value: value, resourceType: GoogleBQType}
 	case reKinesis.MatchString(style):
 		return &GenericResource{id: id, value: value, resourceType: KinesisType}
 	case resLambda.MatchString(style):

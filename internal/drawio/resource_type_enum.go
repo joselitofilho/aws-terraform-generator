@@ -14,6 +14,8 @@ const (
 	DatabaseType
 	// EndpointType represents the Endpoint resource type.
 	EndpointType
+	// GoogleBQType represents the Google BigQuery resource type.
+	GoogleBQType
 	// KinesisType represents the Kinesis resource type.
 	KinesisType
 	// LambdaType represents the Lambda resource type.
@@ -41,6 +43,8 @@ func (rt ResourceType) String() string {
 		return "Database"
 	case EndpointType:
 		return "Endpoint"
+	case GoogleBQType:
+		return "GoogleBQ"
 	case KinesisType:
 		return "Kinesis"
 	case LambdaType:
@@ -69,6 +73,8 @@ func ParseResourceType(s string) ResourceType {
 		return DatabaseType
 	case "endpoint":
 		return EndpointType
+	case "googlebq":
+		return GoogleBQType
 	case "kinesis":
 		return KinesisType
 	case "lambda":

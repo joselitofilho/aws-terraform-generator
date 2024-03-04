@@ -11,8 +11,8 @@ func TestParseResources(t *testing.T) {
 		mxFile *MxFile
 	}
 
-	lambdaResource := NewGenericResource("1", "myReceiver", LambdaType)
-	sqsResource := NewGenericResource("2", "my-sqs", SQSType)
+	lambdaResource := NewGenericResource("LAMBDA_ID", "myReceiver", LambdaType)
+	sqsResource := NewGenericResource("SQS_ID", "my-sqs", SQSType)
 
 	tests := []struct {
 		name      string
@@ -21,6 +21,120 @@ func TestParseResources(t *testing.T) {
 		targetErr error
 	}{
 		{
+			name: "API Gateway Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "APIG_ID", Value: "myAPI", Style: "mxgraph.aws3.api_gateway"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("APIG_ID", "myAPI", APIGatewayType)},
+			},
+		},
+		{
+			name: "Cron Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "CRON_ID", Value: "myScheduler", Style: "mxgraph.aws4.event_time_based"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("CRON_ID", "myScheduler", CronType)},
+			},
+		},
+		{
+			name: "Database Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "DB_ID", Value: "myDB", Style: "mxgraph.flowchart.database"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("DB_ID", "myDB", DatabaseType)},
+			},
+		},
+		{
+			name: "Endpoint Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "ENDPOINT_ID", Value: "myEndpoint", Style: "mxgraph.aws4.endpoint"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("ENDPOINT_ID", "myEndpoint", EndpointType)},
+			},
+		},
+		{
+			name: "GoogleBQ Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "GBC_ID", Value: "myGBC", Style: "google_bigquery"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("GBC_ID", "myGBC", GoogleBQType)},
+			},
+		},
+		{
+			name: "Kinesis Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "KINESIS_ID", Value: "myKinesis", Style: "mxgraph.aws3.kinesis"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("KINESIS_ID", "myKinesis", KinesisType)},
+			},
+		},
+		{
 			name: "Lambda Resource",
 			args: args{
 				mxFile: &MxFile{
@@ -28,7 +142,7 @@ func TestParseResources(t *testing.T) {
 						MxGraphModel: MxGraphModel{
 							Root: Root{
 								MxCells: []MxCell{
-									{ID: "1", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
+									{ID: "LAMBDA_ID", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
 								},
 							},
 						},
@@ -40,6 +154,44 @@ func TestParseResources(t *testing.T) {
 			},
 		},
 		{
+			name: "Restful API Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "RESTFULAPI_ID", Value: "myRestAPI", Style: "mxgraph.veeam2.restful_api"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("RESTFULAPI_ID", "myRestAPI", RestfulAPIType)},
+			},
+		},
+		{
+			name: "S3 Resource",
+			args: args{
+				mxFile: &MxFile{
+					Diagram: Diagram{
+						MxGraphModel: MxGraphModel{
+							Root: Root{
+								MxCells: []MxCell{
+									{ID: "S3BUCKET_ID", Value: "myBucket", Style: "mxgraph.aws3.s3"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &ResourceCollection{
+				Resources: []Resource{NewGenericResource("S3BUCKET_ID", "myBucket", S3Type)},
+			},
+		},
+		{
 			name: "SQS Resource",
 			args: args{
 				mxFile: &MxFile{
@@ -47,7 +199,7 @@ func TestParseResources(t *testing.T) {
 						MxGraphModel: MxGraphModel{
 							Root: Root{
 								MxCells: []MxCell{
-									{ID: "2", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
+									{ID: "SQS_ID", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
 								},
 							},
 						},
@@ -66,7 +218,7 @@ func TestParseResources(t *testing.T) {
 						MxGraphModel: MxGraphModel{
 							Root: Root{
 								MxCells: []MxCell{
-									{ID: "3", Value: "my-sns", Style: "mxgraph.aws3.sns"},
+									{ID: "SNS_ID", Value: "my-sns", Style: "mxgraph.aws3.sns"},
 								},
 							},
 						},
@@ -74,140 +226,7 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("3", "my-sns", SNSType)},
-			},
-		},
-		{
-			name: "Cron Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "4", Value: "myScheduler", Style: "mxgraph.aws4.event_time_based"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("4", "myScheduler", CronType)},
-			},
-		},
-		{
-			name: "API Gateway Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "5", Value: "myAPI", Style: "mxgraph.aws3.api_gateway"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("5", "myAPI", APIGatewayType)},
-			},
-		},
-		{
-			name: "Endpoint Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "6", Value: "myEndpoint", Style: "mxgraph.aws4.endpoint"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("6", "myEndpoint", EndpointType)},
-			},
-		},
-		{
-			name: "S3 Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "7", Value: "myBucket", Style: "mxgraph.aws3.s3"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("7", "myBucket", S3Type)},
-			},
-		},
-		{
-			name: "Database Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "8", Value: "myDB", Style: "mxgraph.flowchart.database"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("8", "myDB", DatabaseType)},
-			},
-		},
-		{
-			name: "Restful API Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "9", Value: "myRestAPI", Style: "mxgraph.veeam2.restful_api"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("9", "myRestAPI", RestfulAPIType)},
-			},
-		},
-		{
-			name: "Kinesis Resource",
-			args: args{
-				mxFile: &MxFile{
-					Diagram: Diagram{
-						MxGraphModel: MxGraphModel{
-							Root: Root{
-								MxCells: []MxCell{
-									{ID: "10", Value: "myKinesis", Style: "mxgraph.aws3.kinesis"},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("10", "myKinesis", KinesisType)},
+				Resources: []Resource{NewGenericResource("SNS_ID", "my-sns", SNSType)},
 			},
 		},
 		{
@@ -233,9 +252,9 @@ func TestParseResources(t *testing.T) {
 						MxGraphModel: MxGraphModel{
 							Root: Root{
 								MxCells: []MxCell{
-									{ID: "1", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
-									{ID: "2", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
-									{ID: "3", Source: "1", Target: "2"},
+									{ID: "LAMBDA_ID", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
+									{ID: "SQS_ID", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
+									{ID: "3", Source: "LAMBDA_ID", Target: "SQS_ID"},
 								},
 							},
 						},

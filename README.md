@@ -46,6 +46,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
     - APIGateway
     - Cron
     - Database
+    - Google BigQuery
     - Kinesis streams
     - Lambda
     - Restful API

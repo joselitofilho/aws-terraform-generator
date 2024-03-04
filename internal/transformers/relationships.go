@@ -42,6 +42,11 @@ func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database
 	buildLambdaVars(envars, lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"})
 }
 
+func buildLambdaToGoogleBQ(lambda, googleBQ drawio.Resource, envars map[string]map[string]string) {
+	buildLambdaVars(envars, lambda, googleBQ,
+		[]string{"BQ_PROJECT_ID", "BQ_API_KEY_SECRET", "BQ_PARTITION_FIELD", "BQ_CLUSTERING_FIELDS"})
+}
+
 func buildLambdaToKinesis(envars map[string]map[string]string, lambda, kinesis drawio.Resource) {
 	kinesisName := initLambdaEnvarsAndGetTargetName(envars, lambda, kinesis)
 

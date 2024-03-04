@@ -7,12 +7,14 @@ import (
 
 func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.ResourceCollection) (*config.Config, error) {
 	apiGatewaysByID := map[string]drawio.Resource{}
-	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	cronsByLambdaID := map[string]drawio.Resource{}
+	endpointsByAPIGatewayID := map[string]drawio.Resource{}
 	kinesisTriggersByLambdaID := map[string][]drawio.Resource{}
 	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
-	envars := map[string]map[string]string{}
+
 	snsMap := map[string]config.SNS{}
+
+	envars := map[string]map[string]string{}
 
 	resourcesByTypeMap := buildResourcesByTypeMap(resources)
 
@@ -76,6 +78,8 @@ func buildResourceRelationships(
 		switch target.ResourceType() {
 		case drawio.APIGatewayType:
 			buildAPIGatewayRelationship(source, target, apiGatewaysByID, endpointsByAPIGatewayID)
+		case drawio.GoogleBQType:
+			buildGoogleBQRelationship(source, target, envars)
 		case drawio.DatabaseType:
 			buildDatabaseRelationship(source, target, envars)
 		case drawio.KinesisType:

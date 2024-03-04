@@ -172,6 +172,73 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 	}
 }
 
+func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
+	type args struct {
+		yamlConfig *config.Config
+		resources  *drawio.ResourceCollection
+	}
+
+	googleBQ := drawio.NewGenericResource("id1", "google", drawio.GoogleBQType)
+	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+
+	tests := []struct {
+		name      string
+		args      args
+		want      *config.Config
+		targetErr error
+	}{
+		{
+			name: "only google BQ",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{googleBQ}},
+			},
+			want: &config.Config{},
+		},
+		{
+			name: "google BQ receives data from a Lambda",
+			args: args{
+				yamlConfig: diagramConfig,
+				resources: &drawio.ResourceCollection{
+					Resources:     []drawio.Resource{googleBQ, lambda},
+					Relationships: []drawio.Relationship{{Source: lambda, Target: googleBQ}},
+				},
+			},
+			want: &config.Config{
+				Lambdas: []config.Lambda{
+					{
+						Name:        "myReceiver",
+						Source:      "git@",
+						RoleName:    "execute_lambda",
+						Description: "myReceiver lambda",
+						Envars: []map[string]string{
+							{"GOOGLEBQ_PROJECT_ID": "var.google_bq_project_id"},
+							{"GOOGLEBQ_API_KEY_SECRET": "var.google_bq_api_key_secret"},
+							{"GOOGLEBQ_PARTITION_FIELD": "var.google_bq_partition_field"},
+							{"GOOGLEBQ_CLUSTERING_FIELDS": "var.google_bq_clustering_fields"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+
+			if tc.targetErr == nil {
+				require.NoError(t, err)
+				require.Equal(t, tc.want, got)
+			} else {
+				require.ErrorIs(t, err, tc.targetErr)
+			}
+		})
+	}
+}
+
 func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
