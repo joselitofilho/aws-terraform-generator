@@ -7,7 +7,7 @@ import (
 
 func buildKinesisRelationship(source, target drawio.Resource, envars map[string]map[string]string) {
 	if source.ResourceType() == drawio.LambdaType {
-		buildLambdaToKinesis(envars, source, target)
+		buildLambdaToKinesis(source, target, envars)
 	}
 }
 

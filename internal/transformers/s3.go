@@ -7,7 +7,7 @@ import (
 
 func buildS3Relationship(source, target drawio.Resource, envars map[string]map[string]string) {
 	if source.ResourceType() == drawio.LambdaType {
-		buildLambdaToS3(envars, source, target)
+		buildLambdaToS3(source, target, envars)
 	}
 }
 

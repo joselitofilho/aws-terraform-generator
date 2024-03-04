@@ -7,7 +7,7 @@ import (
 
 func buildRestfulAPIRelationship(source, target drawio.Resource, envars map[string]map[string]string) {
 	if source.ResourceType() == drawio.LambdaType {
-		buildLambdaToRestfulAPI(envars, source, target)
+		buildLambdaToRestfulAPI(source, target, envars)
 	}
 }
 

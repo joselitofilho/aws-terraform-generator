@@ -112,7 +112,7 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 		resources  *drawio.ResourceCollection
 	}
 
-	database := drawio.NewGenericResource("id1", "myDatabase", drawio.DatabaseType)
+	database := drawio.NewGenericResource("id1", "my-database", drawio.DatabaseType)
 	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
 
 	tests := []struct {
@@ -146,9 +146,9 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
 						Envars: []map[string]string{
-							{"MYDATABASEDB_HOST": "var.mydatabase_db_host"},
-							{"MYDATABASEDB_USER": "var.mydatabase_db_user"},
-							{"MYDATABASEDB_PASSWORD_SECRET": "var.mydatabase_db_password_secret"},
+							{"MY_DATABASE_DB_HOST": "var.my_database_db_host"},
+							{"MY_DATABASE_DB_USER": "var.my_database_db_user"},
+							{"MY_DATABASE_DB_PASSWORD_SECRET": "var.my_database_db_password_secret"},
 						},
 					},
 				},
@@ -212,10 +212,10 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
 						Envars: []map[string]string{
-							{"GOOGLEBQ_PROJECT_ID": "var.google_bq_project_id"},
-							{"GOOGLEBQ_API_KEY_SECRET": "var.google_bq_api_key_secret"},
-							{"GOOGLEBQ_PARTITION_FIELD": "var.google_bq_partition_field"},
-							{"GOOGLEBQ_CLUSTERING_FIELDS": "var.google_bq_clustering_fields"},
+							{"GOOGLE_BQ_PROJECT_ID": "var.google_bq_project_id"},
+							{"GOOGLE_BQ_API_KEY_SECRET": "var.google_bq_api_key_secret"},
+							{"GOOGLE_BQ_PARTITION_FIELD": "var.google_bq_partition_field"},
+							{"GOOGLE_BQ_CLUSTERING_FIELDS": "var.google_bq_clustering_fields"},
 						},
 					},
 				},

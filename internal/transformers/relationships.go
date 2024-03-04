@@ -9,15 +9,6 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
-func buildLambdaVars(envars map[string]map[string]string, lambda, target drawio.Resource, variables []string) {
-	targetName := initLambdaEnvarsAndGetTargetName(envars, lambda, target)
-
-	for _, v := range variables {
-		envars[lambda.ID()][fmt.Sprintf("%s%s",
-			strcase.ToSNAKE(targetName), v)] = "var." + strcase.ToSnake(fmt.Sprintf("%s%s", targetName, v))
-	}
-}
-
 func buildCronToLambda(cronsByLambdaID map[string]drawio.Resource, cron, lambda drawio.Resource) {
 	cronsByLambdaID[lambda.ID()] = cron
 }
@@ -38,28 +29,37 @@ func buildKinesisToLambda(kinesisTriggersByLambdaID map[string][]drawio.Resource
 	kinesisTriggersByLambdaID[lambdaID] = append(kinesisTriggersByLambdaID[lambdaID], kinesis)
 }
 
-func buildLambdaToDatabase(envars map[string]map[string]string, lambda, database drawio.Resource) {
-	buildLambdaVars(envars, lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"})
+func buildLambdaVars(lambda, target drawio.Resource, variables []string, envars map[string]map[string]string) {
+	targetName := initLambdaEnvarsAndGetTargetName(lambda, target, envars)
+
+	for _, v := range variables {
+		envars[lambda.ID()][strcase.ToSNAKE(fmt.Sprintf("%s%s",
+			targetName, v))] = "var." + strcase.ToSnake(fmt.Sprintf("%s%s", targetName, v))
+	}
+}
+
+func buildLambdaToDatabase(lambda, database drawio.Resource, envars map[string]map[string]string) {
+	buildLambdaVars(lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"}, envars)
 }
 
 func buildLambdaToGoogleBQ(lambda, googleBQ drawio.Resource, envars map[string]map[string]string) {
-	buildLambdaVars(envars, lambda, googleBQ,
-		[]string{"BQ_PROJECT_ID", "BQ_API_KEY_SECRET", "BQ_PARTITION_FIELD", "BQ_CLUSTERING_FIELDS"})
+	buildLambdaVars(lambda, googleBQ,
+		[]string{"BQ_PROJECT_ID", "BQ_API_KEY_SECRET", "BQ_PARTITION_FIELD", "BQ_CLUSTERING_FIELDS"}, envars)
 }
 
-func buildLambdaToKinesis(envars map[string]map[string]string, lambda, kinesis drawio.Resource) {
-	kinesisName := initLambdaEnvarsAndGetTargetName(envars, lambda, kinesis)
+func buildLambdaToKinesis(lambda, kinesis drawio.Resource, envars map[string]map[string]string) {
+	kinesisName := initLambdaEnvarsAndGetTargetName(lambda, kinesis, envars)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_KINESIS_STREAM_URL",
 		strcase.ToSNAKE(kinesisName))] = fmt.Sprintf("aws_kinesis_stream.%s_kinesis.name", strcase.ToSnake(kinesisName))
 }
 
-func buildLambdaToRestfulAPI(envars map[string]map[string]string, lambda, restfulAPI drawio.Resource) {
-	buildLambdaVars(envars, lambda, restfulAPI, []string{"_API_BASE_URL", "_HOST", "_USER"})
+func buildLambdaToRestfulAPI(lambda, restfulAPI drawio.Resource, envars map[string]map[string]string) {
+	buildLambdaVars(lambda, restfulAPI, []string{"API_BASE_URL", "HOST", "USER"}, envars)
 }
 
-func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawio.Resource) {
-	bucketName := initLambdaEnvarsAndGetTargetName(envars, lambda, s3Bucket)
+func buildLambdaToS3(lambda, s3Bucket drawio.Resource, envars map[string]map[string]string) {
+	bucketName := initLambdaEnvarsAndGetTargetName(lambda, s3Bucket, envars)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
@@ -67,8 +67,8 @@ func buildLambdaToS3(envars map[string]map[string]string, lambda, s3Bucket drawi
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf(`"%s_files"`, strings.ToLower(strcase.ToSnake(lambda.Value())))
 }
 
-func buildLambdaToSQS(envars map[string]map[string]string, lambda, sqs drawio.Resource) {
-	sqsName := initLambdaEnvarsAndGetTargetName(envars, lambda, sqs)
+func buildLambdaToSQS(lambda, sqs drawio.Resource, envars map[string]map[string]string) {
+	sqsName := initLambdaEnvarsAndGetTargetName(lambda, sqs, envars)
 
 	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
 		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.name", strcase.ToSnake(sqsName))
@@ -103,13 +103,13 @@ func buildSQSToLambda(sqsTriggersByLambdaID map[string][]drawio.Resource, sqs, l
 	sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], sqs)
 }
 
-func initEnvarsIfNecessaryByKey(envars map[string]map[string]string, key string) {
+func initEnvarsIfNecessaryByKey(key string, envars map[string]map[string]string) {
 	if _, ok := envars[key]; !ok {
 		envars[key] = map[string]string{}
 	}
 }
 
-func initLambdaEnvarsAndGetTargetName(envars map[string]map[string]string, lambda, target drawio.Resource) string {
-	initEnvarsIfNecessaryByKey(envars, lambda.ID())
+func initLambdaEnvarsAndGetTargetName(lambda, target drawio.Resource, envars map[string]map[string]string) string {
+	initEnvarsIfNecessaryByKey(lambda.ID(), envars)
 	return strings.ToLower(target.Value())
 }

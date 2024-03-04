@@ -10,7 +10,7 @@ func buildSQSRelationships(
 ) {
 	switch source.ResourceType() {
 	case drawio.LambdaType:
-		buildLambdaToSQS(envars, source, target)
+		buildLambdaToSQS(source, target, envars)
 	case drawio.SNSType:
 		buildSNSToSQS(snsMap, source, target)
 	}
