@@ -4,7 +4,7 @@
 
 [![GitHub tag](https://img.shields.io/github/release/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/joselitofilho/aws-terraform-generator?style=for-the-badge)](https://goreportcard.com/report/github.com/joselitofilho/aws-terraform-generator)
-[![Code coverage](https://img.shields.io/badge/Coverage-94.6%25-2ea44f?style=for-the-badge)](#)
+[![Code coverage](https://img.shields.io/badge/Coverage-94.4%25-2ea44f?style=for-the-badge)](#)
 
 [![Made with Golang](https://img.shields.io/badge/Golang-1.21.6-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
 [![Using Terraform](https://img.shields.io/badge/Terraform-3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")
@@ -42,7 +42,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 - [Diagrams](https://app.diagrams.net/) integration: Generate everything based on the exported XML diagram.
 - Customization Options: Tailor generated code to your specific requirements using customizable templates and configuration parameters.
 - Best Practices: Adhere to AWS and Terraform best practices with automatically generated code that follows industry standards.
-- Supported resources:
+- [Supported resources](https://drive.google.com/file/d/1Lrh6SikW1bvGXrfJLRDFBB4BChQdAPqz/view?usp=sharing):
     - APIGateway
     - Cron
     - Database
