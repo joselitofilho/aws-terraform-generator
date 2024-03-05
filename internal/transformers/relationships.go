@@ -111,5 +111,5 @@ func initEnvarsIfNecessaryByKey(key string, envars map[string]map[string]string)
 
 func initLambdaEnvarsAndGetTargetName(lambda, target drawio.Resource, envars map[string]map[string]string) string {
 	initEnvarsIfNecessaryByKey(lambda.ID(), envars)
-	return strings.ToLower(target.Value())
+	return target.Value()
 }
