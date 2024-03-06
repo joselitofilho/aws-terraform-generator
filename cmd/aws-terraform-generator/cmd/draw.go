@@ -1,13 +1,9 @@
 package cmd
 
 import (
-	"encoding/xml"
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/draw"
 )
 
 // drawCmd represents the sqs command
@@ -15,43 +11,37 @@ var drawCmd = &cobra.Command{
 	Use:   "draw",
 	Short: "Manage Draw",
 	Run: func(cmd *cobra.Command, _ []string) {
-		directory, err := cmd.Flags().GetString("directory")
+		workdir, err := cmd.Flags().GetString(flagWorkdir)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
-		output, err := cmd.Flags().GetString("output")
+		configFilename, err := cmd.Flags().GetString(flagConfig)
 		if err != nil {
-			panic(err)
+			printErrorAndExit(err)
 		}
 
-		config, err := terraform.ParseTerraformFiles(directory)
+		output, err := cmd.Flags().GetString(flagOutput)
 		if err != nil {
-			fmt.Printf("Error parsing Terraform files: %s\n", err)
-			return
+			printErrorAndExit(err)
 		}
 
-		xmlData, err := xml.MarshalIndent(config, "", "    ")
+		err = draw.NewDraw(configFilename, workdir, output).Build()
 		if err != nil {
-			fmt.Printf("Error marshalling XML: %s\n", err)
-			return
+			printErrorAndExit(err)
 		}
-
-		err = os.WriteFile(output, xmlData, os.ModePerm)
-		if err != nil {
-			fmt.Printf("Error writing XML to file: %s\n", err)
-			return
-		}
-
-		fmt.Println("XML representation of Terraform configuration has been written to", output)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(drawCmd)
 
-	drawCmd.Flags().StringP("directory", "d", "", "Path to the infra folder. For example: ./output/mystack")
-	drawCmd.Flags().StringP("output", "o", "", "Path to the output file. For example: ./output/diagram.xml")
+	drawCmd.Flags().StringP(flagWorkdir, "", "", "Path to the folder where the terraform files are. For example: ./output")
+	drawCmd.Flags().StringP(flagConfig, "c", "",
+		"Path to the YAML config file. For example: ./draw.config.yaml")
+	drawCmd.Flags().StringP(flagOutput, "o", "", "Path to the output folder. For example: ./output")
 
-	_ = drawCmd.MarkFlagRequired("output")
+	_ = drawCmd.MarkFlagRequired(flagWorkdir)
+	_ = drawCmd.MarkFlagRequired(flagConfig)
+	_ = drawCmd.MarkFlagRequired(flagOutput)
 }

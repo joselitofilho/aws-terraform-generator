@@ -4,6 +4,8 @@ go 1.19
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/aws/aws-lambda-go v1.46.0
+	github.com/emicklei/dot v1.6.1
 	github.com/ettle/strcase v0.2.0
 	github.com/fatih/color v1.16.0
 	github.com/hashicorp/hcl/v2 v2.20.0
@@ -11,6 +13,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.14.3
 	go.uber.org/mock v0.4.0
+	gonum.org/v1/gonum v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -30,5 +33,5 @@ require (
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/tools v0.6.0 // indirect
+	golang.org/x/tools v0.7.0 // indirect
 )

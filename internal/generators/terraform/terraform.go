@@ -17,22 +17,24 @@ import (
 type Resource struct {
 	Type       string
 	Name       string
+	Labels     []string
 	Attributes map[string]any
 }
 
 // Module represents a Terraform module.
 type Module struct {
 	Source     string
+	Labels     []string
 	Attributes map[string]any
 }
 
 // Config represents the Terraform configuration.
 type Config struct {
-	Resources []Resource
-	Modules   []Module
+	Resources []*Resource
+	Modules   []*Module
 }
 
-func ParseTerraformFiles(directory string) (Config, error) {
+func Parse(directory string) (Config, error) {
 	config := Config{}
 
 	parser := hclparse.NewParser()
@@ -65,9 +67,9 @@ func ParseTerraformFiles(directory string) (Config, error) {
 	return config, nil
 }
 
-func parseConfig(file *hcl.File) ([]Resource, []Module) {
-	resources := make([]Resource, 0)
-	modules := make([]Module, 0)
+func parseConfig(file *hcl.File) ([]*Resource, []*Module) {
+	resources := make([]*Resource, 0)
+	modules := make([]*Module, 0)
 
 	for _, block := range file.Body.(*hclsyntax.Body).Blocks {
 		switch block.Type {
@@ -83,8 +85,9 @@ func parseConfig(file *hcl.File) ([]Resource, []Module) {
 	return resources, modules
 }
 
-func parseModule(block *hclsyntax.Block) Module {
-	module := Module{
+func parseModule(block *hclsyntax.Block) *Module {
+	module := &Module{
+		Labels:     block.Labels,
 		Attributes: map[string]any{},
 	}
 
@@ -100,10 +103,11 @@ func parseModule(block *hclsyntax.Block) Module {
 	return module
 }
 
-func parseResource(block *hclsyntax.Block) Resource {
-	resource := Resource{
+func parseResource(block *hclsyntax.Block) *Resource {
+	resource := &Resource{
 		Type:       block.Labels[0],
 		Name:       block.Labels[1],
+		Labels:     block.Labels,
 		Attributes: map[string]any{},
 	}
 

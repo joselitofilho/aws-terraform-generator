@@ -37,7 +37,7 @@ func TestParseTerraformFiles(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := ParseTerraformFiles(tc.args.directory)
+			got, err := Parse(tc.args.directory)
 
 			require.ErrorIs(t, err, tc.targetErr)
 			require.Equal(t, tc.want, got)
