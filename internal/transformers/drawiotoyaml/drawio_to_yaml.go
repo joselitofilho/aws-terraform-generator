@@ -1,4 +1,4 @@
-package transformers
+package drawiotoyaml
 
 import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
