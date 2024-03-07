@@ -80,7 +80,7 @@ resource "aws_lambda_permission" "{{ToSnake $.Name}}_allow_kinesis" {
 resource "aws_lambda_event_source_mapping" "{{ToSnake $.Name}}_kinesis_mapping" {
   event_source_arn  = {{.SourceARN}}
   function_name     = aws_lambda_function.{{ToSnake $.Name}}_lambda.function_name
-  batch_size        = 10
-  starting_position = "TRIM_HORIZON"
+  batch_size        = 1
+  starting_position = "LATEST"
 }
 {{end}}{{end}}
