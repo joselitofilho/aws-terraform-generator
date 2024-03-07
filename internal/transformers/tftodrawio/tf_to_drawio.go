@@ -18,21 +18,27 @@ var (
 )
 
 var (
+	// suffixEndpoint = "_api"
 	suffixKinesis = "_kinesis"
 	suffixLambda  = "_lambda"
 	suffixSQS     = "_sqs"
 )
 
 var (
+	labelAWSAPIGatewayRoute          = "aws_apigatewayv2_route"
+	labelAWSAPIGatewayIntegration    = "aws_apigatewayv2_integration"
 	labelAWSCloudwatchEventTarget    = "aws_cloudwatch_event_target"
 	labelAWSCron                     = "aws_cloudwatch_event_rule"
+	labelAWSEndpoint                 = "aws_apigatewayv2_domain_name"
 	labelAWSKinesisStream            = "aws_kinesis_stream"
 	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
 	labelAWSSQSQueue                 = "aws_sqs_queue"
 )
 
 var (
+	arnAPIGateway    = "route"
 	arnCloudwatchKey = "cloudwatch"
+	arnEndpoint      = "apigatewayv2"
 	arnKinesisKey    = "kinesis"
 	arnLambdaKey     = "lambda"
 	arnSQSKey        = "sqs"
@@ -42,12 +48,17 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	resources := []drawio.Resource{}
 	relationships := []drawio.Relationship{}
 
+	apiGatewayResourcesByName := map[string]drawio.Resource{}
 	cronResourcesByName := map[string]drawio.Resource{}
 	dbResourcesByName := map[string]drawio.Resource{}
+	endpointResourcesByName := map[string]drawio.Resource{}
 	kinesisResourcesByName := map[string]drawio.Resource{}
 	lambdaResourcesByName := map[string]drawio.Resource{}
 	restfulAPIResourcesByName := map[string]drawio.Resource{}
 	sqsResourcesByName := map[string]drawio.Resource{}
+
+	endpointAPIGatewayMap := map[resourceARN]resourceARN{}
+	resourceEndpointAPIGatewayMap := map[resourceARN]map[resourceARN]resourceARN{}
 
 	relationshipsMap := map[resourceARN][]resourceARN{}
 
@@ -58,11 +69,16 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 		&id, &resources, &relationships)
 
 	processTerraformResources(tfConfig.Resources,
-		cronResourcesByName, kinesisResourcesByName, sqsResourcesByName, relationshipsMap,
+		apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+		sqsResourcesByName,
+		relationshipsMap,
+		endpointAPIGatewayMap, resourceEndpointAPIGatewayMap,
 		&id, &resources)
 
 	buildRelationships(relationshipsMap,
-		cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+		apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+		lambdaResourcesByName, sqsResourcesByName,
+		resourceEndpointAPIGatewayMap,
 		&relationships)
 
 	return &drawio.ResourceCollection{Resources: resources, Relationships: relationships}
@@ -70,16 +86,32 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 
 func buildRelationships(
 	relationshipsMap map[resourceARN][]resourceARN,
-	cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+	lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
 	relationships *[]drawio.Relationship,
 ) {
-	for k, v := range relationshipsMap {
-		source := getResourceByARN(k,
-			cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
+	for sourceARN, rel := range relationshipsMap {
+		source := getResourceByARN(sourceARN,
+			apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+			lambdaResourcesByName, sqsResourcesByName)
 
-		for i := range v {
-			target := getResourceByARN(v[i],
-				cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
+		for i := range rel {
+			targetARN := rel[i]
+
+			target := getResourceByARN(targetARN,
+				apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+				lambdaResourcesByName, sqsResourcesByName)
+
+			if endpointAPIGatewayMap, ok := resourceEndpointAPIGatewayMap[targetARN]; ok && targetARN.key != arnAPIGateway {
+				updatedSource := getResourceByARN(endpointAPIGatewayMap[sourceARN],
+					apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+					lambdaResourcesByName, sqsResourcesByName)
+
+				*relationships = append(*relationships, drawio.Relationship{Source: updatedSource, Target: target})
+
+				continue
+			}
 
 			*relationships = append(*relationships, drawio.Relationship{Source: source, Target: target})
 		}
@@ -108,17 +140,28 @@ func processTerraformModules(
 
 func processTerraformResources(
 	tfResources []*terraform.Resource,
-	cronResourcesByName, kinesisResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+	sqsResourcesByName map[string]drawio.Resource,
 	relationshipsMap map[resourceARN][]resourceARN,
+	endpointAPIGatewayMap map[resourceARN]resourceARN,
+	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
 	id *int, resources *[]drawio.Resource,
 ) {
 	for _, conf := range tfResources {
 		if len(conf.Labels) == 2 {
 			switch conf.Labels[0] {
+			case labelAWSAPIGatewayRoute:
+				processAPIGatewayRoute(conf, apiGatewayResourcesByName, id, resources, relationshipsMap,
+					endpointAPIGatewayMap)
+			case labelAWSAPIGatewayIntegration:
+				processAPIGatewayIntegration(conf,
+					endpointAPIGatewayMap, resourceEndpointAPIGatewayMap, relationshipsMap)
 			case labelAWSCloudwatchEventTarget:
 				processCloudwatchEventTarget(conf, relationshipsMap)
 			case labelAWSCron:
 				processCronResource(conf, cronResourcesByName, id, resources)
+			case labelAWSEndpoint:
+				processEndpointResource(conf, endpointResourcesByName, id, resources)
 			case labelAWSKinesisStream:
 				processKinesisResource(conf, kinesisResourcesByName, id, resources)
 			case labelAWSSQSQueue:
@@ -130,6 +173,43 @@ func processTerraformResources(
 	}
 }
 
+func processAPIGatewayRoute(
+	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
+	id *int, resources *[]drawio.Resource, relationshipsMap map[resourceARN][]resourceARN,
+	endpointAPIGatewayMap map[resourceARN]resourceARN,
+) {
+	value := conf.Attributes["route_key"].(string)
+
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.APIGatewayType)
+	*id++
+
+	*resources = append(*resources, resource)
+	resourcesByName[value] = resource
+
+	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
+	routeKeyARN := resourceARN{key: strings.Split(conf.Labels[1], "_")[1], name: conf.Attributes["route_key"].(string)}
+
+	relationshipsMap[apiIDARN] = append(relationshipsMap[apiIDARN], routeKeyARN)
+
+	endpointAPIGatewayMap[apiIDARN] = routeKeyARN
+}
+
+func processAPIGatewayIntegration(
+	conf *terraform.Resource,
+	endpointAPIGatewayMap map[resourceARN]resourceARN,
+	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
+	relationshipsMap map[resourceARN][]resourceARN,
+) {
+	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
+	integrationURIARN := resourceByARN(conf.Attributes["integration_uri"].(string))
+
+	relationshipsMap[apiIDARN] = append(relationshipsMap[apiIDARN], integrationURIARN)
+
+	resourceEndpointAPIGatewayMap[integrationURIARN] = map[resourceARN]resourceARN{
+		apiIDARN: endpointAPIGatewayMap[apiIDARN],
+	}
+}
+
 func processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
 	ruleARN := resourceByARN(conf.Attributes["rule"].(string))
 	arn := resourceByARN(conf.Attributes["arn"].(string))
@@ -138,7 +218,7 @@ func processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map
 }
 
 func processCronResource(
-	conf *terraform.Resource, cronResourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource,
 ) {
 	value := conf.Attributes["schedule_expression"].(string)
@@ -147,7 +227,7 @@ func processCronResource(
 	*id++
 
 	*resources = append(*resources, resource)
-	cronResourcesByName[conf.Labels[1]] = resource
+	resourcesByName[conf.Labels[1]] = resource
 }
 
 func processDBResourceFromEnvar(
@@ -166,6 +246,19 @@ func processDBResourceFromEnvar(
 	}
 
 	return &resource
+}
+
+func processEndpointResource(
+	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
+	id *int, resources *[]drawio.Resource,
+) {
+	value := conf.Attributes["domain_name"].(string)
+
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.EndpointType)
+	*id++
+
+	*resources = append(*resources, resource)
+	resourcesByName[conf.Labels[1]] = resource
 }
 
 func processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
@@ -308,11 +401,16 @@ func processRestfulAPIResourceFromEnvar(
 
 func getResourceByARN(
 	arn resourceARN,
-	cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
+	lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 ) (resource drawio.Resource) {
 	switch arn.key {
+	case arnAPIGateway:
+		resource = apiGatewayResourcesByName[arn.name]
 	case arnCloudwatchKey:
 		resource = cronResourcesByName[arn.name]
+	case arnEndpoint:
+		resource = endpointResourcesByName[arn.name]
 	case arnKinesisKey:
 		resource = kinesisResourcesByName[arn.name]
 	case arnLambdaKey:
@@ -367,7 +465,9 @@ func resourceByARN(arn string) resourceARN {
 	} else {
 		parts := strings.Split(arn, ".")
 
-		key = strings.Split(parts[0], "_")[1]
+		keyParts := strings.Split(parts[0], "_")
+
+		key = keyParts[1]
 		name = parts[1]
 	}
 

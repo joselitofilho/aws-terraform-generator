@@ -77,8 +77,6 @@ func parseConfig(file *hcl.File) ([]*Resource, []*Module) {
 			modules = append(modules, parseModule(block))
 		case "resource":
 			resources = append(resources, parseResource(block))
-		default:
-			fmt.Println("unsupported block:", block.Type)
 		}
 	}
 

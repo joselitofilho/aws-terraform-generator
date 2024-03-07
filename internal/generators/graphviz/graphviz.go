@@ -15,6 +15,10 @@ func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.Res
 		n.Attrs("shape", "plaintext", "imagepos", "tc", "labelloc", "b", "height", "0.9")
 	})
 
+	g.EdgeInitializer(func(e dot.Edge) {
+		e.Attrs("arrowhead", "vee", "arrowtail", "normal")
+	})
+
 	nodes := map[string]dot.Node{}
 
 	for _, res := range resources.Resources {
