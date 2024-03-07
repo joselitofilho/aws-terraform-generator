@@ -29,7 +29,7 @@ func TestDraw_Build(t *testing.T) {
 			name: "",
 			fields: fields{
 				configFileName: path.Join(testdataDir, "draw.config.yaml"),
-				input:          path.Join(testdataDir, "stack"),
+				input:          "/Users/joselitofilho/dev/personal/aws-terraform-generator/output/location", // path.Join(testdataDir, "stack"),
 				output:         testOutput,
 			},
 		},

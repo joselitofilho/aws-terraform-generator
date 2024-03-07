@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	envarSuffixDBHost           = "DB_HOST"
+	envarSuffixDBHost           = "_DB_HOST"
+	envarSuffixGoogleBQ         = "_BQ_PROJECT_ID"
 	envarSuffixKinesisStreamURL = "_KINESIS_STREAM_URL"
 	envarSuffixSQSQueueURL      = "_SQS_QUEUE_URL"
 	envarSuffixRestfulAPI       = "_API_BASE_URL"
 )
 
 var (
-	// suffixEndpoint = "_api"
 	suffixKinesis = "_kinesis"
 	suffixLambda  = "_lambda"
 	suffixSQS     = "_sqs"
@@ -52,6 +52,7 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	cronResourcesByName := map[string]drawio.Resource{}
 	dbResourcesByName := map[string]drawio.Resource{}
 	endpointResourcesByName := map[string]drawio.Resource{}
+	googleBQResourcesByName := map[string]drawio.Resource{}
 	kinesisResourcesByName := map[string]drawio.Resource{}
 	lambdaResourcesByName := map[string]drawio.Resource{}
 	restfulAPIResourcesByName := map[string]drawio.Resource{}
@@ -65,7 +66,7 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	id := 1
 
 	processTerraformModules(tfConfig.Modules,
-		dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName, restfulAPIResourcesByName,
+		dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName, restfulAPIResourcesByName,
 		&id, &resources, &relationships)
 
 	processTerraformResources(tfConfig.Resources,
@@ -120,7 +121,7 @@ func buildRelationships(
 
 func processTerraformModules(
 	tfModules []*terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+	dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
 	restfulAPIResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
@@ -129,8 +130,8 @@ func processTerraformModules(
 			l := conf.Labels[0]
 
 			if strings.HasSuffix(strings.ToLower(l), suffixLambda) {
-				processLambdaResource(conf,
-					dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+				processLambdaModule(conf,
+					dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
 					restfulAPIResourcesByName,
 					id, resources, relationships)
 			}
@@ -268,6 +269,24 @@ func processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[re
 	relationshipsMap[eventSourceARN] = append(relationshipsMap[eventSourceARN], functionName)
 }
 
+func processGoogleBQResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+) *drawio.Resource {
+	value := googleBQName(envar, envarSuffixGoogleBQ)
+
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.GoogleBQType)
+		*id++
+
+		resourcesByName[value] = resource
+		*resources = append(*resources, resource)
+	}
+
+	return &resource
+}
+
 func processKinesisResourceFromEnvar(
 	envar string, resourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource,
@@ -304,8 +323,8 @@ func processKinesisResource(
 	}
 }
 
-func processLambdaResource(conf *terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+func processLambdaModule(conf *terraform.Module,
+	dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
 	restfulAPIResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
@@ -320,6 +339,12 @@ func processLambdaResource(conf *terraform.Module,
 	for k := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
 		if strings.HasSuffix(k, envarSuffixDBHost) {
 			target := processDBResourceFromEnvar(k, dbResourcesByName, id, resources)
+			*relationships = append(*relationships,
+				drawio.Relationship{Source: resource, Target: *target})
+		}
+
+		if strings.HasSuffix(k, envarSuffixGoogleBQ) {
+			target := processGoogleBQResourceFromEnvar(k, googleBQResourcesByName, id, resources)
 			*relationships = append(*relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
@@ -423,6 +448,10 @@ func getResourceByARN(
 }
 
 func databaseName(str, suffix string) string {
+	return strcase.ToKebab(str[:len(str)-len(suffix)])
+}
+
+func googleBQName(str, suffix string) string {
 	return strcase.ToKebab(str[:len(str)-len(suffix)])
 }
 
