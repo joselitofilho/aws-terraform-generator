@@ -27,6 +27,10 @@ func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.Res
 	}
 
 	for _, rel := range resources.Relationships {
+		if rel.Source == nil || rel.Target == nil {
+			continue
+		}
+
 		g.Edge(nodes[rel.Source.ID()], nodes[rel.Target.ID()])
 	}
 

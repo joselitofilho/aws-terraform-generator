@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	envarSuffixDBHost           = "_DB_HOST"
-	envarSuffixGoogleBQ         = "_BQ_PROJECT_ID"
-	envarSuffixKinesisStreamURL = "_KINESIS_STREAM_URL"
-	envarSuffixSQSQueueURL      = "_SQS_QUEUE_URL"
-	envarSuffixRestfulAPI       = "_API_BASE_URL"
+	envarSuffixDBHost           = "DB_HOST"
+	envarSuffixGoogleBQ         = "BQ_PROJECT_ID"
+	envarSuffixKinesisStreamURL = "KINESIS_STREAM_URL"
+	envarSuffixSQSQueueURL      = "SQS_QUEUE_URL"
+	envarSuffixRestfulAPI       = "API_BASE_URL"
 )
 
 var (
@@ -31,6 +31,7 @@ var (
 	labelAWSCron                     = "aws_cloudwatch_event_rule"
 	labelAWSEndpoint                 = "aws_apigatewayv2_domain_name"
 	labelAWSKinesisStream            = "aws_kinesis_stream"
+	labelAWSLambdaFunction           = "aws_lambda_function"
 	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
 	labelAWSSQSQueue                 = "aws_sqs_queue"
 )
@@ -61,8 +62,8 @@ type Transformer struct {
 	restfulAPIResourcesByName map[string]drawio.Resource
 	sqsResourcesByName        map[string]drawio.Resource
 
-	endpointAPIGatewayMap         map[resourceARN]resourceARN
-	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN
+	endpointAPIGatewayMap   map[resourceARN][]resourceARN
+	resourceAPIGIntegration map[resourceARN]resourceARN
 
 	relationshipsMap map[resourceARN][]resourceARN
 
@@ -87,8 +88,8 @@ func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Tran
 		restfulAPIResourcesByName: map[string]drawio.Resource{},
 		sqsResourcesByName:        map[string]drawio.Resource{},
 
-		endpointAPIGatewayMap:         map[resourceARN]resourceARN{},
-		resourceEndpointAPIGatewayMap: map[resourceARN]map[resourceARN]resourceARN{},
+		endpointAPIGatewayMap:   map[resourceARN][]resourceARN{},
+		resourceAPIGIntegration: map[resourceARN]resourceARN{},
 
 		relationshipsMap: map[resourceARN][]resourceARN{},
 
@@ -115,11 +116,12 @@ func (t *Transformer) buildRelationships() {
 
 			target := t.getResourceByARN(targetARN)
 
-			if endpointAPIGatewayMap, ok := t.resourceEndpointAPIGatewayMap[targetARN]; ok &&
-				targetARN.key != arnAPIGateway {
-				updatedSource := t.getResourceByARN(endpointAPIGatewayMap[sourceARN])
+			if integration, ok := t.resourceAPIGIntegration[targetARN]; ok {
+				for _, apig := range t.endpointAPIGatewayMap[integration] {
+					updatedSource := t.getResourceByARN(apig)
 
-				t.relationships = append(t.relationships, drawio.Relationship{Source: updatedSource, Target: target})
+					t.relationships = append(t.relationships, drawio.Relationship{Source: updatedSource, Target: target})
+				}
 
 				continue
 			}
@@ -148,9 +150,9 @@ func (t *Transformer) processTerraformResources() {
 			case labelAWSAPIGatewayRoute:
 				t.processAPIGatewayRoute(tfResourceConf, t.apiGatewayResourcesByName)
 			case labelAWSAPIGatewayIntegration:
-				t.processAPIGatewayIntegration(tfResourceConf, t.endpointAPIGatewayMap)
+				t.processAPIGatewayIntegration(tfResourceConf)
 			case labelAWSCloudwatchEventTarget:
-				t.processCloudwatchEventTarget(tfResourceConf, t.relationshipsMap)
+				t.processCloudwatchEventTarget(tfResourceConf)
 			case labelAWSCron:
 				t.processCronResource(tfResourceConf, t.cronResourcesByName)
 			case labelAWSEndpoint:
@@ -160,7 +162,7 @@ func (t *Transformer) processTerraformResources() {
 			case labelAWSSQSQueue:
 				t.processSQSResource(tfResourceConf, t.sqsResourcesByName)
 			case labelAWSLambdaEventSourceMapping:
-				t.processEventSourceMapping(tfResourceConf, t.relationshipsMap)
+				t.processEventSourceMapping(tfResourceConf)
 			}
 		}
 	}
@@ -176,31 +178,29 @@ func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource, resources
 	resourcesByName[value] = resource
 
 	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
-	routeKeyARN := resourceARN{key: strings.Split(conf.Labels[1], "_")[1], name: conf.Attributes["route_key"].(string)}
+	routeKeyARN := resourceARN{key: strings.Split(conf.Labels[0], "_")[2], name: conf.Attributes["route_key"].(string)}
+	target := resourceARN{key: strings.Split(conf.Attributes["target"].(string), ".")[1]}
 
 	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], routeKeyARN)
 
-	t.endpointAPIGatewayMap[apiIDARN] = routeKeyARN
+	t.endpointAPIGatewayMap[target] = append(t.endpointAPIGatewayMap[target], routeKeyARN)
 }
 
-func (t *Transformer) processAPIGatewayIntegration(
-	conf *terraform.Resource, endpointAPIGatewayMap map[resourceARN]resourceARN,
-) {
+func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
+	label := resourceARN{key: conf.Labels[1]}
 	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
 	integrationURIARN := resourceByARN(conf.Attributes["integration_uri"].(string))
 
 	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], integrationURIARN)
 
-	t.resourceEndpointAPIGatewayMap[integrationURIARN] = map[resourceARN]resourceARN{
-		apiIDARN: endpointAPIGatewayMap[apiIDARN],
-	}
+	t.resourceAPIGIntegration[integrationURIARN] = label
 }
 
-func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
+func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
 	ruleARN := resourceByARN(conf.Attributes["rule"].(string))
 	arn := resourceByARN(conf.Attributes["arn"].(string))
 
-	relationshipsMap[ruleARN] = append(relationshipsMap[ruleARN], arn)
+	t.relationshipsMap[ruleARN] = append(t.relationshipsMap[ruleARN], arn)
 }
 
 func (t *Transformer) processCronResource(
@@ -216,9 +216,9 @@ func (t *Transformer) processCronResource(
 }
 
 func (t *Transformer) processDBResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource,
+	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := databaseName(envar, envarSuffixDBHost)
+	value := toKebabFromEnvar(k, v, envarSuffixDBHost)
 
 	resource, ok := resourcesByName[value]
 
@@ -245,17 +245,34 @@ func (t *Transformer) processEndpointResource(
 	resourcesByName[conf.Labels[1]] = resource
 }
 
-func (t *Transformer) processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
+func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 	eventSourceARN := resourceByARN(conf.Attributes["event_source_arn"].(string))
 	functionName := resourceByARN(conf.Attributes["function_name"].(string))
 
-	relationshipsMap[eventSourceARN] = append(relationshipsMap[eventSourceARN], functionName)
+	t.relationshipsMap[eventSourceARN] = append(t.relationshipsMap[eventSourceARN], functionName)
+
+	t.tryToCreateResourceByARN(eventSourceARN)
+}
+
+func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
+	switch eventSourceARN.key {
+	case arnKinesisKey:
+		value := eventSourceARN.name
+
+		if _, ok := t.kinesisResourcesByName[value]; !ok {
+			resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+			t.id++
+
+			t.resources = append(t.resources, resource)
+			t.kinesisResourcesByName[value] = resource
+		}
+	}
 }
 
 func (t *Transformer) processGoogleBQResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource,
+	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := googleBQName(envar, envarSuffixGoogleBQ)
+	value := toKebabFromEnvar(k, v, envarSuffixGoogleBQ)
 
 	resource, ok := resourcesByName[value]
 
@@ -271,9 +288,9 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 }
 
 func (t *Transformer) processKinesisResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource,
+	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := kinesisName(envar, envarSuffixKinesisStreamURL)
+	value := toKebabFromEnvar(k, v, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -289,7 +306,7 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 }
 
 func (t *Transformer) processKinesisResource(
-	conf *terraform.Resource, kinesisResourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
 ) {
 	l := conf.Labels[1]
 
@@ -300,7 +317,7 @@ func (t *Transformer) processKinesisResource(
 		t.id++
 
 		t.resources = append(t.resources, resource)
-		kinesisResourcesByName[value] = resource
+		resourcesByName[value] = resource
 	}
 }
 
@@ -313,33 +330,33 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	t.resources = append(t.resources, resource)
 	t.lambdaResourcesByName[value] = resource
 
-	for k := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
+	for k, v := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
 		if strings.HasSuffix(k, envarSuffixDBHost) {
-			target := t.processDBResourceFromEnvar(k, t.dbResourcesByName)
+			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixGoogleBQ) {
-			target := t.processGoogleBQResourceFromEnvar(k, t.googleBQResourcesByName)
+			target := t.processGoogleBQResourceFromEnvar(k, v.(string), t.googleBQResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixKinesisStreamURL) {
-			target := t.processKinesisResourceFromEnvar(k, t.kinesisResourcesByName)
+			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixSQSQueueURL) {
-			target := t.processSQSResourceFromEnvar(k, t.sqsResourcesByName)
+			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixRestfulAPI) {
-			target := t.processRestfulAPIResourceFromEnvar(k, t.restfulAPIResourcesByName)
+			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
@@ -347,9 +364,9 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 }
 
 func (t *Transformer) processSQSResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource,
+	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := sqsName(envar, envarSuffixSQSQueueURL)
+	value := toKebabFromEnvar(k, v, envarSuffixSQSQueueURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -379,9 +396,9 @@ func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesB
 }
 
 func (t *Transformer) processRestfulAPIResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource,
+	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := restfulAPIName(envar, envarSuffixRestfulAPI)
+	value := toCamelFromEnvar(k, v, envarSuffixRestfulAPI)
 
 	resource, ok := resourcesByName[value]
 
@@ -431,12 +448,43 @@ func replaceVars(str string, tfLocals []*terraform.Local) string {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func databaseName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
+func strTransformFromEnvar(
+	key, value, suffix string, f func(s string) string,
+) string {
+	var result string
+
+	if key == suffix {
+		suffixMap := map[string]struct{}{
+			labelAWSKinesisStream:  {},
+			labelAWSLambdaFunction: {},
+			labelAWSSQSQueue:       {},
+		}
+
+		result = value
+
+		if strings.HasPrefix(result, "var.client-var.environment-") {
+			result = strings.ReplaceAll(result, "var.client-var.environment-", "")
+		}
+
+		for s := range suffixMap {
+			if strings.HasPrefix(result, s) {
+				result = resourceByARN(result).name
+				break
+			}
+		}
+	} else {
+		result = key[:len(key)-len(suffix)]
+	}
+
+	return f(result)
 }
 
-func googleBQName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
+func toCamelFromEnvar(key, value, suffix string) string {
+	return strTransformFromEnvar(key, value, suffix, strcase.ToCamel)
+}
+
+func toKebabFromEnvar(key, value, suffix string) string {
+	return strTransformFromEnvar(key, value, suffix, strcase.ToKebab)
 }
 
 func kinesisName(str, suffix string) string {
@@ -449,10 +497,6 @@ func lambdaName(str, suffix string) string {
 
 func sqsName(str, suffix string) string {
 	return strcase.ToKebab(str[:len(str)-len(suffix)])
-}
-
-func restfulAPIName(str, suffix string) string {
-	return strcase.ToCamel(str[:len(str)-len(suffix)])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,17 +524,23 @@ func resourceByARN(arn string) resourceARN {
 
 		keyParts := strings.Split(parts[0], "_")
 
-		key = keyParts[1]
-		name = parts[1]
-	}
+		if parts[0] == "module" {
+			// TODO: Add support to more type of modules
+			key = arnLambdaKey
+		} else {
+			key = keyParts[1]
+		}
 
-	switch key {
-	case arnKinesisKey:
-		name = kinesisName(name, suffixKinesis)
-	case arnLambdaKey:
-		name = lambdaName(name, suffixLambda)
-	case arnSQSKey:
-		name = sqsName(name, suffixSQS)
+		name = parts[1]
+
+		switch key {
+		case arnKinesisKey:
+			name = kinesisName(name, suffixKinesis)
+		case arnLambdaKey:
+			name = lambdaName(name, suffixLambda)
+		case arnSQSKey:
+			name = sqsName(name, suffixSQS)
+		}
 	}
 
 	return resourceARN{key: key, name: name}
