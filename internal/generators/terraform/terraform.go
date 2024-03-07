@@ -39,35 +39,55 @@ type Config struct {
 	Locals    []*Local
 }
 
-func Parse(directory string) (Config, error) {
+func Parse(directories, files []string) (Config, error) {
 	config := Config{}
 
 	parser := hclparse.NewParser()
 
-	// Walk through all .tf files in the directory.
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && filepath.Ext(path) == ".tf" {
-			file, diags := parser.ParseHCLFile(path)
-			if diags.HasErrors() {
-				return fmt.Errorf("failed to load config file %s: %v", path, diags.Errs())
+	for i := range directories {
+		// Walk through all .tf files in the directory.
+		err := filepath.Walk(directories[i], func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
 			}
 
-			parsedConfig := parseConfig(file)
+			if !info.IsDir() && filepath.Ext(path) == ".tf" {
+				file, diags := parser.ParseHCLFile(path)
+				if diags.HasErrors() {
+					return fmt.Errorf("failed to load config file %s: %w", path, diags.Errs())
+				}
 
-			config.Modules = append(config.Modules, parsedConfig.Modules...)
-			config.Resources = append(config.Resources, parsedConfig.Resources...)
-			config.Locals = append(config.Locals, parsedConfig.Locals...)
+				parsedConfig := parseConfig(file)
+
+				config.Modules = append(config.Modules, parsedConfig.Modules...)
+				config.Resources = append(config.Resources, parsedConfig.Resources...)
+				config.Locals = append(config.Locals, parsedConfig.Locals...)
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return Config{}, err
 		}
+	}
 
-		return nil
-	})
+	for _, f := range files {
+		if filepath.Ext(f) == ".tf" {
+			_, err := os.Stat(f)
+			if !os.IsNotExist(err) {
+				file, diags := parser.ParseHCLFile(f)
+				if diags.HasErrors() {
+					return config, fmt.Errorf("failed to load config file %s: %w", file, diags.Errs())
+				}
 
-	if err != nil {
-		return Config{}, err
+				parsedConfig := parseConfig(file)
+
+				config.Modules = append(config.Modules, parsedConfig.Modules...)
+				config.Resources = append(config.Resources, parsedConfig.Resources...)
+				config.Locals = append(config.Locals, parsedConfig.Locals...)
+			}
+		}
 	}
 
 	return config, nil

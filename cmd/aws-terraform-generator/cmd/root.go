@@ -18,6 +18,7 @@ import (
 const (
 	flagConfig  = "config"
 	flagDiagram = "diagram"
+	flagFile    = "file"
 	flagOutput  = "output"
 	flagWorkdir = "workdir"
 )

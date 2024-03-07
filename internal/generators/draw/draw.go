@@ -30,13 +30,14 @@ var defaultResourceImageMap = map[drawio.ResourceType]string{
 }
 
 type Draw struct {
+	workdirs       []string
+	files          []string
 	configFilename string
-	workdir        string
 	output         string
 }
 
-func NewDraw(configFilename, workdir, output string) *Draw {
-	return &Draw{configFilename: configFilename, workdir: workdir, output: output}
+func NewDraw(workdirs, files []string, configFilename, output string) *Draw {
+	return &Draw{workdirs: workdirs, files: files, configFilename: configFilename, output: output}
 }
 
 func (d *Draw) Build() error {
@@ -47,7 +48,7 @@ func (d *Draw) Build() error {
 		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
 	}
 
-	tfConfig, err := terraform.Parse(d.workdir)
+	tfConfig, err := terraform.Parse(d.workdirs, d.files)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

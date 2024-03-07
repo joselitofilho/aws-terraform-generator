@@ -15,8 +15,9 @@ const (
 
 func TestDraw_Build(t *testing.T) {
 	type fields struct {
+		workdirs       []string
+		files          []string
 		configFileName string
-		input          string
 		output         string
 	}
 
@@ -28,11 +29,15 @@ func TestDraw_Build(t *testing.T) {
 		{
 			name: "",
 			fields: fields{
+				workdirs: []string{
+					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/location",
+					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/bigquery/mod",
+				},
+				files: []string{
+					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/eventprocessing/mod/location.tf",
+				},
 				configFileName: path.Join(testdataDir, "draw.config.yaml"),
-				// input:          path.Join(testdataDir, "stack"),
-				// input:          "/Users/joselitofilho/dev/personal/aws-terraform-generator/output/location",
-				input:  "/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/location",
-				output: testOutput,
+				output:         testOutput,
 			},
 		},
 	}
@@ -42,8 +47,9 @@ func TestDraw_Build(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			d := NewDraw(
+				tc.fields.workdirs,
+				tc.fields.files,
 				tc.fields.configFileName,
-				tc.fields.input,
 				tc.fields.output,
 			)
 

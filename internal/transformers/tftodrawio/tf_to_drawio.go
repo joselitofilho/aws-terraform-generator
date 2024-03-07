@@ -213,7 +213,14 @@ func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
 func (t *Transformer) processCronResource(
 	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
 ) {
-	value := conf.Attributes["schedule_expression"].(string)
+	var value string
+
+	switch v := conf.Attributes["schedule_expression"].(type) {
+	case string:
+		value = v
+	default:
+		value = "schedule_expression"
+	}
 
 	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.CronType)
 	t.id++
@@ -264,7 +271,7 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
 	switch eventSourceARN.key {
 	case arnKinesisKey:
-		value := eventSourceARN.name
+		value := toPascalFromEnvar(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
 
 		if _, ok := t.kinesisResourcesByName[value]; !ok {
 			resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
@@ -279,7 +286,8 @@ func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
 func (t *Transformer) processGoogleBQResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := toKebabFromEnvar(k, v, envarSuffixGoogleBQ)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toKebabFromEnvar(k, value, envarSuffixGoogleBQ)
 
 	resource, ok := resourcesByName[value]
 
@@ -297,7 +305,7 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 func (t *Transformer) processKinesisResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
-	value := toKebabFromEnvar(k, v, envarSuffixKinesisStreamURL)
+	value := toPascalFromEnvar(k, v, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -318,7 +326,7 @@ func (t *Transformer) processKinesisResource(
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixKinesis) {
-		value := kinesisName(l, suffixKinesis)
+		value := toPascalFromEnvar(l, l, suffixKinesis)
 
 		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
 		t.id++
@@ -477,7 +485,15 @@ func replaceVars(str string, tfLocals []*terraform.Local) string {
 
 	for i := range tfLocals {
 		for k, v := range tfLocals[i].Attributes {
-			result = strings.ReplaceAll(result, k, v.(string))
+			switch v := v.(type) {
+			// TODO: Implement others
+			case string:
+				result = strings.ReplaceAll(result, k, v)
+			case []string:
+				result = fmt.Sprintf("%slocal.%s[]", result, k)
+			default:
+				result = fmt.Sprintf("%slocal.%s", result, k)
+			}
 		}
 	}
 
@@ -501,13 +517,13 @@ func strTransformFromEnvar(
 
 		result = value
 
-		if strings.HasPrefix(result, "var.client-var.environment-") {
-			result = strings.ReplaceAll(result, "var.client-var.environment-", "")
+		if strings.HasPrefix(result, "var.client-var.environment-") { // TODO:
+			result = f(strings.ReplaceAll(result, "var.client-var.environment-", "")) // TODO:
 		}
 
 		for s := range suffixMap {
 			if strings.HasPrefix(result, s) {
-				result = resourceByARN(result).name
+				result = f(resourceByARN(result).name)
 				break
 			}
 		}
@@ -516,10 +532,10 @@ func strTransformFromEnvar(
 
 		result = strings.ReplaceAll(result, "_"+suffix, "")
 		result = strings.ReplaceAll(result, suffix, "")
-		// result = key[:len(key)-len(suffix)]
+		result = f(result)
 	}
 
-	return f(result)
+	return result
 }
 
 func toCamelFromEnvar(key, value, suffix string) string {
@@ -528,6 +544,10 @@ func toCamelFromEnvar(key, value, suffix string) string {
 
 func toKebabFromEnvar(key, value, suffix string) string {
 	return strTransformFromEnvar(key, value, suffix, strcase.ToKebab)
+}
+
+func toPascalFromEnvar(key, value, suffix string) string {
+	return strTransformFromEnvar(key, value, suffix, strcase.ToPascal)
 }
 
 func kinesisName(str, suffix string) string {
@@ -574,8 +594,10 @@ func resourceByARN(arn string) resourceARN {
 		if parts[0] == "module" {
 			// TODO: Add support to more type of modules
 			key = arnLambdaKey
-		} else {
+		} else if len(keyParts) > 1 {
 			key = keyParts[1]
+		} else {
+			key = strings.Join(keyParts, "_")
 		}
 
 		name = parts[1]
