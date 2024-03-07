@@ -13,6 +13,7 @@ import (
 var (
 	envarSuffixDBHost           = "DB_HOST"
 	envarSuffixKinesisStreamURL = "_KINESIS_STREAM_URL"
+	envarSuffixSQSQueueURL      = "_SQS_QUEUE_URL"
 )
 
 var (
@@ -50,7 +51,8 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 
 	id := 1
 
-	processTerraformModules(tfConfig.Modules, dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName,
+	processTerraformModules(tfConfig.Modules,
+		dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
 		&id, &resources, &relationships)
 
 	processTerraformResources(tfConfig.Resources,
@@ -84,7 +86,7 @@ func buildRelationships(
 
 func processTerraformModules(
 	tfModules []*terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName map[string]drawio.Resource,
+	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
 	for _, conf := range tfModules {
@@ -93,7 +95,8 @@ func processTerraformModules(
 
 			if strings.HasSuffix(strings.ToLower(l), suffixLambda) {
 				processLambdaResource(conf,
-					dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, id, resources, relationships)
+					dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+					id, resources, relationships)
 			}
 		}
 	}
@@ -144,17 +147,21 @@ func processCronResource(
 }
 
 func processDBResourceFromEnvar(
-	envar string, dbResourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
-) {
+	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+) *drawio.Resource {
 	value := databaseName(envar, envarSuffixDBHost)
 
-	if _, ok := dbResourcesByName[value]; !ok {
-		dbResource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.DatabaseType)
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.DatabaseType)
 		*id++
 
-		dbResourcesByName[value] = dbResource
-		*resources = append(*resources, dbResource)
+		resourcesByName[value] = resource
+		*resources = append(*resources, resource)
 	}
+
+	return &resource
 }
 
 func processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
@@ -165,18 +172,22 @@ func processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[re
 }
 
 func processKinesisResourceFromEnvar(
-	envar string, kinesisResourcesByName map[string]drawio.Resource,
+	envar string, resourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource,
-) {
-	value := databaseName(envar, envarSuffixKinesisStreamURL)
+) *drawio.Resource {
+	value := kinesisName(envar, envarSuffixKinesisStreamURL)
 
-	if _, ok := kinesisResourcesByName[value]; !ok {
-		kinesisResource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.KinesisType)
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.KinesisType)
 		*id++
 
-		kinesisResourcesByName[value] = kinesisResource
-		*resources = append(*resources, kinesisResource)
+		resourcesByName[value] = resource
+		*resources = append(*resources, resource)
 	}
+
+	return &resource
 }
 
 func processKinesisResource(
@@ -198,7 +209,7 @@ func processKinesisResource(
 
 func processLambdaResource(
 	conf *terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName map[string]drawio.Resource,
+	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
 	value := lambdaName(conf.Labels[0], suffixLambda)
@@ -211,19 +222,41 @@ func processLambdaResource(
 
 	for k := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
 		if strings.HasSuffix(k, envarSuffixDBHost) {
-			processDBResourceFromEnvar(k, dbResourcesByName, id, resources)
+			target := processDBResourceFromEnvar(k, dbResourcesByName, id, resources)
 			*relationships = append(*relationships,
-				drawio.Relationship{Source: resource, Target: dbResourcesByName[databaseName(k, envarSuffixDBHost)]})
+				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixKinesisStreamURL) {
-			processKinesisResourceFromEnvar(k, kinesisResourcesByName, id, resources)
-			*relationships = append(*relationships, drawio.Relationship{
-				Source: resource,
-				Target: kinesisResourcesByName[kinesisName(k, envarSuffixKinesisStreamURL)],
-			})
+			target := processKinesisResourceFromEnvar(k, kinesisResourcesByName, id, resources)
+			*relationships = append(*relationships,
+				drawio.Relationship{Source: resource, Target: *target})
+		}
+
+		if strings.HasSuffix(k, envarSuffixSQSQueueURL) {
+			target := processSQSResourceFromEnvar(k, sqsResourcesByName, id, resources)
+			*relationships = append(*relationships,
+				drawio.Relationship{Source: resource, Target: *target})
 		}
 	}
+}
+
+func processSQSResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+) *drawio.Resource {
+	value := sqsName(envar, envarSuffixSQSQueueURL)
+
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.SQSType)
+		*id++
+
+		resourcesByName[value] = resource
+		*resources = append(*resources, resource)
+	}
+
+	return &resource
 }
 
 func processSQSResource(
