@@ -14,14 +14,16 @@ var (
 	envarSuffixDBHost           = "DB_HOST"
 	envarSuffixGoogleBQ         = "BQ_PROJECT_ID"
 	envarSuffixKinesisStreamURL = "KINESIS_STREAM_URL"
+	envarSuffixS3BucketURL      = "S3_BUCKET"
 	envarSuffixSQSQueueURL      = "SQS_QUEUE_URL"
 	envarSuffixRestfulAPI       = "API_BASE_URL"
 )
 
 var (
-	suffixKinesis = "_kinesis"
-	suffixLambda  = "_lambda"
-	suffixSQS     = "_sqs"
+	suffixKinesis  = "_kinesis"
+	suffixLambda   = "_lambda"
+	suffixS3Bucket = "_bucket"
+	suffixSQS      = "_sqs"
 )
 
 var (
@@ -33,6 +35,7 @@ var (
 	labelAWSKinesisStream            = "aws_kinesis_stream"
 	labelAWSLambdaFunction           = "aws_lambda_function"
 	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
+	labelAWSS3Bucket                 = "aws_s3_bucket"
 	labelAWSSQSQueue                 = "aws_sqs_queue"
 )
 
@@ -60,6 +63,7 @@ type Transformer struct {
 	kinesisResourcesByName    map[string]drawio.Resource
 	lambdaResourcesByName     map[string]drawio.Resource
 	restfulAPIResourcesByName map[string]drawio.Resource
+	s3BucketResourcesByName   map[string]drawio.Resource
 	sqsResourcesByName        map[string]drawio.Resource
 
 	endpointAPIGatewayMap   map[resourceARN][]resourceARN
@@ -86,6 +90,7 @@ func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Tran
 		kinesisResourcesByName:    map[string]drawio.Resource{},
 		lambdaResourcesByName:     map[string]drawio.Resource{},
 		restfulAPIResourcesByName: map[string]drawio.Resource{},
+		s3BucketResourcesByName:   map[string]drawio.Resource{},
 		sqsResourcesByName:        map[string]drawio.Resource{},
 
 		endpointAPIGatewayMap:   map[resourceARN][]resourceARN{},
@@ -159,6 +164,8 @@ func (t *Transformer) processTerraformResources() {
 				t.processEndpointResource(tfResourceConf, t.endpointResourcesByName)
 			case labelAWSKinesisStream:
 				t.processKinesisResource(tfResourceConf, t.kinesisResourcesByName)
+			case labelAWSS3Bucket:
+				t.processS3BucketResource(tfResourceConf, t.s3BucketResourcesByName)
 			case labelAWSSQSQueue:
 				t.processSQSResource(tfResourceConf, t.sqsResourcesByName)
 			case labelAWSLambdaEventSourceMapping:
@@ -331,35 +338,66 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	t.lambdaResourcesByName[value] = resource
 
 	for k, v := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
-		if strings.HasSuffix(k, envarSuffixDBHost) {
+		switch {
+		case strings.HasSuffix(k, envarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
-		}
-
-		if strings.HasSuffix(k, envarSuffixGoogleBQ) {
+		case strings.HasSuffix(k, envarSuffixGoogleBQ):
 			target := t.processGoogleBQResourceFromEnvar(k, v.(string), t.googleBQResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
-		}
-
-		if strings.HasSuffix(k, envarSuffixKinesisStreamURL) {
+		case strings.HasSuffix(k, envarSuffixKinesisStreamURL):
 			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
-		}
-
-		if strings.HasSuffix(k, envarSuffixSQSQueueURL) {
+		case strings.HasSuffix(k, envarSuffixS3BucketURL):
+			target := t.processS3BucketResourceFromEnvar(k, v.(string), t.s3BucketResourcesByName)
+			t.relationships = append(t.relationships,
+				drawio.Relationship{Source: resource, Target: *target})
+		case strings.HasSuffix(k, envarSuffixSQSQueueURL):
 			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
-		}
-
-		if strings.HasSuffix(k, envarSuffixRestfulAPI) {
+		case strings.HasSuffix(k, envarSuffixRestfulAPI):
 			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
+	}
+}
+
+func (t *Transformer) processS3BucketResourceFromEnvar(
+	k, v string, resourcesByName map[string]drawio.Resource,
+) *drawio.Resource {
+	value := toKebabFromEnvar(k, v, envarSuffixS3BucketURL)
+
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.S3Type)
+		t.id++
+
+		resourcesByName[value] = resource
+		t.resources = append(t.resources, resource)
+	}
+
+	return &resource
+}
+
+func (t *Transformer) processS3BucketResource(
+	conf *terraform.Resource, s3BucketResourcesByName map[string]drawio.Resource,
+) {
+	l := conf.Labels[1]
+
+	if strings.HasSuffix(strings.ToLower(l), suffixS3Bucket) {
+		value := s3BucketName(l, suffixS3Bucket)
+
+		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.S3Type)
+		t.id++
+
+		t.resources = append(t.resources, resource)
+		s3BucketResourcesByName[value] = resource
 	}
 }
 
@@ -457,6 +495,7 @@ func strTransformFromEnvar(
 		suffixMap := map[string]struct{}{
 			labelAWSKinesisStream:  {},
 			labelAWSLambdaFunction: {},
+			labelAWSS3Bucket:       {},
 			labelAWSSQSQueue:       {},
 		}
 
@@ -473,7 +512,11 @@ func strTransformFromEnvar(
 			}
 		}
 	} else {
-		result = key[:len(key)-len(suffix)]
+		result = key
+
+		result = strings.ReplaceAll(result, "_"+suffix, "")
+		result = strings.ReplaceAll(result, suffix, "")
+		// result = key[:len(key)-len(suffix)]
 	}
 
 	return f(result)
@@ -493,6 +536,10 @@ func kinesisName(str, suffix string) string {
 
 func lambdaName(str, suffix string) string {
 	return strcase.ToCamel(str[:len(str)-len(suffix)])
+}
+
+func s3BucketName(str, suffix string) string {
+	return strcase.ToKebab(str[:len(str)-len(suffix)])
 }
 
 func sqsName(str, suffix string) string {
