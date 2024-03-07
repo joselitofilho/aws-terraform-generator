@@ -22,7 +22,7 @@ var defaultResourceImageMap = map[drawio.ResourceType]string{
 	drawio.GoogleBQType:   "assets/aws/google_bigquery.svg",
 	drawio.KinesisType:    "assets/aws/kinesis_data_stream.svg",
 	drawio.LambdaType:     "assets/aws/lambda.svg",
-	drawio.RestfulAPIType: "assets/aws/restfull_api.svg",
+	drawio.RestfulAPIType: "assets/aws/restful_api.svg",
 	drawio.S3Type:         "assets/aws/s3_bucket.svg",
 	drawio.SNSType:        "assets/aws/sns.svg",
 	drawio.SQSType:        "assets/aws/sqs.svg",

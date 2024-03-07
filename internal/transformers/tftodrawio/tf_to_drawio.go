@@ -14,6 +14,7 @@ var (
 	envarSuffixDBHost           = "DB_HOST"
 	envarSuffixKinesisStreamURL = "_KINESIS_STREAM_URL"
 	envarSuffixSQSQueueURL      = "_SQS_QUEUE_URL"
+	envarSuffixRestfulAPI       = "_API_BASE_URL"
 )
 
 var (
@@ -45,6 +46,7 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	dbResourcesByName := map[string]drawio.Resource{}
 	kinesisResourcesByName := map[string]drawio.Resource{}
 	lambdaResourcesByName := map[string]drawio.Resource{}
+	restfulAPIResourcesByName := map[string]drawio.Resource{}
 	sqsResourcesByName := map[string]drawio.Resource{}
 
 	relationshipsMap := map[resourceARN][]resourceARN{}
@@ -52,7 +54,7 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	id := 1
 
 	processTerraformModules(tfConfig.Modules,
-		dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+		dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName, restfulAPIResourcesByName,
 		&id, &resources, &relationships)
 
 	processTerraformResources(tfConfig.Resources,
@@ -86,7 +88,8 @@ func buildRelationships(
 
 func processTerraformModules(
 	tfModules []*terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+	restfulAPIResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
 	for _, conf := range tfModules {
@@ -96,6 +99,7 @@ func processTerraformModules(
 			if strings.HasSuffix(strings.ToLower(l), suffixLambda) {
 				processLambdaResource(conf,
 					dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+					restfulAPIResourcesByName,
 					id, resources, relationships)
 			}
 		}
@@ -207,9 +211,9 @@ func processKinesisResource(
 	}
 }
 
-func processLambdaResource(
-	conf *terraform.Module,
-	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+func processLambdaResource(conf *terraform.Module,
+	dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+	restfulAPIResourcesByName map[string]drawio.Resource,
 	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
 ) {
 	value := lambdaName(conf.Labels[0], suffixLambda)
@@ -235,6 +239,12 @@ func processLambdaResource(
 
 		if strings.HasSuffix(k, envarSuffixSQSQueueURL) {
 			target := processSQSResourceFromEnvar(k, sqsResourcesByName, id, resources)
+			*relationships = append(*relationships,
+				drawio.Relationship{Source: resource, Target: *target})
+		}
+
+		if strings.HasSuffix(k, envarSuffixRestfulAPI) {
+			target := processRestfulAPIResourceFromEnvar(k, restfulAPIResourcesByName, id, resources)
 			*relationships = append(*relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
@@ -276,6 +286,24 @@ func processSQSResource(
 	}
 }
 
+func processRestfulAPIResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+) *drawio.Resource {
+	value := restfulAPIName(envar, envarSuffixRestfulAPI)
+
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.RestfulAPIType)
+		*id++
+
+		resourcesByName[value] = resource
+		*resources = append(*resources, resource)
+	}
+
+	return &resource
+}
+
 ///////
 
 func getResourceByARN(
@@ -310,6 +338,10 @@ func lambdaName(str, suffix string) string {
 
 func sqsName(str, suffix string) string {
 	return strcase.ToKebab(str[:len(str)-len(suffix)])
+}
+
+func restfulAPIName(str, suffix string) string {
+	return strcase.ToCamel(str[:len(str)-len(suffix)])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
