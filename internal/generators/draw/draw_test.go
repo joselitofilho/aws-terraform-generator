@@ -8,7 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testdataDir = "testdata"
+const (
+	testdataDir = "testdata"
+	testOutput  = "testoutput"
+)
 
 func TestDraw_Build(t *testing.T) {
 	type fields struct {
@@ -27,7 +30,7 @@ func TestDraw_Build(t *testing.T) {
 			fields: fields{
 				configFileName: path.Join(testdataDir, "draw.config.yaml"),
 				input:          path.Join(testdataDir, "stack"),
-				output:         path.Join(testdataDir, "output"),
+				output:         testOutput,
 			},
 		},
 	}

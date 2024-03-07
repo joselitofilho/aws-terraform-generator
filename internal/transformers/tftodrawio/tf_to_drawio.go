@@ -22,21 +22,25 @@ var (
 )
 
 var (
-	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
+	labelAWSCloudwatchEventTarget    = "aws_cloudwatch_event_target"
+	labelAWSCron                     = "aws_cloudwatch_event_rule"
 	labelAWSKinesisStream            = "aws_kinesis_stream"
+	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
 	labelAWSSQSQueue                 = "aws_sqs_queue"
 )
 
 var (
-	arnKinesisKey = "kinesis"
-	arnLambdaKey  = "lambda"
-	arnSQSKey     = "sqs"
+	arnCloudwatchKey = "cloudwatch"
+	arnKinesisKey    = "kinesis"
+	arnLambdaKey     = "lambda"
+	arnSQSKey        = "sqs"
 )
 
 func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) *drawio.ResourceCollection {
 	resources := []drawio.Resource{}
 	relationships := []drawio.Relationship{}
 
+	cronResourcesByName := map[string]drawio.Resource{}
 	dbResourcesByName := map[string]drawio.Resource{}
 	kinesisResourcesByName := map[string]drawio.Resource{}
 	lambdaResourcesByName := map[string]drawio.Resource{}
@@ -49,10 +53,12 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 	processTerraformModules(tfConfig.Modules, dbResourcesByName, kinesisResourcesByName, lambdaResourcesByName,
 		&id, &resources, &relationships)
 
-	processTerraformResources(tfConfig.Resources, kinesisResourcesByName, sqsResourcesByName, relationshipsMap,
+	processTerraformResources(tfConfig.Resources,
+		cronResourcesByName, kinesisResourcesByName, sqsResourcesByName, relationshipsMap,
 		&id, &resources)
 
-	buildRelationships(relationshipsMap, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
+	buildRelationships(relationshipsMap,
+		cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
 		&relationships)
 
 	return &drawio.ResourceCollection{Resources: resources, Relationships: relationships}
@@ -60,14 +66,16 @@ func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) 
 
 func buildRelationships(
 	relationshipsMap map[resourceARN][]resourceARN,
-	kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 	relationships *[]drawio.Relationship,
 ) {
 	for k, v := range relationshipsMap {
-		source := getResourceByARN(k, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
+		source := getResourceByARN(k,
+			cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
 
 		for i := range v {
-			target := getResourceByARN(v[i], kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
+			target := getResourceByARN(v[i],
+				cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName)
 
 			*relationships = append(*relationships, drawio.Relationship{Source: source, Target: target})
 		}
@@ -93,13 +101,17 @@ func processTerraformModules(
 
 func processTerraformResources(
 	tfResources []*terraform.Resource,
-	kinesisResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	cronResourcesByName, kinesisResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 	relationshipsMap map[resourceARN][]resourceARN,
 	id *int, resources *[]drawio.Resource,
 ) {
 	for _, conf := range tfResources {
 		if len(conf.Labels) == 2 {
 			switch conf.Labels[0] {
+			case labelAWSCloudwatchEventTarget:
+				processCloudwatchEventTarget(conf, relationshipsMap)
+			case labelAWSCron:
+				processCronResource(conf, cronResourcesByName, id, resources)
 			case labelAWSKinesisStream:
 				processKinesisResource(conf, kinesisResourcesByName, id, resources)
 			case labelAWSSQSQueue:
@@ -109,6 +121,26 @@ func processTerraformResources(
 			}
 		}
 	}
+}
+
+func processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
+	ruleARN := resourceByARN(conf.Attributes["rule"].(string))
+	arn := resourceByARN(conf.Attributes["arn"].(string))
+
+	relationshipsMap[ruleARN] = append(relationshipsMap[ruleARN], arn)
+}
+
+func processCronResource(
+	conf *terraform.Resource, cronResourcesByName map[string]drawio.Resource,
+	id *int, resources *[]drawio.Resource,
+) {
+	value := conf.Attributes["schedule_expression"].(string)
+
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.CronType)
+	*id++
+
+	*resources = append(*resources, resource)
+	cronResourcesByName[conf.Labels[1]] = resource
 }
 
 func processDBResourceFromEnvar(
@@ -215,9 +247,11 @@ func processSQSResource(
 
 func getResourceByARN(
 	arn resourceARN,
-	kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
+	cronResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
 ) (resource drawio.Resource) {
 	switch arn.key {
+	case arnCloudwatchKey:
+		resource = cronResourcesByName[arn.name]
 	case arnKinesisKey:
 		resource = kinesisResourcesByName[arn.name]
 	case arnLambdaKey:

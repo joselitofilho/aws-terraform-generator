@@ -9,6 +9,8 @@ import (
 func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string) (string, error) {
 	g := dot.NewGraph(dot.Directed)
 
+	g.Attr("rankdir", "LR")
+
 	g.NodeInitializer(func(n dot.Node) {
 		n.Attrs("shape", "plaintext", "imagepos", "tc", "labelloc", "b", "height", "0.9")
 	})
