@@ -28,10 +28,15 @@ type Module struct {
 	Attributes map[string]any
 }
 
+type Local struct {
+	Attributes map[string]any
+}
+
 // Config represents the Terraform configuration.
 type Config struct {
 	Resources []*Resource
 	Modules   []*Module
+	Locals    []*Local
 }
 
 func Parse(directory string) (Config, error) {
@@ -51,10 +56,11 @@ func Parse(directory string) (Config, error) {
 				return fmt.Errorf("failed to load config file %s: %v", path, diags.Errs())
 			}
 
-			resources, modules := parseConfig(file)
+			parsedConfig := parseConfig(file)
 
-			config.Resources = append(config.Resources, resources...)
-			config.Modules = append(config.Modules, modules...)
+			config.Modules = append(config.Modules, parsedConfig.Modules...)
+			config.Resources = append(config.Resources, parsedConfig.Resources...)
+			config.Locals = append(config.Locals, parsedConfig.Locals...)
 		}
 
 		return nil
@@ -67,9 +73,10 @@ func Parse(directory string) (Config, error) {
 	return config, nil
 }
 
-func parseConfig(file *hcl.File) ([]*Resource, []*Module) {
+func parseConfig(file *hcl.File) Config {
 	resources := make([]*Resource, 0)
 	modules := make([]*Module, 0)
+	locals := make([]*Local, 0)
 
 	for _, block := range file.Body.(*hclsyntax.Body).Blocks {
 		switch block.Type {
@@ -77,10 +84,12 @@ func parseConfig(file *hcl.File) ([]*Resource, []*Module) {
 			modules = append(modules, parseModule(block))
 		case "resource":
 			resources = append(resources, parseResource(block))
+		case "locals":
+			locals = append(locals, parseLocals(block))
 		}
 	}
 
-	return resources, modules
+	return Config{Resources: resources, Modules: modules, Locals: locals}
 }
 
 func parseModule(block *hclsyntax.Block) *Module {
@@ -115,6 +124,19 @@ func parseResource(block *hclsyntax.Block) *Resource {
 	}
 
 	return resource
+}
+
+func parseLocals(block *hclsyntax.Block) *Local {
+	local := &Local{
+		Attributes: map[string]any{},
+	}
+
+	for _, attribute := range block.Body.Attributes {
+		value := evaluateExpression(attribute.Expr)
+		local.Attributes[attribute.Name] = value
+	}
+
+	return local
 }
 
 func buildVarExpressions(traversal hcl.Traversal) string {

@@ -44,379 +44,347 @@ var (
 	arnSQSKey        = "sqs"
 )
 
-func TransformTfToDrawIO(yamlConfig *config.Config, tfConfig *terraform.Config) *drawio.ResourceCollection {
-	resources := []drawio.Resource{}
-	relationships := []drawio.Relationship{}
+type Transformer struct {
+	resources     []drawio.Resource
+	relationships []drawio.Relationship
 
-	apiGatewayResourcesByName := map[string]drawio.Resource{}
-	cronResourcesByName := map[string]drawio.Resource{}
-	dbResourcesByName := map[string]drawio.Resource{}
-	endpointResourcesByName := map[string]drawio.Resource{}
-	googleBQResourcesByName := map[string]drawio.Resource{}
-	kinesisResourcesByName := map[string]drawio.Resource{}
-	lambdaResourcesByName := map[string]drawio.Resource{}
-	restfulAPIResourcesByName := map[string]drawio.Resource{}
-	sqsResourcesByName := map[string]drawio.Resource{}
+	apiGatewayResourcesByName map[string]drawio.Resource
+	cronResourcesByName       map[string]drawio.Resource
+	dbResourcesByName         map[string]drawio.Resource
+	endpointResourcesByName   map[string]drawio.Resource
+	googleBQResourcesByName   map[string]drawio.Resource
+	kinesisResourcesByName    map[string]drawio.Resource
+	lambdaResourcesByName     map[string]drawio.Resource
+	restfulAPIResourcesByName map[string]drawio.Resource
+	sqsResourcesByName        map[string]drawio.Resource
 
-	endpointAPIGatewayMap := map[resourceARN]resourceARN{}
-	resourceEndpointAPIGatewayMap := map[resourceARN]map[resourceARN]resourceARN{}
+	endpointAPIGatewayMap         map[resourceARN]resourceARN
+	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN
 
-	relationshipsMap := map[resourceARN][]resourceARN{}
+	relationshipsMap map[resourceARN][]resourceARN
 
-	id := 1
-
-	processTerraformModules(tfConfig.Modules,
-		dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName, restfulAPIResourcesByName,
-		&id, &resources, &relationships)
-
-	processTerraformResources(tfConfig.Resources,
-		apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-		sqsResourcesByName,
-		relationshipsMap,
-		endpointAPIGatewayMap, resourceEndpointAPIGatewayMap,
-		&id, &resources)
-
-	buildRelationships(relationshipsMap,
-		apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-		lambdaResourcesByName, sqsResourcesByName,
-		resourceEndpointAPIGatewayMap,
-		&relationships)
-
-	return &drawio.ResourceCollection{Resources: resources, Relationships: relationships}
+	id int
 }
 
-func buildRelationships(
-	relationshipsMap map[resourceARN][]resourceARN,
-	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-	lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
-	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
-	relationships *[]drawio.Relationship,
-) {
-	for sourceARN, rel := range relationshipsMap {
-		source := getResourceByARN(sourceARN,
-			apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-			lambdaResourcesByName, sqsResourcesByName)
+func NewTransformer() *Transformer {
+	return &Transformer{
+		resources:     []drawio.Resource{},
+		relationships: []drawio.Relationship{},
+
+		apiGatewayResourcesByName: map[string]drawio.Resource{},
+		cronResourcesByName:       map[string]drawio.Resource{},
+		dbResourcesByName:         map[string]drawio.Resource{},
+		endpointResourcesByName:   map[string]drawio.Resource{},
+		googleBQResourcesByName:   map[string]drawio.Resource{},
+		kinesisResourcesByName:    map[string]drawio.Resource{},
+		lambdaResourcesByName:     map[string]drawio.Resource{},
+		restfulAPIResourcesByName: map[string]drawio.Resource{},
+		sqsResourcesByName:        map[string]drawio.Resource{},
+
+		endpointAPIGatewayMap:         map[resourceARN]resourceARN{},
+		resourceEndpointAPIGatewayMap: map[resourceARN]map[resourceARN]resourceARN{},
+
+		relationshipsMap: map[resourceARN][]resourceARN{},
+
+		id: 1,
+	}
+}
+
+func (t *Transformer) Transform(yamlConfig *config.Config, tfConfig *terraform.Config) *drawio.ResourceCollection {
+	t.processTerraformModules(tfConfig.Modules)
+
+	t.processTerraformResources(tfConfig)
+
+	t.buildRelationships()
+
+	return &drawio.ResourceCollection{Resources: t.resources, Relationships: t.relationships}
+}
+
+func (t *Transformer) buildRelationships() {
+	for sourceARN, rel := range t.relationshipsMap {
+		source := t.getResourceByARN(sourceARN)
 
 		for i := range rel {
 			targetARN := rel[i]
 
-			target := getResourceByARN(targetARN,
-				apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-				lambdaResourcesByName, sqsResourcesByName)
+			target := t.getResourceByARN(targetARN)
 
-			if endpointAPIGatewayMap, ok := resourceEndpointAPIGatewayMap[targetARN]; ok && targetARN.key != arnAPIGateway {
-				updatedSource := getResourceByARN(endpointAPIGatewayMap[sourceARN],
-					apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-					lambdaResourcesByName, sqsResourcesByName)
+			if endpointAPIGatewayMap, ok := t.resourceEndpointAPIGatewayMap[targetARN]; ok &&
+				targetARN.key != arnAPIGateway {
+				updatedSource := t.getResourceByARN(endpointAPIGatewayMap[sourceARN])
 
-				*relationships = append(*relationships, drawio.Relationship{Source: updatedSource, Target: target})
+				t.relationships = append(t.relationships, drawio.Relationship{Source: updatedSource, Target: target})
 
 				continue
 			}
 
-			*relationships = append(*relationships, drawio.Relationship{Source: source, Target: target})
+			t.relationships = append(t.relationships, drawio.Relationship{Source: source, Target: target})
 		}
 	}
 }
 
-func processTerraformModules(
-	tfModules []*terraform.Module,
-	dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
-	restfulAPIResourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
-) {
+func (t *Transformer) processTerraformModules(tfModules []*terraform.Module) {
 	for _, conf := range tfModules {
 		if len(conf.Labels) == 1 {
 			l := conf.Labels[0]
 
 			if strings.HasSuffix(strings.ToLower(l), suffixLambda) {
-				processLambdaModule(conf,
-					dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
-					restfulAPIResourcesByName,
-					id, resources, relationships)
+				t.processLambdaModule(conf)
 			}
 		}
 	}
 }
 
-func processTerraformResources(
-	tfResources []*terraform.Resource,
-	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-	sqsResourcesByName map[string]drawio.Resource,
-	relationshipsMap map[resourceARN][]resourceARN,
-	endpointAPIGatewayMap map[resourceARN]resourceARN,
-	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
-	id *int, resources *[]drawio.Resource,
-) {
-	for _, conf := range tfResources {
-		if len(conf.Labels) == 2 {
-			switch conf.Labels[0] {
+func (t *Transformer) processTerraformResources(tfConfig *terraform.Config) {
+	for _, tfResourceConf := range tfConfig.Resources {
+		if len(tfResourceConf.Labels) == 2 {
+			switch tfResourceConf.Labels[0] {
 			case labelAWSAPIGatewayRoute:
-				processAPIGatewayRoute(conf, apiGatewayResourcesByName, id, resources, relationshipsMap,
-					endpointAPIGatewayMap)
+				t.processAPIGatewayRoute(tfResourceConf, t.apiGatewayResourcesByName)
 			case labelAWSAPIGatewayIntegration:
-				processAPIGatewayIntegration(conf,
-					endpointAPIGatewayMap, resourceEndpointAPIGatewayMap, relationshipsMap)
+				t.processAPIGatewayIntegration(tfResourceConf, t.endpointAPIGatewayMap)
 			case labelAWSCloudwatchEventTarget:
-				processCloudwatchEventTarget(conf, relationshipsMap)
+				t.processCloudwatchEventTarget(tfResourceConf, t.relationshipsMap)
 			case labelAWSCron:
-				processCronResource(conf, cronResourcesByName, id, resources)
+				t.processCronResource(tfResourceConf, t.cronResourcesByName)
 			case labelAWSEndpoint:
-				processEndpointResource(conf, endpointResourcesByName, id, resources)
+				t.processEndpointResource(tfResourceConf, t.endpointResourcesByName)
 			case labelAWSKinesisStream:
-				processKinesisResource(conf, kinesisResourcesByName, id, resources)
+				t.processKinesisResource(tfResourceConf, t.kinesisResourcesByName)
 			case labelAWSSQSQueue:
-				processSQSResource(conf, sqsResourcesByName, id, resources)
+				t.processSQSResource(tfResourceConf, t.sqsResourcesByName)
 			case labelAWSLambdaEventSourceMapping:
-				processEventSourceMapping(conf, relationshipsMap)
+				t.processEventSourceMapping(tfResourceConf, t.relationshipsMap)
 			}
 		}
 	}
 }
 
-func processAPIGatewayRoute(
-	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource, relationshipsMap map[resourceARN][]resourceARN,
-	endpointAPIGatewayMap map[resourceARN]resourceARN,
-) {
+func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource, resourcesByName map[string]drawio.Resource) {
 	value := conf.Attributes["route_key"].(string)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.APIGatewayType)
-	*id++
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.APIGatewayType)
+	t.id++
 
-	*resources = append(*resources, resource)
+	t.resources = append(t.resources, resource)
 	resourcesByName[value] = resource
 
 	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
 	routeKeyARN := resourceARN{key: strings.Split(conf.Labels[1], "_")[1], name: conf.Attributes["route_key"].(string)}
 
-	relationshipsMap[apiIDARN] = append(relationshipsMap[apiIDARN], routeKeyARN)
+	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], routeKeyARN)
 
-	endpointAPIGatewayMap[apiIDARN] = routeKeyARN
+	t.endpointAPIGatewayMap[apiIDARN] = routeKeyARN
 }
 
-func processAPIGatewayIntegration(
-	conf *terraform.Resource,
-	endpointAPIGatewayMap map[resourceARN]resourceARN,
-	resourceEndpointAPIGatewayMap map[resourceARN]map[resourceARN]resourceARN,
-	relationshipsMap map[resourceARN][]resourceARN,
+func (t *Transformer) processAPIGatewayIntegration(
+	conf *terraform.Resource, endpointAPIGatewayMap map[resourceARN]resourceARN,
 ) {
 	apiIDARN := resourceByARN(conf.Attributes["api_id"].(string))
 	integrationURIARN := resourceByARN(conf.Attributes["integration_uri"].(string))
 
-	relationshipsMap[apiIDARN] = append(relationshipsMap[apiIDARN], integrationURIARN)
+	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], integrationURIARN)
 
-	resourceEndpointAPIGatewayMap[integrationURIARN] = map[resourceARN]resourceARN{
+	t.resourceEndpointAPIGatewayMap[integrationURIARN] = map[resourceARN]resourceARN{
 		apiIDARN: endpointAPIGatewayMap[apiIDARN],
 	}
 }
 
-func processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
+func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
 	ruleARN := resourceByARN(conf.Attributes["rule"].(string))
 	arn := resourceByARN(conf.Attributes["arn"].(string))
 
 	relationshipsMap[ruleARN] = append(relationshipsMap[ruleARN], arn)
 }
 
-func processCronResource(
+func (t *Transformer) processCronResource(
 	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource,
 ) {
 	value := conf.Attributes["schedule_expression"].(string)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.CronType)
-	*id++
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.CronType)
+	t.id++
 
-	*resources = append(*resources, resource)
+	t.resources = append(t.resources, resource)
 	resourcesByName[conf.Labels[1]] = resource
 }
 
-func processDBResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+func (t *Transformer) processDBResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
 	value := databaseName(envar, envarSuffixDBHost)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.DatabaseType)
-		*id++
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.DatabaseType)
+		t.id++
 
 		resourcesByName[value] = resource
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 	}
 
 	return &resource
 }
 
-func processEndpointResource(
+func (t *Transformer) processEndpointResource(
 	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource,
 ) {
 	value := conf.Attributes["domain_name"].(string)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.EndpointType)
-	*id++
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.EndpointType)
+	t.id++
 
-	*resources = append(*resources, resource)
+	t.resources = append(t.resources, resource)
 	resourcesByName[conf.Labels[1]] = resource
 }
 
-func processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
+func (t *Transformer) processEventSourceMapping(conf *terraform.Resource, relationshipsMap map[resourceARN][]resourceARN) {
 	eventSourceARN := resourceByARN(conf.Attributes["event_source_arn"].(string))
 	functionName := resourceByARN(conf.Attributes["function_name"].(string))
 
 	relationshipsMap[eventSourceARN] = append(relationshipsMap[eventSourceARN], functionName)
 }
 
-func processGoogleBQResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+func (t *Transformer) processGoogleBQResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
 	value := googleBQName(envar, envarSuffixGoogleBQ)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.GoogleBQType)
-		*id++
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.GoogleBQType)
+		t.id++
 
 		resourcesByName[value] = resource
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 	}
 
 	return &resource
 }
 
-func processKinesisResourceFromEnvar(
+func (t *Transformer) processKinesisResourceFromEnvar(
 	envar string, resourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource,
 ) *drawio.Resource {
 	value := kinesisName(envar, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.KinesisType)
-		*id++
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+		t.id++
 
 		resourcesByName[value] = resource
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 	}
 
 	return &resource
 }
 
-func processKinesisResource(
+func (t *Transformer) processKinesisResource(
 	conf *terraform.Resource, kinesisResourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource,
 ) {
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixKinesis) {
 		value := kinesisName(l, suffixKinesis)
 
-		resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.KinesisType)
-		*id++
+		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+		t.id++
 
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 		kinesisResourcesByName[value] = resource
 	}
 }
 
-func processLambdaModule(conf *terraform.Module,
-	dbResourcesByName, googleBQResourcesByName, kinesisResourcesByName, lambdaResourcesByName, sqsResourcesByName,
-	restfulAPIResourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource, relationships *[]drawio.Relationship,
-) {
+func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	value := lambdaName(conf.Labels[0], suffixLambda)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.LambdaType)
-	*id++
+	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.LambdaType)
+	t.id++
 
-	*resources = append(*resources, resource)
-	lambdaResourcesByName[value] = resource
+	t.resources = append(t.resources, resource)
+	t.lambdaResourcesByName[value] = resource
 
 	for k := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
 		if strings.HasSuffix(k, envarSuffixDBHost) {
-			target := processDBResourceFromEnvar(k, dbResourcesByName, id, resources)
-			*relationships = append(*relationships,
+			target := t.processDBResourceFromEnvar(k, t.dbResourcesByName)
+			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixGoogleBQ) {
-			target := processGoogleBQResourceFromEnvar(k, googleBQResourcesByName, id, resources)
-			*relationships = append(*relationships,
+			target := t.processGoogleBQResourceFromEnvar(k, t.googleBQResourcesByName)
+			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixKinesisStreamURL) {
-			target := processKinesisResourceFromEnvar(k, kinesisResourcesByName, id, resources)
-			*relationships = append(*relationships,
+			target := t.processKinesisResourceFromEnvar(k, t.kinesisResourcesByName)
+			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixSQSQueueURL) {
-			target := processSQSResourceFromEnvar(k, sqsResourcesByName, id, resources)
-			*relationships = append(*relationships,
+			target := t.processSQSResourceFromEnvar(k, t.sqsResourcesByName)
+			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 
 		if strings.HasSuffix(k, envarSuffixRestfulAPI) {
-			target := processRestfulAPIResourceFromEnvar(k, restfulAPIResourcesByName, id, resources)
-			*relationships = append(*relationships,
+			target := t.processRestfulAPIResourceFromEnvar(k, t.restfulAPIResourcesByName)
+			t.relationships = append(t.relationships,
 				drawio.Relationship{Source: resource, Target: *target})
 		}
 	}
 }
 
-func processSQSResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+func (t *Transformer) processSQSResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
 	value := sqsName(envar, envarSuffixSQSQueueURL)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.SQSType)
-		*id++
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.SQSType)
+		t.id++
 
 		resourcesByName[value] = resource
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 	}
 
 	return &resource
 }
 
-func processSQSResource(
-	conf *terraform.Resource, sqsResourcesByName map[string]drawio.Resource,
-	id *int, resources *[]drawio.Resource,
-) {
+func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesByName map[string]drawio.Resource) {
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixSQS) {
 		value := sqsName(l, suffixSQS)
 
-		resource := drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.SQSType)
-		*id++
+		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.SQSType)
+		t.id++
 
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 		sqsResourcesByName[value] = resource
 	}
 }
 
-func processRestfulAPIResourceFromEnvar(
-	envar string, resourcesByName map[string]drawio.Resource, id *int, resources *[]drawio.Resource,
+func (t *Transformer) processRestfulAPIResourceFromEnvar(
+	envar string, resourcesByName map[string]drawio.Resource,
 ) *drawio.Resource {
 	value := restfulAPIName(envar, envarSuffixRestfulAPI)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", *id), value, drawio.RestfulAPIType)
-		*id++
+		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.RestfulAPIType)
+		t.id++
 
 		resourcesByName[value] = resource
-		*resources = append(*resources, resource)
+		t.resources = append(t.resources, resource)
 	}
 
 	return &resource
@@ -424,24 +392,20 @@ func processRestfulAPIResourceFromEnvar(
 
 ///////
 
-func getResourceByARN(
-	arn resourceARN,
-	apiGatewayResourcesByName, cronResourcesByName, endpointResourcesByName, kinesisResourcesByName,
-	lambdaResourcesByName, sqsResourcesByName map[string]drawio.Resource,
-) (resource drawio.Resource) {
+func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
 	switch arn.key {
 	case arnAPIGateway:
-		resource = apiGatewayResourcesByName[arn.name]
+		resource = t.apiGatewayResourcesByName[arn.name]
 	case arnCloudwatchKey:
-		resource = cronResourcesByName[arn.name]
+		resource = t.cronResourcesByName[arn.name]
 	case arnEndpoint:
-		resource = endpointResourcesByName[arn.name]
+		resource = t.endpointResourcesByName[arn.name]
 	case arnKinesisKey:
-		resource = kinesisResourcesByName[arn.name]
+		resource = t.kinesisResourcesByName[arn.name]
 	case arnLambdaKey:
-		resource = lambdaResourcesByName[arn.name]
+		resource = t.lambdaResourcesByName[arn.name]
 	case arnSQSKey:
-		resource = sqsResourcesByName[arn.name]
+		resource = t.sqsResourcesByName[arn.name]
 	}
 
 	return resource
