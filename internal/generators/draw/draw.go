@@ -52,7 +52,7 @@ func (d *Draw) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	resources := tftodrawio.NewTransformer().Transform(yamlConfig, &tfConfig)
+	resources := tftodrawio.NewTransformer(yamlConfig, &tfConfig).Transform()
 
 	dotContent, err := graphviz.Build(resources, defaultResourceImageMap)
 	if err != nil {

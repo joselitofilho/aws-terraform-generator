@@ -45,6 +45,9 @@ var (
 )
 
 type Transformer struct {
+	yamlConfig *config.Config
+	tfConfig   *terraform.Config
+
 	resources     []drawio.Resource
 	relationships []drawio.Relationship
 
@@ -66,8 +69,11 @@ type Transformer struct {
 	id int
 }
 
-func NewTransformer() *Transformer {
+func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Transformer {
 	return &Transformer{
+		yamlConfig: yamlConfig,
+		tfConfig:   tfConfig,
+
 		resources:     []drawio.Resource{},
 		relationships: []drawio.Relationship{},
 
@@ -90,10 +96,10 @@ func NewTransformer() *Transformer {
 	}
 }
 
-func (t *Transformer) Transform(yamlConfig *config.Config, tfConfig *terraform.Config) *drawio.ResourceCollection {
-	t.processTerraformModules(tfConfig.Modules)
+func (t *Transformer) Transform() *drawio.ResourceCollection {
+	t.processTerraformModules()
 
-	t.processTerraformResources(tfConfig)
+	t.processTerraformResources()
 
 	t.buildRelationships()
 
@@ -123,20 +129,20 @@ func (t *Transformer) buildRelationships() {
 	}
 }
 
-func (t *Transformer) processTerraformModules(tfModules []*terraform.Module) {
-	for _, conf := range tfModules {
-		if len(conf.Labels) == 1 {
-			l := conf.Labels[0]
+func (t *Transformer) processTerraformModules() {
+	for _, tfModule := range t.tfConfig.Modules {
+		if len(tfModule.Labels) == 1 {
+			l := tfModule.Labels[0]
 
 			if strings.HasSuffix(strings.ToLower(l), suffixLambda) {
-				t.processLambdaModule(conf)
+				t.processLambdaModule(tfModule)
 			}
 		}
 	}
 }
 
-func (t *Transformer) processTerraformResources(tfConfig *terraform.Config) {
-	for _, tfResourceConf := range tfConfig.Resources {
+func (t *Transformer) processTerraformResources() {
+	for _, tfResourceConf := range t.tfConfig.Resources {
 		if len(tfResourceConf.Labels) == 2 {
 			switch tfResourceConf.Labels[0] {
 			case labelAWSAPIGatewayRoute:
@@ -230,7 +236,7 @@ func (t *Transformer) processDBResourceFromEnvar(
 func (t *Transformer) processEndpointResource(
 	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
 ) {
-	value := conf.Attributes["domain_name"].(string)
+	value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Locals)
 
 	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.EndpointType)
 	t.id++
@@ -390,8 +396,6 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 	return &resource
 }
 
-///////
-
 func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
 	switch arn.key {
 	case arnAPIGateway:
@@ -410,6 +414,22 @@ func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resourc
 
 	return resource
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+func replaceVars(str string, tfLocals []*terraform.Local) string {
+	result := str
+
+	for i := range tfLocals {
+		for k, v := range tfLocals[i].Attributes {
+			result = strings.ReplaceAll(result, k, v.(string))
+		}
+	}
+
+	return result
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 func databaseName(str, suffix string) string {
 	return strcase.ToKebab(str[:len(str)-len(suffix)])
