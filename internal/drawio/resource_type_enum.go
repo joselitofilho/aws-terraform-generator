@@ -3,33 +3,44 @@ package drawio
 import "strings"
 
 // ResourceType represents the type of a resource.
-type ResourceType int
+type ResourceType string
 
 const (
 	// APIGatewayType represents the API Gateway resource type.
-	APIGatewayType ResourceType = iota
+	APIGatewayType ResourceType = "apigateway"
+
 	// CronType represents the Cron resource type.
-	CronType
+	CronType ResourceType = "cron"
+
 	// DatabaseType represents the Database resource type.
-	DatabaseType
+	DatabaseType ResourceType = "database"
+
 	// EndpointType represents the Endpoint resource type.
-	EndpointType
+	EndpointType ResourceType = "endpoint"
+
 	// GoogleBQType represents the Google BigQuery resource type.
-	GoogleBQType
+	GoogleBQType ResourceType = "googlebq"
+
 	// KinesisType represents the Kinesis resource type.
-	KinesisType
+	KinesisType ResourceType = "kinesis"
+
 	// LambdaType represents the Lambda resource type.
-	LambdaType
+	LambdaType ResourceType = "lambda"
+
 	// RestfulAPIType represents the Restful API resource type.
-	RestfulAPIType
+	RestfulAPIType ResourceType = "restfulapi"
+
 	// S3Type represents the S3 resource type.
-	S3Type
+	S3Type ResourceType = "s3"
+
 	// SNSType represents the SNS resource type.
-	SNSType
+	SNSType ResourceType = "sns"
+
 	// SQSType represents the SQS resource type.
-	SQSType
+	SQSType ResourceType = "sqs"
+
 	// UnknownType represents an unknown resource type.
-	UnknownType
+	UnknownType ResourceType = "unknown"
 )
 
 // String returns the string representation of a ResourceType.

@@ -41,6 +41,14 @@ func Build(
 			continue
 		}
 
+		if _, ok := nodes[rel.Source.ID()]; !ok {
+			continue
+		}
+
+		if _, ok := nodes[rel.Target.ID()]; !ok {
+			continue
+		}
+
 		g.Edge(nodes[rel.Source.ID()], nodes[rel.Target.ID()])
 	}
 

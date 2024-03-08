@@ -3,6 +3,7 @@ draw:
   filters:
     kinesis:
       match:
-        - "^ProcessorLocation"
-      not_match:
-        - "^H"
+        - "^ProcessedLocation"
+      # not_match:
+      #   - "^ProcessedA"
+      #   - "^ProcessedB"

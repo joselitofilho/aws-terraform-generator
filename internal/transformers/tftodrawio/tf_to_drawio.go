@@ -2,10 +2,8 @@ package tftodrawio
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
-	"github.com/ettle/strcase"
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
@@ -110,7 +108,37 @@ func (t *Transformer) Transform() *drawio.ResourceCollection {
 
 	t.buildRelationships()
 
+	t.applyFiltersInResources()
+	t.applyFiltersInRelationships()
+
 	return &drawio.ResourceCollection{Resources: t.resources, Relationships: t.relationships}
+}
+
+func (t *Transformer) applyFiltersInResources() {
+	filtered := make([]drawio.Resource, 0, len(t.resources))
+
+	for _, res := range t.resources {
+		if t.hasResourceMatched(res, t.yamlConfig.Draw.Filters) {
+			filtered = append(filtered, res)
+		}
+	}
+
+	t.resources = filtered
+}
+
+func (t *Transformer) applyFiltersInRelationships() {
+	filtered := make([]drawio.Relationship, 0, len(t.relationships))
+
+	for _, rel := range t.relationships {
+		sourceMatch := t.hasResourceMatched(rel.Source, t.yamlConfig.Draw.Filters)
+		targetMatch := t.hasResourceMatched(rel.Target, t.yamlConfig.Draw.Filters)
+
+		if sourceMatch && targetMatch {
+			filtered = append(filtered, rel)
+		}
+	}
+
+	t.relationships = filtered
 }
 
 func (t *Transformer) buildRelationships() {
@@ -135,6 +163,25 @@ func (t *Transformer) buildRelationships() {
 			t.relationships = append(t.relationships, drawio.Relationship{Source: source, Target: target})
 		}
 	}
+}
+
+func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
+	switch arn.key {
+	case arnAPIGateway:
+		resource = t.apiGatewayResourcesByName[arn.name]
+	case arnCloudwatchKey:
+		resource = t.cronResourcesByName[arn.name]
+	case arnEndpoint:
+		resource = t.endpointResourcesByName[arn.name]
+	case arnKinesisKey:
+		resource = t.kinesisResourcesByName[arn.name]
+	case arnLambdaKey:
+		resource = t.lambdaResourcesByName[arn.name]
+	case arnSQSKey:
+		resource = t.sqsResourcesByName[arn.name]
+	}
+
+	return resource
 }
 
 func (t *Transformer) processTerraformModules() {
@@ -266,21 +313,7 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 
 	t.relationshipsMap[eventSourceARN] = append(t.relationshipsMap[eventSourceARN], functionName)
 
-	t.tryToCreateResourceByARN(eventSourceARN)
-}
-
-func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
-	if eventSourceARN.key == arnKinesisKey {
-		value := toPascalFromEnvar(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
-
-		if _, ok := t.kinesisResourcesByName[value]; !ok {
-			resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
-			t.id++
-
-			t.resources = append(t.resources, resource)
-			t.kinesisResourcesByName[value] = resource
-		}
-	}
+	t.tryToCreateKinesisResourceByARN(eventSourceARN)
 }
 
 func (t *Transformer) processGoogleBQResourceFromEnvar(
@@ -459,183 +492,16 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 	return resource
 }
 
-func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
-	switch arn.key {
-	case arnAPIGateway:
-		resource = t.apiGatewayResourcesByName[arn.name]
-	case arnCloudwatchKey:
-		resource = t.cronResourcesByName[arn.name]
-	case arnEndpoint:
-		resource = t.endpointResourcesByName[arn.name]
-	case arnKinesisKey:
-		resource = t.kinesisResourcesByName[arn.name]
-	case arnLambdaKey:
-		resource = t.lambdaResourcesByName[arn.name]
-	case arnSQSKey:
-		resource = t.sqsResourcesByName[arn.name]
-	}
+func (t *Transformer) tryToCreateKinesisResourceByARN(eventSourceARN resourceARN) {
+	if eventSourceARN.key == arnKinesisKey {
+		value := toPascalFromEnvar(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
 
-	return resource
-}
+		if _, ok := t.kinesisResourcesByName[value]; !ok {
+			resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+			t.id++
 
-func replaceVars(str string, tfLocals []*terraform.Local) string {
-	result := str
-
-	keyValue := map[string]string{}
-
-	for i := range tfLocals {
-		for k, v := range tfLocals[i].Attributes {
-			varName := fmt.Sprintf("local.%s", k)
-
-			switch v := v.(type) {
-			case string:
-				keyValue[varName] = v
-			case []string:
-				finalValue := varName
-
-				if len(v) > 0 {
-					finalValue = v[0]
-				}
-
-				keyValue[varName] = finalValue
-			case map[string]any:
-				finalValue := varName
-
-				arr := make([]string, 0, len(v))
-				for k := range v {
-					arr = append(arr, k)
-				}
-
-				if len(arr) > 0 {
-					slices.Sort(arr)
-
-					finalValue = arr[0]
-				}
-
-				keyValue[varName] = finalValue
-			default:
-				// TODO: Implement other types
-				keyValue[varName] = varName
-			}
+			t.resources = append(t.resources, resource)
+			t.kinesisResourcesByName[value] = resource
 		}
 	}
-
-	for {
-		for varName, finalValue := range keyValue {
-			result = strings.ReplaceAll(result, varName, finalValue)
-		}
-
-		if !strings.Contains(result, "local.") {
-			break
-		}
-	}
-
-	return result
-}
-
-func strTransformFromEnvar(
-	key, value, suffix string, f func(s string) string,
-) string {
-	var result string
-
-	if key == suffix {
-		suffixMap := map[string]struct{}{
-			labelAWSKinesisStream:  {},
-			labelAWSLambdaFunction: {},
-			labelAWSS3Bucket:       {},
-			labelAWSSQSQueue:       {},
-		}
-
-		result = value
-
-		if strings.HasPrefix(result, "var.client-var.environment-") { // TODO:
-			result = f(strings.ReplaceAll(result, "var.client-var.environment-", "")) // TODO:
-		}
-
-		for s := range suffixMap {
-			if strings.HasPrefix(result, s) {
-				result = f(resourceByARN(result).name)
-				break
-			}
-		}
-	} else {
-		result = key
-
-		result = strings.ReplaceAll(result, "_"+suffix, "")
-		result = strings.ReplaceAll(result, suffix, "")
-		result = f(result)
-	}
-
-	return result
-}
-
-func toCamelFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToCamel)
-}
-
-func toKebabFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToKebab)
-}
-
-func toPascalFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToPascal)
-}
-
-func lambdaName(str, suffix string) string {
-	return strcase.ToCamel(str[:len(str)-len(suffix)])
-}
-
-func s3BucketName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
-}
-
-func sqsName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
-}
-
-type resourceARN struct {
-	key  string
-	name string
-}
-
-func resourceByARN(arn string) resourceARN {
-	var key, name string
-
-	if strings.HasPrefix(arn, "arn:") {
-		parts := strings.Split(arn, ":")
-
-		key = parts[2]
-
-		if key == arnKinesisKey {
-			parts = strings.Split(arn, "/")
-		}
-
-		name = parts[len(parts)-1]
-	} else {
-		parts := strings.Split(arn, ".")
-
-		keyParts := strings.Split(parts[0], "_")
-
-		if parts[0] == "module" {
-			// TODO: Add support to more type of modules
-			key = arnLambdaKey
-		} else if len(keyParts) > 1 {
-			key = keyParts[1]
-		} else {
-			key = strings.Join(keyParts, "_")
-		}
-
-		name = parts[1]
-
-		switch key {
-		case arnKinesisKey:
-			name = toPascalFromEnvar(name, name, suffixKinesis)
-		case arnLambdaKey:
-			name = toCamelFromEnvar(name, name, suffixLambda)
-		case arnSQSKey:
-			name = toKebabFromEnvar(name, name, suffixSQS)
-		}
-	}
-
-	return resourceARN{key: key, name: name}
 }

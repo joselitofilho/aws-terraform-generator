@@ -22,7 +22,7 @@ func TestResourceType_String(t *testing.T) {
 		{name: "Database", rt: DatabaseType, want: "Database"},
 		{name: "RestfulAPI", rt: RestfulAPIType, want: "RestfulAPI"},
 		{name: "Kinesis", rt: KinesisType, want: "Kinesis"},
-		{name: "Unknown", rt: 999, want: "Unknown"},
+		{name: "Unknown", rt: "", want: "Unknown"},
 	}
 
 	for i := range tests {

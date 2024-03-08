@@ -1,0 +1,9 @@
+draw:
+  # orientation: LR
+  filters:
+    kinesis:
+      match:
+        - "^ProcessedLocation"
+      # not_match:
+      #   - "^ProcessedA"
+      #   - "^ProcessedB"
