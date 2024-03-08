@@ -9,8 +9,8 @@ import (
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawio_to_resources"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resources_to_yaml"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawiotoresources"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
 )
 
 // diagramCmd represents the structure command.
@@ -52,12 +52,12 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	resources, err := drawio_to_resources.Transform(mxFile)
+	resources, err := drawiotoresources.Transform(mxFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	yamlConfigOut, err := resources_to_yaml.Transform(yamlConfig, resources)
+	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resources).Transform()
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

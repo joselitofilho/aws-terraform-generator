@@ -1,4 +1,4 @@
-package drawio_to_resources
+package drawiotoresources
 
 import (
 	"regexp"

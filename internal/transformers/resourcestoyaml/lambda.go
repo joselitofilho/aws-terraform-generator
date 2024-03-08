@@ -1,4 +1,4 @@
-package resources_to_yaml
+package resourcestoyaml
 
 import (
 	"fmt"
@@ -23,9 +23,10 @@ func (t *Transformer) buildLambdaRelationships(source, target resources.Resource
 	}
 }
 
-func (t *Transformer) buildLambdas() ([]config.Lambda, map[string][]config.APIGatewayLambda) {
-	lambdas := []config.Lambda{}
-	apiGatewayLambdasByAPIGatewayID := map[string][]config.APIGatewayLambda{}
+func (t *Transformer) buildLambdas() (
+	lambdas []config.Lambda, apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda,
+) {
+	apiGatewayLambdasByAPIGatewayID = map[string][]config.APIGatewayLambda{}
 	apiGatewayLambdaIDs := map[string]struct{}{}
 
 	for _, rel := range t.resc.Relationships {

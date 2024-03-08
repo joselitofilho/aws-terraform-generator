@@ -1,4 +1,4 @@
-package terraform_to_resources
+package terraformtoresources
 
 import (
 	"testing"

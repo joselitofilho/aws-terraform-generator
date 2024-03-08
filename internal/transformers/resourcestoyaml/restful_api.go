@@ -1,4 +1,4 @@
-package resources_to_yaml
+package resourcestoyaml
 
 import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"

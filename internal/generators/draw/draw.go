@@ -10,7 +10,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/terraform_to_resources"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/terraformtoresources"
 )
 
 // https://awsicons.dev/
@@ -53,7 +53,7 @@ func (d *Draw) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	resc := terraform_to_resources.NewTransformer(yamlConfig, &tfConfig).Transform()
+	resc := terraformtoresources.NewTransformer(yamlConfig, &tfConfig).Transform()
 
 	dotConfig := graphviz.Config{Orientation: yamlConfig.Draw.Orientation}
 
