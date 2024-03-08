@@ -6,8 +6,9 @@ import (
 	"strings"
 
 	"github.com/ettle/strcase"
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 type resourceARN struct {
@@ -15,7 +16,7 @@ type resourceARN struct {
 	name string
 }
 
-func (t *Transformer) hasResourceMatched(res drawio.Resource, filters config.Filters) bool {
+func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.Filters) bool {
 	filter, hasFilter := filters[res.ResourceType()]
 	if !hasFilter {
 		return true

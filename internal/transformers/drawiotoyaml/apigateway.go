@@ -1,22 +1,22 @@
 package drawiotoyaml
 
 import (
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func buildAPIGatewayRelationship(
-	source, target drawio.Resource, apiGatewaysByID, endpointsByAPIGatewayID map[string]drawio.Resource,
+	source, target resources.Resource, apiGatewaysByID, endpointsByAPIGatewayID map[string]resources.Resource,
 ) {
-	if source.ResourceType() == drawio.EndpointType {
+	if source.ResourceType() == resources.EndpointType {
 		buildEndpointToAPIGateway(apiGatewaysByID, endpointsByAPIGatewayID, source, target)
 	}
 }
 
 func buildAPIGateways(
 	yamlConfig *config.Config,
-	apiGatewaysByID map[string]drawio.Resource,
-	endpointsByAPIGatewayID map[string]drawio.Resource,
+	apiGatewaysByID map[string]resources.Resource,
+	endpointsByAPIGatewayID map[string]resources.Resource,
 	apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda,
 ) (apiGateways []config.APIGateway) {
 	for id := range apiGatewaysByID {

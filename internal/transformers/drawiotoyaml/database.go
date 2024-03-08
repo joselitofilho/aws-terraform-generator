@@ -1,9 +1,11 @@
 package drawiotoyaml
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+import (
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+)
 
-func buildDatabaseRelationship(source, target drawio.Resource, envars map[string]map[string]string) {
-	if source.ResourceType() == drawio.LambdaType {
+func buildDatabaseRelationship(source, target resources.Resource, envars map[string]map[string]string) {
+	if source.ResourceType() == resources.LambdaType {
 		buildLambdaToDatabase(source, target, envars)
 	}
 }

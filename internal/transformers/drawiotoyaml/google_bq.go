@@ -1,9 +1,11 @@
 package drawiotoyaml
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+import (
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+)
 
-func buildGoogleBQRelationship(source, target drawio.Resource, envars map[string]map[string]string) {
-	if source.ResourceType() == drawio.LambdaType {
+func buildGoogleBQRelationship(source, target resources.Resource, envars map[string]map[string]string) {
+	if source.ResourceType() == resources.LambdaType {
 		buildLambdaToGoogleBQ(source, target, envars)
 	}
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 var (
@@ -51,19 +51,19 @@ type Transformer struct {
 	yamlConfig *config.Config
 	tfConfig   *terraform.Config
 
-	resources     []drawio.Resource
-	relationships []drawio.Relationship
+	resources     []resources.Resource
+	relationships []resources.Relationship
 
-	apiGatewayResourcesByName map[string]drawio.Resource
-	cronResourcesByName       map[string]drawio.Resource
-	dbResourcesByName         map[string]drawio.Resource
-	endpointResourcesByName   map[string]drawio.Resource
-	googleBQResourcesByName   map[string]drawio.Resource
-	kinesisResourcesByName    map[string]drawio.Resource
-	lambdaResourcesByName     map[string]drawio.Resource
-	restfulAPIResourcesByName map[string]drawio.Resource
-	s3BucketResourcesByName   map[string]drawio.Resource
-	sqsResourcesByName        map[string]drawio.Resource
+	apiGatewayResourcesByName map[string]resources.Resource
+	cronResourcesByName       map[string]resources.Resource
+	dbResourcesByName         map[string]resources.Resource
+	endpointResourcesByName   map[string]resources.Resource
+	googleBQResourcesByName   map[string]resources.Resource
+	kinesisResourcesByName    map[string]resources.Resource
+	lambdaResourcesByName     map[string]resources.Resource
+	restfulAPIResourcesByName map[string]resources.Resource
+	s3BucketResourcesByName   map[string]resources.Resource
+	sqsResourcesByName        map[string]resources.Resource
 
 	endpointAPIGatewayMap   map[resourceARN][]resourceARN
 	resourceAPIGIntegration map[resourceARN]resourceARN
@@ -78,19 +78,19 @@ func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Tran
 		yamlConfig: yamlConfig,
 		tfConfig:   tfConfig,
 
-		resources:     []drawio.Resource{},
-		relationships: []drawio.Relationship{},
+		resources:     []resources.Resource{},
+		relationships: []resources.Relationship{},
 
-		apiGatewayResourcesByName: map[string]drawio.Resource{},
-		cronResourcesByName:       map[string]drawio.Resource{},
-		dbResourcesByName:         map[string]drawio.Resource{},
-		endpointResourcesByName:   map[string]drawio.Resource{},
-		googleBQResourcesByName:   map[string]drawio.Resource{},
-		kinesisResourcesByName:    map[string]drawio.Resource{},
-		lambdaResourcesByName:     map[string]drawio.Resource{},
-		restfulAPIResourcesByName: map[string]drawio.Resource{},
-		s3BucketResourcesByName:   map[string]drawio.Resource{},
-		sqsResourcesByName:        map[string]drawio.Resource{},
+		apiGatewayResourcesByName: map[string]resources.Resource{},
+		cronResourcesByName:       map[string]resources.Resource{},
+		dbResourcesByName:         map[string]resources.Resource{},
+		endpointResourcesByName:   map[string]resources.Resource{},
+		googleBQResourcesByName:   map[string]resources.Resource{},
+		kinesisResourcesByName:    map[string]resources.Resource{},
+		lambdaResourcesByName:     map[string]resources.Resource{},
+		restfulAPIResourcesByName: map[string]resources.Resource{},
+		s3BucketResourcesByName:   map[string]resources.Resource{},
+		sqsResourcesByName:        map[string]resources.Resource{},
 
 		endpointAPIGatewayMap:   map[resourceARN][]resourceARN{},
 		resourceAPIGIntegration: map[resourceARN]resourceARN{},
@@ -101,7 +101,7 @@ func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Tran
 	}
 }
 
-func (t *Transformer) Transform() *drawio.ResourceCollection {
+func (t *Transformer) Transform() *resources.ResourceCollection {
 	t.processTerraformModules()
 
 	t.processTerraformResources()
@@ -111,11 +111,11 @@ func (t *Transformer) Transform() *drawio.ResourceCollection {
 	t.applyFiltersInResources()
 	t.applyFiltersInRelationships()
 
-	return &drawio.ResourceCollection{Resources: t.resources, Relationships: t.relationships}
+	return &resources.ResourceCollection{Resources: t.resources, Relationships: t.relationships}
 }
 
 func (t *Transformer) applyFiltersInResources() {
-	filtered := make([]drawio.Resource, 0, len(t.resources))
+	filtered := make([]resources.Resource, 0, len(t.resources))
 
 	for _, res := range t.resources {
 		if t.hasResourceMatched(res, t.yamlConfig.Draw.Filters) {
@@ -127,7 +127,7 @@ func (t *Transformer) applyFiltersInResources() {
 }
 
 func (t *Transformer) applyFiltersInRelationships() {
-	filtered := make([]drawio.Relationship, 0, len(t.relationships))
+	filtered := make([]resources.Relationship, 0, len(t.relationships))
 
 	for _, rel := range t.relationships {
 		sourceMatch := t.hasResourceMatched(rel.Source, t.yamlConfig.Draw.Filters)
@@ -154,18 +154,18 @@ func (t *Transformer) buildRelationships() {
 				for _, apig := range t.endpointAPIGatewayMap[integration] {
 					updatedSource := t.getResourceByARN(apig)
 
-					t.relationships = append(t.relationships, drawio.Relationship{Source: updatedSource, Target: target})
+					t.relationships = append(t.relationships, resources.Relationship{Source: updatedSource, Target: target})
 				}
 
 				continue
 			}
 
-			t.relationships = append(t.relationships, drawio.Relationship{Source: source, Target: target})
+			t.relationships = append(t.relationships, resources.Relationship{Source: source, Target: target})
 		}
 	}
 }
 
-func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
+func (t *Transformer) getResourceByARN(arn resourceARN) (resource resources.Resource) {
 	switch arn.key {
 	case arnAPIGateway:
 		resource = t.apiGatewayResourcesByName[arn.name]
@@ -223,10 +223,10 @@ func (t *Transformer) processTerraformResources() {
 	}
 }
 
-func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource, resourcesByName map[string]drawio.Resource) {
+func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource, resourcesByName map[string]resources.Resource) {
 	value := conf.Attributes["route_key"].(string)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.APIGatewayType)
+	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.APIGatewayType)
 	t.id++
 
 	t.resources = append(t.resources, resource)
@@ -259,7 +259,7 @@ func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processCronResource(
-	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, resourcesByName map[string]resources.Resource,
 ) {
 	var value string
 
@@ -270,7 +270,7 @@ func (t *Transformer) processCronResource(
 		value = "schedule_expression"
 	}
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.CronType)
+	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.CronType)
 	t.id++
 
 	t.resources = append(t.resources, resource)
@@ -278,14 +278,14 @@ func (t *Transformer) processCronResource(
 }
 
 func (t *Transformer) processDBResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixDBHost)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.DatabaseType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.DatabaseType)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -296,11 +296,11 @@ func (t *Transformer) processDBResourceFromEnvar(
 }
 
 func (t *Transformer) processEndpointResource(
-	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, resourcesByName map[string]resources.Resource,
 ) {
 	value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Locals)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.EndpointType)
+	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.EndpointType)
 	t.id++
 
 	t.resources = append(t.resources, resource)
@@ -317,15 +317,15 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processGoogleBQResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = toKebabFromEnvar(k, value, envarSuffixGoogleBQ)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.GoogleBQType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.GoogleBQType)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -336,14 +336,14 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 }
 
 func (t *Transformer) processKinesisResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := toPascalFromEnvar(k, v, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -354,14 +354,14 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 }
 
 func (t *Transformer) processKinesisResource(
-	conf *terraform.Resource, resourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, resourcesByName map[string]resources.Resource,
 ) {
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixKinesis) {
 		value := toPascalFromEnvar(l, l, suffixKinesis)
 
-		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
 		t.id++
 
 		t.resources = append(t.resources, resource)
@@ -372,7 +372,7 @@ func (t *Transformer) processKinesisResource(
 func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	value := lambdaName(conf.Labels[0], suffixLambda)
 
-	resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.LambdaType)
+	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.LambdaType)
 	t.id++
 
 	t.resources = append(t.resources, resource)
@@ -383,40 +383,40 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 		case strings.HasSuffix(k, envarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixGoogleBQ):
 			target := t.processGoogleBQResourceFromEnvar(k, v.(string), t.googleBQResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixKinesisStreamURL):
 			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixS3BucketURL):
 			target := t.processS3BucketResourceFromEnvar(k, v.(string), t.s3BucketResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixSQSQueueURL):
 			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixRestfulAPI):
 			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: target})
+				resources.Relationship{Source: resource, Target: target})
 		}
 	}
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixS3BucketURL)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.S3Type)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.S3Type)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -427,14 +427,14 @@ func (t *Transformer) processS3BucketResourceFromEnvar(
 }
 
 func (t *Transformer) processS3BucketResource(
-	conf *terraform.Resource, s3BucketResourcesByName map[string]drawio.Resource,
+	conf *terraform.Resource, s3BucketResourcesByName map[string]resources.Resource,
 ) {
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixS3Bucket) {
 		value := s3BucketName(l, suffixS3Bucket)
 
-		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.S3Type)
+		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.S3Type)
 		t.id++
 
 		t.resources = append(t.resources, resource)
@@ -443,14 +443,14 @@ func (t *Transformer) processS3BucketResource(
 }
 
 func (t *Transformer) processSQSResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixSQSQueueURL)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.SQSType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.SQSType)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -460,13 +460,13 @@ func (t *Transformer) processSQSResourceFromEnvar(
 	return resource
 }
 
-func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesByName map[string]drawio.Resource) {
+func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesByName map[string]resources.Resource) {
 	l := conf.Labels[1]
 
 	if strings.HasSuffix(strings.ToLower(l), suffixSQS) {
 		value := sqsName(l, suffixSQS)
 
-		resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.SQSType)
+		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.SQSType)
 		t.id++
 
 		t.resources = append(t.resources, resource)
@@ -475,14 +475,14 @@ func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesB
 }
 
 func (t *Transformer) processRestfulAPIResourceFromEnvar(
-	k, v string, resourcesByName map[string]drawio.Resource,
-) drawio.Resource {
+	k, v string, resourcesByName map[string]resources.Resource,
+) resources.Resource {
 	value := toCamelFromEnvar(k, v, envarSuffixRestfulAPI)
 
 	resource, ok := resourcesByName[value]
 
 	if !ok {
-		resource = drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.RestfulAPIType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.RestfulAPIType)
 		t.id++
 
 		resourcesByName[value] = resource
@@ -497,7 +497,7 @@ func (t *Transformer) tryToCreateKinesisResourceByARN(eventSourceARN resourceARN
 		value := toPascalFromEnvar(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
 
 		if _, ok := t.kinesisResourcesByName[value]; !ok {
-			resource := drawio.NewGenericResource(fmt.Sprintf("%d", t.id), value, drawio.KinesisType)
+			resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
 			t.id++
 
 			t.resources = append(t.resources, resource)

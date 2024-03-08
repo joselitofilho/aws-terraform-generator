@@ -1,4 +1,4 @@
-package drawio
+package resources
 
 import "strings"
 

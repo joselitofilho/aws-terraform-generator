@@ -60,7 +60,7 @@ func TestParse(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := Parse(tc.args.fileName)
+			got, err := ParseXML(tc.args.fileName)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)

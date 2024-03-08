@@ -1,39 +1,39 @@
 package drawiotoyaml
 
 import (
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.ResourceCollection) (*config.Config, error) {
-	apiGatewaysByID := map[string]drawio.Resource{}
-	cronsByLambdaID := map[string]drawio.Resource{}
-	endpointsByAPIGatewayID := map[string]drawio.Resource{}
-	kinesisTriggersByLambdaID := map[string][]drawio.Resource{}
-	sqsTriggersByLambdaID := map[string][]drawio.Resource{}
+func TransformDrawIOToYAML(yamlConfig *config.Config, rscs *resources.ResourceCollection) (*config.Config, error) {
+	apiGatewaysByID := map[string]resources.Resource{}
+	cronsByLambdaID := map[string]resources.Resource{}
+	endpointsByAPIGatewayID := map[string]resources.Resource{}
+	kinesisTriggersByLambdaID := map[string][]resources.Resource{}
+	sqsTriggersByLambdaID := map[string][]resources.Resource{}
 
 	snsMap := map[string]config.SNS{}
 
 	envars := map[string]map[string]string{}
 
-	resourcesByTypeMap := buildResourcesByTypeMap(resources)
+	resourcesByTypeMap := buildResourcesByTypeMap(rscs)
 
-	for _, sns := range resourcesByTypeMap[drawio.SNSType] {
+	for _, sns := range resourcesByTypeMap[resources.SNSType] {
 		snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
 	}
 
-	for i := range resourcesByTypeMap[drawio.APIGatewayType] {
-		apiGateway := resourcesByTypeMap[drawio.APIGatewayType][i]
+	for i := range resourcesByTypeMap[resources.APIGatewayType] {
+		apiGateway := resourcesByTypeMap[resources.APIGatewayType][i]
 		apiGatewaysByID[apiGateway.ID()] = apiGateway
 	}
 
-	buildResourceRelationships(resources, envars,
+	buildResourceRelationships(rscs, envars,
 		apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID,
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID,
 		snsMap)
 
 	lambdas, apiGatewayLambdasByAPIGatewayID := buildLambdas(
-		yamlConfig, resourcesByTypeMap, resources, envars, cronsByLambdaID,
+		yamlConfig, resourcesByTypeMap, rscs, envars, cronsByLambdaID,
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID)
 	apiGateways := buildAPIGateways(
 		yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdasByAPIGatewayID)
@@ -54,10 +54,10 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, resources *drawio.Resource
 	}, nil
 }
 
-func buildResourcesByTypeMap(resources *drawio.ResourceCollection) map[drawio.ResourceType][]drawio.Resource {
-	resourcesByTypeMap := map[drawio.ResourceType][]drawio.Resource{}
+func buildResourcesByTypeMap(rscs *resources.ResourceCollection) map[resources.ResourceType][]resources.Resource {
+	resourcesByTypeMap := map[resources.ResourceType][]resources.Resource{}
 
-	for _, resource := range resources.Resources {
+	for _, resource := range rscs.Resources {
 		resourcesByTypeMap[resource.ResourceType()] = append(resourcesByTypeMap[resource.ResourceType()], resource)
 	}
 
@@ -65,35 +65,35 @@ func buildResourcesByTypeMap(resources *drawio.ResourceCollection) map[drawio.Re
 }
 
 func buildResourceRelationships(
-	resources *drawio.ResourceCollection,
+	rscs *resources.ResourceCollection,
 	envars map[string]map[string]string,
-	apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID map[string]drawio.Resource,
-	kinesisTriggersByLambdaID, sqsTriggersByLambdaID map[string][]drawio.Resource,
+	apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID map[string]resources.Resource,
+	kinesisTriggersByLambdaID, sqsTriggersByLambdaID map[string][]resources.Resource,
 	snsMap map[string]config.SNS,
 ) {
-	for _, rel := range resources.Relationships {
+	for _, rel := range rscs.Relationships {
 		target := rel.Target
 		source := rel.Source
 
 		switch target.ResourceType() {
-		case drawio.APIGatewayType:
+		case resources.APIGatewayType:
 			buildAPIGatewayRelationship(source, target, apiGatewaysByID, endpointsByAPIGatewayID)
-		case drawio.GoogleBQType:
+		case resources.GoogleBQType:
 			buildGoogleBQRelationship(source, target, envars)
-		case drawio.DatabaseType:
+		case resources.DatabaseType:
 			buildDatabaseRelationship(source, target, envars)
-		case drawio.KinesisType:
+		case resources.KinesisType:
 			buildKinesisRelationship(source, target, envars)
-		case drawio.LambdaType:
+		case resources.LambdaType:
 			buildLambdaRelationships(
 				source, target, cronsByLambdaID, kinesisTriggersByLambdaID, sqsTriggersByLambdaID, snsMap)
-		case drawio.RestfulAPIType:
+		case resources.RestfulAPIType:
 			buildRestfulAPIRelationship(source, target, envars)
-		case drawio.S3Type:
+		case resources.S3Type:
 			buildS3Relationship(source, target, envars)
-		case drawio.SNSType:
+		case resources.SNSType:
 			buildSNSRelationship(source, target, snsMap)
-		case drawio.SQSType:
+		case resources.SQSType:
 			buildSQSRelationships(source, target, envars, snsMap)
 		}
 	}

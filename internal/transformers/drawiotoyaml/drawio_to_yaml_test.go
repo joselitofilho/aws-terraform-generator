@@ -3,8 +3,8 @@ package drawiotoyaml
 import (
 	"testing"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
 )
@@ -22,12 +22,12 @@ var diagramConfig = &config.Config{
 func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	endpointResource := drawio.NewGenericResource("id1", "https://my-domain.com", drawio.EndpointType)
-	apiGatewayResource := drawio.NewGenericResource("id2", "POST /examples", drawio.APIGatewayType)
-	lambdaResource := drawio.NewGenericResource("id3", "my-lambda", drawio.LambdaType)
+	endpointResource := resources.NewGenericResource("id1", "https://my-domain.com", resources.EndpointType)
+	apiGatewayResource := resources.NewGenericResource("id2", "POST /examples", resources.APIGatewayType)
+	lambdaResource := resources.NewGenericResource("id3", "my-lambda", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -39,8 +39,8 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 			name: "only API Gateway",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{apiGatewayResource},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{apiGatewayResource},
 				},
 			},
 			want: &config.Config{
@@ -56,13 +56,13 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 			name: "API Gateway full example",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{
 						endpointResource,
 						apiGatewayResource,
 						lambdaResource,
 					},
-					Relationships: []drawio.Relationship{
+					Relationships: []resources.Relationship{
 						{Source: endpointResource, Target: apiGatewayResource},
 						{Source: apiGatewayResource, Target: lambdaResource},
 					},
@@ -109,11 +109,11 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 func TestTransformDrawIOToYAML_Database(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	database := drawio.NewGenericResource("id1", "my-database", drawio.DatabaseType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+	database := resources.NewGenericResource("id1", "my-database", resources.DatabaseType)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -125,7 +125,7 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 			name: "only database",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{database}},
+				resources:  &resources.ResourceCollection{Resources: []resources.Resource{database}},
 			},
 			want: &config.Config{},
 		},
@@ -133,9 +133,9 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 			name: "database receives data from a Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{database, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: database}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{database, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: database}},
 				},
 			},
 			want: &config.Config{
@@ -175,11 +175,11 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	googleBQ := drawio.NewGenericResource("id1", "google", drawio.GoogleBQType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+	googleBQ := resources.NewGenericResource("id1", "google", resources.GoogleBQType)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -191,7 +191,7 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 			name: "only google BQ",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{googleBQ}},
+				resources:  &resources.ResourceCollection{Resources: []resources.Resource{googleBQ}},
 			},
 			want: &config.Config{},
 		},
@@ -199,9 +199,9 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 			name: "google BQ receives data from a Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{googleBQ, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: googleBQ}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{googleBQ, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: googleBQ}},
 				},
 			},
 			want: &config.Config{
@@ -242,11 +242,11 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	kinesis := drawio.NewGenericResource("id1", "my-stream", drawio.KinesisType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+	kinesis := resources.NewGenericResource("id1", "my-stream", resources.KinesisType)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -258,8 +258,8 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 			name: "only Kinesis",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{kinesis},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{kinesis},
 				},
 			},
 			want: &config.Config{
@@ -270,9 +270,9 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 			name: "enqueue a message to an Kinesis stream published by Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{kinesis, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: kinesis}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{kinesis, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: kinesis}},
 				},
 			},
 			want: &config.Config{
@@ -311,15 +311,15 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	lambda := drawio.NewGenericResource("id1", "myReceiver", drawio.LambdaType)
-	cron := drawio.NewGenericResource("id2", "cron(0 2 * * ? *)", drawio.CronType)
-	sqs := drawio.NewGenericResource("id3", "my-queue", drawio.SQSType)
-	sns := drawio.NewGenericResource("id4", "my-notification", drawio.SNSType)
-	s3Bucket := drawio.NewGenericResource("id5", "my-bucket", drawio.S3Type)
-	kinesis := drawio.NewGenericResource("id6", "my-stream", drawio.KinesisType)
+	lambda := resources.NewGenericResource("id1", "myReceiver", resources.LambdaType)
+	cron := resources.NewGenericResource("id2", "cron(0 2 * * ? *)", resources.CronType)
+	sqs := resources.NewGenericResource("id3", "my-queue", resources.SQSType)
+	sns := resources.NewGenericResource("id4", "my-notification", resources.SNSType)
+	s3Bucket := resources.NewGenericResource("id5", "my-bucket", resources.S3Type)
+	kinesis := resources.NewGenericResource("id6", "my-stream", resources.KinesisType)
 
 	tests := []struct {
 		name      string
@@ -331,8 +331,8 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			name: "Lambda as module",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{lambda},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{lambda},
 				},
 			},
 			want: &config.Config{
@@ -358,8 +358,8 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 						},
 					},
 				},
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{lambda},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{lambda},
 				},
 			},
 			want: &config.Config{
@@ -378,9 +378,9 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			name: "invoke a Lambda on a schedule using a cron expression",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{lambda, cron},
-					Relationships: []drawio.Relationship{{Source: cron, Target: lambda}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{lambda, cron},
+					Relationships: []resources.Relationship{{Source: cron, Target: lambda}},
 				},
 			},
 			want: &config.Config{
@@ -399,9 +399,9 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			name: "invoke a Lambda to receive messages from an Kinesis stream",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{lambda, kinesis},
-					Relationships: []drawio.Relationship{{Source: kinesis, Target: lambda}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{lambda, kinesis},
+					Relationships: []resources.Relationship{{Source: kinesis, Target: lambda}},
 				},
 			},
 			want: &config.Config{
@@ -421,9 +421,9 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			name: "invoke a Lambda to receive messages from an SQS queue",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{lambda, sqs},
-					Relationships: []drawio.Relationship{{Source: sqs, Target: lambda}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{lambda, sqs},
+					Relationships: []resources.Relationship{{Source: sqs, Target: lambda}},
 				},
 			},
 			want: &config.Config{
@@ -443,9 +443,9 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 			name: "invoke a Lambda to process SNS notifications",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{lambda, sns, s3Bucket},
-					Relationships: []drawio.Relationship{
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{lambda, sns, s3Bucket},
+					Relationships: []resources.Relationship{
 						{Source: s3Bucket, Target: sns},
 						{Source: sns, Target: lambda},
 					},
@@ -485,11 +485,11 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	s3Bucket := drawio.NewGenericResource("id1", "my-bucket", drawio.S3Type)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+	s3Bucket := resources.NewGenericResource("id1", "my-bucket", resources.S3Type)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -501,8 +501,8 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 			name: "only s3 bucket",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{s3Bucket},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{s3Bucket},
 				},
 			},
 			want: &config.Config{
@@ -513,9 +513,9 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 			name: "s3 bucket stores object from Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{s3Bucket, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: s3Bucket}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{s3Bucket, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: s3Bucket}},
 				},
 			},
 			want: &config.Config{
@@ -555,13 +555,13 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	sqs := drawio.NewGenericResource("id1", "my-queue", drawio.SQSType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
-	sns := drawio.NewGenericResource("id3", "my-notification", drawio.SNSType)
-	s3Bucket := drawio.NewGenericResource("id4", "my-bucket", drawio.S3Type)
+	sqs := resources.NewGenericResource("id1", "my-queue", resources.SQSType)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	sns := resources.NewGenericResource("id3", "my-notification", resources.SNSType)
+	s3Bucket := resources.NewGenericResource("id4", "my-bucket", resources.S3Type)
 
 	tests := []struct {
 		name      string
@@ -573,8 +573,8 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 			name: "only SQS",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{sqs},
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{sqs},
 				},
 			},
 			want: &config.Config{
@@ -585,9 +585,9 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 			name: "enqueue a message to an SQS queue published by Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{sqs, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: sqs}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{sqs, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: sqs}},
 				},
 			},
 			want: &config.Config{
@@ -609,9 +609,9 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 			name: "enqueue a message to an SQS queue triggered by SNS notification",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources: []drawio.Resource{sqs, sns, s3Bucket},
-					Relationships: []drawio.Relationship{
+				resources: &resources.ResourceCollection{
+					Resources: []resources.Resource{sqs, sns, s3Bucket},
+					Relationships: []resources.Relationship{
 						{Source: s3Bucket, Target: sns},
 						{Source: sns, Target: sqs},
 					},
@@ -648,11 +648,11 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	sns := drawio.NewGenericResource("id1", "my-notification", drawio.SNSType)
-	s3Bucket := drawio.NewGenericResource("id1", "my-bucket", drawio.S3Type)
+	sns := resources.NewGenericResource("id1", "my-notification", resources.SNSType)
+	s3Bucket := resources.NewGenericResource("id1", "my-bucket", resources.S3Type)
 
 	tests := []struct {
 		name      string
@@ -664,7 +664,7 @@ func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 			name: "only SNS",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{sns}},
+				resources:  &resources.ResourceCollection{Resources: []resources.Resource{sns}},
 			},
 			want: &config.Config{SNSs: []config.SNS{{Name: "my-notification"}}},
 		},
@@ -672,9 +672,9 @@ func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 			name: "receive an SNS notification triggered by an S3 Bucket event",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{sns, s3Bucket},
-					Relationships: []drawio.Relationship{{Source: s3Bucket, Target: sns}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{sns, s3Bucket},
+					Relationships: []resources.Relationship{{Source: s3Bucket, Target: sns}},
 				},
 			},
 			want: &config.Config{
@@ -706,11 +706,11 @@ func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 	type args struct {
 		yamlConfig *config.Config
-		resources  *drawio.ResourceCollection
+		resources  *resources.ResourceCollection
 	}
 
-	restfulAPI := drawio.NewGenericResource("id1", "my-api", drawio.RestfulAPIType)
-	lambda := drawio.NewGenericResource("id2", "myReceiver", drawio.LambdaType)
+	restfulAPI := resources.NewGenericResource("id1", "my-api", resources.RestfulAPIType)
+	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
 
 	tests := []struct {
 		name      string
@@ -722,7 +722,7 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 			name: "only restful API",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources:  &drawio.ResourceCollection{Resources: []drawio.Resource{restfulAPI}},
+				resources:  &resources.ResourceCollection{Resources: []resources.Resource{restfulAPI}},
 			},
 			want: &config.Config{RestfulAPIs: []config.RestfulAPI{{Name: "my-api"}}},
 		},
@@ -730,9 +730,9 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 			name: "restful API receives a request from a Lambda",
 			args: args{
 				yamlConfig: diagramConfig,
-				resources: &drawio.ResourceCollection{
-					Resources:     []drawio.Resource{restfulAPI, lambda},
-					Relationships: []drawio.Relationship{{Source: lambda, Target: restfulAPI}},
+				resources: &resources.ResourceCollection{
+					Resources:     []resources.Resource{restfulAPI, lambda},
+					Relationships: []resources.Relationship{{Source: lambda, Target: restfulAPI}},
 				},
 			},
 			want: &config.Config{

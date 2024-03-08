@@ -3,7 +3,7 @@ package graphviz
 import (
 	"github.com/emicklei/dot"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 const OrientationLeftRight = "LR"
@@ -13,7 +13,7 @@ type Config struct {
 }
 
 func Build(
-	resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string, config Config,
+	resources *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
 ) (string, error) {
 	g := dot.NewGraph(dot.Directed)
 

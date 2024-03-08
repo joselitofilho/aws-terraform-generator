@@ -1,6 +1,6 @@
 package config
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+import "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 type FilenameTemplateMap map[string]string
 
@@ -15,4 +15,4 @@ type Filter struct {
 	NotMatch []string `yaml:"not_match,omitempty"`
 }
 
-type Filters map[drawio.ResourceType]Filter
+type Filters map[resources.ResourceType]Filter

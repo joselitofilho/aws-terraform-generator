@@ -3,6 +3,8 @@ package drawio
 import (
 	"testing"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,13 +13,13 @@ func TestParseResources(t *testing.T) {
 		mxFile *MxFile
 	}
 
-	lambdaResource := NewGenericResource("LAMBDA_ID", "myReceiver", LambdaType)
-	sqsResource := NewGenericResource("SQS_ID", "my-sqs", SQSType)
+	lambdaResource := resources.NewGenericResource("LAMBDA_ID", "myReceiver", resources.LambdaType)
+	sqsResource := resources.NewGenericResource("SQS_ID", "my-sqs", resources.SQSType)
 
 	tests := []struct {
 		name      string
 		args      args
-		want      *ResourceCollection
+		want      *resources.ResourceCollection
 		targetErr error
 	}{
 		{
@@ -35,8 +37,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("APIG_ID", "myAPI", APIGatewayType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("APIG_ID", "myAPI", resources.APIGatewayType)},
 			},
 		},
 		{
@@ -54,8 +56,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("CRON_ID", "myScheduler", CronType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("CRON_ID", "myScheduler", resources.CronType)},
 			},
 		},
 		{
@@ -73,8 +75,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("DB_ID", "myDB", DatabaseType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("DB_ID", "myDB", resources.DatabaseType)},
 			},
 		},
 		{
@@ -92,8 +94,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("ENDPOINT_ID", "myEndpoint", EndpointType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("ENDPOINT_ID", "myEndpoint", resources.EndpointType)},
 			},
 		},
 		{
@@ -111,8 +113,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("GBC_ID", "myGBC", GoogleBQType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("GBC_ID", "myGBC", resources.GoogleBQType)},
 			},
 		},
 		{
@@ -130,8 +132,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("KINESIS_ID", "myKinesis", KinesisType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("KINESIS_ID", "myKinesis", resources.KinesisType)},
 			},
 		},
 		{
@@ -149,8 +151,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{lambdaResource},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{lambdaResource},
 			},
 		},
 		{
@@ -168,8 +170,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("RESTFULAPI_ID", "myRestAPI", RestfulAPIType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("RESTFULAPI_ID", "myRestAPI", resources.RestfulAPIType)},
 			},
 		},
 		{
@@ -187,8 +189,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("S3BUCKET_ID", "myBucket", S3Type)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("S3BUCKET_ID", "myBucket", resources.S3Type)},
 			},
 		},
 		{
@@ -206,8 +208,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{sqsResource},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{sqsResource},
 			},
 		},
 		{
@@ -225,8 +227,8 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources: []Resource{NewGenericResource("SNS_ID", "my-sns", SNSType)},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{resources.NewGenericResource("SNS_ID", "my-sns", resources.SNSType)},
 			},
 		},
 		{
@@ -242,7 +244,7 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: NewResourceCollection(),
+			want: resources.NewResourceCollection(),
 		},
 		{
 			name: "Two Connected Resources",
@@ -261,9 +263,9 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: &ResourceCollection{
-				Resources:     []Resource{lambdaResource, sqsResource},
-				Relationships: []Relationship{{Source: lambdaResource, Target: sqsResource}},
+			want: &resources.ResourceCollection{
+				Resources:     []resources.Resource{lambdaResource, sqsResource},
+				Relationships: []resources.Relationship{{Source: lambdaResource, Target: sqsResource}},
 			},
 		},
 		{
@@ -281,7 +283,7 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: NewResourceCollection(),
+			want: resources.NewResourceCollection(),
 		},
 		{
 			name: "Two Connected Unknown Resources",
@@ -300,7 +302,7 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: NewResourceCollection(),
+			want: resources.NewResourceCollection(),
 		},
 		{
 			name: "Multiple Unknown Resources",
@@ -318,7 +320,7 @@ func TestParseResources(t *testing.T) {
 					},
 				},
 			},
-			want: NewResourceCollection(),
+			want: resources.NewResourceCollection(),
 		},
 	}
 

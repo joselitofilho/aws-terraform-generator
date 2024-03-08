@@ -46,7 +46,7 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	mxFile, err := drawio.Parse(diagram)
+	mxFile, err := drawio.ParseXML(diagram)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
