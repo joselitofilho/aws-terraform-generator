@@ -6,10 +6,18 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 )
 
-func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string) (string, error) {
+const OrientationLeftRight = "LR"
+
+type Config struct {
+	Orientation string
+}
+
+func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string, config Config) (string, error) {
 	g := dot.NewGraph(dot.Directed)
 
-	// g.Attr("rankdir", "LR")
+	if config.Orientation != "" {
+		g.Attr("rankdir", config.Orientation)
+	}
 
 	g.NodeInitializer(func(n dot.Node) {
 		n.Attrs("shape", "plaintext", "imagepos", "tc", "labelloc", "b", "height", "0.9")

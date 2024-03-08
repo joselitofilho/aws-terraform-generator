@@ -55,7 +55,9 @@ func (d *Draw) Build() error {
 
 	resources := tftodrawio.NewTransformer(yamlConfig, &tfConfig).Transform()
 
-	dotContent, err := graphviz.Build(resources, defaultResourceImageMap)
+	dotConfig := graphviz.Config{Orientation: yamlConfig.Draw.Orientation}
+
+	dotContent, err := graphviz.Build(resources, defaultResourceImageMap, dotConfig)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
