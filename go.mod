@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
-	github.com/aws/aws-lambda-go v1.46.0
 	github.com/emicklei/dot v1.6.1
 	github.com/ettle/strcase v0.2.0
 	github.com/fatih/color v1.16.0
@@ -13,7 +12,6 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.14.3
 	go.uber.org/mock v0.4.0
-	gonum.org/v1/gonum v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -21,6 +19,7 @@ require (
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
