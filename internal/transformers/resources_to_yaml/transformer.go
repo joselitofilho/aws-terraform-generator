@@ -5,7 +5,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func TransformDrawIOToYAML(yamlConfig *config.Config, resc *resources.ResourceCollection) (*config.Config, error) {
+func Transform(yamlConfig *config.Config, resc *resources.ResourceCollection) (*config.Config, error) {
 	apiGatewaysByID := map[string]resources.Resource{}
 	cronsByLambdaID := map[string]resources.Resource{}
 	endpointsByAPIGatewayID := map[string]resources.Resource{}

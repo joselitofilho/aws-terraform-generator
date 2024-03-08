@@ -94,7 +94,7 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -160,7 +160,7 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -227,7 +227,7 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -296,7 +296,7 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -474,7 +474,7 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			require.ErrorIs(t, err, tc.targetErr)
 			require.Equal(t, tc.want, got)
@@ -540,7 +540,7 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -633,7 +633,7 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -691,7 +691,7 @@ func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)
@@ -758,7 +758,7 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := TransformDrawIOToYAML(tc.args.yamlConfig, tc.args.resources)
+			got, err := Transform(tc.args.yamlConfig, tc.args.resources)
 
 			if tc.targetErr == nil {
 				require.NoError(t, err)

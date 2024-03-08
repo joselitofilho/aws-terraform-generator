@@ -57,7 +57,7 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	yamlConfigOut, err := resources_to_yaml.TransformDrawIOToYAML(yamlConfig, resources)
+	yamlConfigOut, err := resources_to_yaml.Transform(yamlConfig, resources)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
