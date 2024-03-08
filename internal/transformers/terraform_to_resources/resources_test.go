@@ -1,4 +1,4 @@
-package tftodrawio
+package terraform_to_resources
 
 import (
 	"testing"
