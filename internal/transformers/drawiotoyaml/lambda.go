@@ -28,7 +28,7 @@ func buildLambdaRelationships(
 func buildLambdas(
 	yamlConfig *config.Config,
 	resourcesByTypeMap map[resources.ResourceType][]resources.Resource,
-	rscs *resources.ResourceCollection, envars map[string]map[string]string,
+	resc *resources.ResourceCollection, envars map[string]map[string]string,
 	cronsByLambdaID map[string]resources.Resource,
 	kinesisTriggersByLambdaID map[string][]resources.Resource,
 	sqsTriggersByLambdaID map[string][]resources.Resource,
@@ -36,7 +36,7 @@ func buildLambdas(
 	apiGatewayLambdasByAPIGatewayID = map[string][]config.APIGatewayLambda{}
 	apiGatewayLambdaIDs := map[string]struct{}{}
 
-	for _, rel := range rscs.Relationships {
+	for _, rel := range resc.Relationships {
 		isAPIGatewayLambda := rel.Target.ResourceType() == resources.LambdaType &&
 			rel.Source.ResourceType() == resources.APIGatewayType
 
@@ -122,7 +122,9 @@ func buildKinesisTriggers(
 	return kinesisTriggers
 }
 
-func buildSQSTriggers(sqsTriggersByLambdaID map[string][]resources.Resource, lambda resources.Resource) []config.SQSTrigger {
+func buildSQSTriggers(
+	sqsTriggersByLambdaID map[string][]resources.Resource, lambda resources.Resource,
+) []config.SQSTrigger {
 	var sqsTriggers []config.SQSTrigger
 	for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
 		sqsTriggers = append(sqsTriggers, config.SQSTrigger{

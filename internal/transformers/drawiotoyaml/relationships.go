@@ -25,7 +25,9 @@ func buildEndpointToAPIGateway(
 	endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
-func buildKinesisToLambda(kinesisTriggersByLambdaID map[string][]resources.Resource, kinesis, lambda resources.Resource) {
+func buildKinesisToLambda(
+	kinesisTriggersByLambdaID map[string][]resources.Resource, kinesis, lambda resources.Resource,
+) {
 	lambdaID := lambda.ID()
 	kinesisTriggersByLambdaID[lambdaID] = append(kinesisTriggersByLambdaID[lambdaID], kinesis)
 }

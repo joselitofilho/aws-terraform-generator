@@ -13,7 +13,7 @@ type Config struct {
 }
 
 func Build(
-	resources *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
+	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
 ) (string, error) {
 	g := dot.NewGraph(dot.Directed)
 
@@ -31,12 +31,12 @@ func Build(
 
 	nodes := map[string]dot.Node{}
 
-	for _, res := range resources.Resources {
+	for _, res := range resc.Resources {
 		nodes[res.ID()] = g.Node(res.Value()).
 			Attr("image", resourceImageMap[res.ResourceType()])
 	}
 
-	for _, rel := range resources.Relationships {
+	for _, rel := range resc.Relationships {
 		if rel.Source == nil || rel.Target == nil {
 			continue
 		}

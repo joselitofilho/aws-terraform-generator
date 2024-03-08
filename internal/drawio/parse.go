@@ -74,19 +74,19 @@ func ParseXML(fileName string) (*MxFile, error) {
 
 // ParseResources parses resources from the MxFile.
 func ParseResources(mxFile *MxFile) (*resources.ResourceCollection, error) {
-	rscs := resources.NewResourceCollection()
+	resc := resources.NewResourceCollection()
 
 	for i := range mxFile.Diagram.MxGraphModel.Root.MxCells {
 		cell := mxFile.Diagram.MxGraphModel.Root.MxCells[i]
 
 		resource := createResource(cell.ID, cell.Value, cell.Style)
 		if resource != nil {
-			rscs.AddResource(resource)
+			resc.AddResource(resource)
 		}
 	}
 
 	resourcesMap := map[string]resources.Resource{}
-	for _, resource := range rscs.Resources {
+	for _, resource := range resc.Resources {
 		resourcesMap[resource.ID()] = resource
 	}
 
@@ -97,12 +97,12 @@ func ParseResources(mxFile *MxFile) (*resources.ResourceCollection, error) {
 			target := resourcesMap[cell.Target]
 
 			if source != nil && target != nil {
-				rscs.AddRelationship(source, target)
+				resc.AddRelationship(source, target)
 			}
 		}
 	}
 
-	return rscs, nil
+	return resc, nil
 }
 
 // createResource creates a resource based on cell data.

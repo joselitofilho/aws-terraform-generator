@@ -38,7 +38,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("APIG_ID", "myAPI", resources.APIGatewayType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("APIG_ID", "myAPI", resources.APIGatewayType)},
 			},
 		},
 		{
@@ -57,7 +58,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("CRON_ID", "myScheduler", resources.CronType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("CRON_ID", "myScheduler", resources.CronType)},
 			},
 		},
 		{
@@ -95,7 +97,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("ENDPOINT_ID", "myEndpoint", resources.EndpointType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("ENDPOINT_ID", "myEndpoint", resources.EndpointType)},
 			},
 		},
 		{
@@ -114,7 +117,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("GBC_ID", "myGBC", resources.GoogleBQType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("GBC_ID", "myGBC", resources.GoogleBQType)},
 			},
 		},
 		{
@@ -133,7 +137,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("KINESIS_ID", "myKinesis", resources.KinesisType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("KINESIS_ID", "myKinesis", resources.KinesisType)},
 			},
 		},
 		{
@@ -171,7 +176,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("RESTFULAPI_ID", "myRestAPI", resources.RestfulAPIType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("RESTFULAPI_ID", "myRestAPI", resources.RestfulAPIType)},
 			},
 		},
 		{
@@ -190,7 +196,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("S3BUCKET_ID", "myBucket", resources.S3Type)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("S3BUCKET_ID", "myBucket", resources.S3Type)},
 			},
 		},
 		{

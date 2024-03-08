@@ -5,7 +5,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func TransformDrawIOToYAML(yamlConfig *config.Config, rscs *resources.ResourceCollection) (*config.Config, error) {
+func TransformDrawIOToYAML(yamlConfig *config.Config, resc *resources.ResourceCollection) (*config.Config, error) {
 	apiGatewaysByID := map[string]resources.Resource{}
 	cronsByLambdaID := map[string]resources.Resource{}
 	endpointsByAPIGatewayID := map[string]resources.Resource{}
@@ -16,7 +16,7 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, rscs *resources.ResourceCo
 
 	envars := map[string]map[string]string{}
 
-	resourcesByTypeMap := buildResourcesByTypeMap(rscs)
+	resourcesByTypeMap := buildResourcesByTypeMap(resc)
 
 	for _, sns := range resourcesByTypeMap[resources.SNSType] {
 		snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
@@ -27,13 +27,13 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, rscs *resources.ResourceCo
 		apiGatewaysByID[apiGateway.ID()] = apiGateway
 	}
 
-	buildResourceRelationships(rscs, envars,
+	buildResourceRelationships(resc, envars,
 		apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID,
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID,
 		snsMap)
 
 	lambdas, apiGatewayLambdasByAPIGatewayID := buildLambdas(
-		yamlConfig, resourcesByTypeMap, rscs, envars, cronsByLambdaID,
+		yamlConfig, resourcesByTypeMap, resc, envars, cronsByLambdaID,
 		kinesisTriggersByLambdaID, sqsTriggersByLambdaID)
 	apiGateways := buildAPIGateways(
 		yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdasByAPIGatewayID)
@@ -54,10 +54,10 @@ func TransformDrawIOToYAML(yamlConfig *config.Config, rscs *resources.ResourceCo
 	}, nil
 }
 
-func buildResourcesByTypeMap(rscs *resources.ResourceCollection) map[resources.ResourceType][]resources.Resource {
+func buildResourcesByTypeMap(resc *resources.ResourceCollection) map[resources.ResourceType][]resources.Resource {
 	resourcesByTypeMap := map[resources.ResourceType][]resources.Resource{}
 
-	for _, resource := range rscs.Resources {
+	for _, resource := range resc.Resources {
 		resourcesByTypeMap[resource.ResourceType()] = append(resourcesByTypeMap[resource.ResourceType()], resource)
 	}
 
@@ -65,13 +65,13 @@ func buildResourcesByTypeMap(rscs *resources.ResourceCollection) map[resources.R
 }
 
 func buildResourceRelationships(
-	rscs *resources.ResourceCollection,
+	resc *resources.ResourceCollection,
 	envars map[string]map[string]string,
 	apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID map[string]resources.Resource,
 	kinesisTriggersByLambdaID, sqsTriggersByLambdaID map[string][]resources.Resource,
 	snsMap map[string]config.SNS,
 ) {
-	for _, rel := range rscs.Relationships {
+	for _, rel := range resc.Relationships {
 		target := rel.Target
 		source := rel.Source
 
