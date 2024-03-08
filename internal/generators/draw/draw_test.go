@@ -42,6 +42,10 @@ func TestDraw_Build(t *testing.T) {
 		},
 	}
 
+	defer func() {
+		_ = os.RemoveAll(testOutput)
+	}()
+
 	for i := range tests {
 		tc := tests[i]
 

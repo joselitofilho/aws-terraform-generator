@@ -8,7 +8,8 @@ import (
 
 func TestParseTerraformFiles(t *testing.T) {
 	type args struct {
-		directory string
+		directories []string
+		files       []string
 	}
 
 	tests := []struct {
@@ -20,21 +21,21 @@ func TestParseTerraformFiles(t *testing.T) {
 		{
 			name: "apig.tf",
 			args: args{
-				directory: "testdata/apigateway",
+				directories: []string{"testdata/apigateway"},
 			},
 			want: Config{},
 		},
 		{
 			name: "loctionEventProcessor lambda",
 			args: args{
-				directory: "testdata/lambda",
+				directories: []string{"testdata/lambda"},
 			},
 			want: Config{},
 		},
 		{
 			name: "sqs.tf",
 			args: args{
-				directory: "testdata/sqs",
+				directories: []string{"testdata/sqs"},
 			},
 			want: Config{},
 		},
@@ -44,10 +45,9 @@ func TestParseTerraformFiles(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := Parse(tc.args.directory)
+			_, err := Parse(tc.args.directories, tc.args.files)
 
 			require.ErrorIs(t, err, tc.targetErr)
-			// require.Equal(t, tc.want, got)
 		})
 	}
 }

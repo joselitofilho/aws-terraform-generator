@@ -1,2 +1,8 @@
 draw:
   # orientation: LR
+  filters:
+    kinesis:
+      match:
+        - "^ProcessorLocation"
+      not_match:
+        - "^H"

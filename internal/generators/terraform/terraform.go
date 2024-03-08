@@ -54,7 +54,7 @@ func Parse(directories, files []string) (Config, error) {
 			if !info.IsDir() && filepath.Ext(path) == ".tf" {
 				file, diags := parser.ParseHCLFile(path)
 				if diags.HasErrors() {
-					return fmt.Errorf("failed to load config file %s: %w", path, diags.Errs())
+					return fmt.Errorf("failed to load config file %s: %s", path, diags.Errs())
 				}
 
 				parsedConfig := parseConfig(file)
@@ -78,7 +78,7 @@ func Parse(directories, files []string) (Config, error) {
 			if !os.IsNotExist(err) {
 				file, diags := parser.ParseHCLFile(f)
 				if diags.HasErrors() {
-					return config, fmt.Errorf("failed to load config file %s: %w", file, diags.Errs())
+					return config, fmt.Errorf("failed to load config file %s: %s", file, diags.Errs())
 				}
 
 				parsedConfig := parseConfig(file)
@@ -224,6 +224,8 @@ func evaluateExpression(expr hcl.Expression) any {
 		}
 
 		return resultMap
+	case *hclsyntax.IndexExpr:
+		resultString += evaluateExpression(expr.Collection).(string)
 	case *hclsyntax.FunctionCallExpr: // TODO: Implement
 	}
 

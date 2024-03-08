@@ -6,7 +6,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/draw"
 )
 
-// drawCmd represents the sqs command
+// drawCmd represents the sqs command.
 var drawCmd = &cobra.Command{
 	Use:   "draw",
 	Short: "Manage Draw",
@@ -41,8 +41,10 @@ var drawCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(drawCmd)
 
-	drawCmd.Flags().StringArrayP(flagWorkdir, "", []string{"."}, "Path to the folder where the terraform files are. For example: ./workdir")
-	drawCmd.Flags().StringArrayP(flagFile, "", nil, "Path to the specific terraform file. For example: ./workdir/sqs.tf")
+	drawCmd.Flags().StringArrayP(flagWorkdir, "", []string{"."},
+		"Path to the folder where the terraform files are. For example: ./workdir")
+	drawCmd.Flags().StringArrayP(flagFile, "", nil,
+		"Path to the specific terraform file. For example: ./workdir/sqs.tf")
 	drawCmd.Flags().StringP(flagConfig, "c", "",
 		"Path to the YAML config file. For example: ./draw.config.yaml")
 	drawCmd.Flags().StringP(flagOutput, "o", "", "Path to the output folder. For example: ./output")

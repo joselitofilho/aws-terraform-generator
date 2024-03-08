@@ -12,7 +12,9 @@ type Config struct {
 	Orientation string
 }
 
-func Build(resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string, config Config) (string, error) {
+func Build(
+	resources *drawio.ResourceCollection, resourceImageMap map[drawio.ResourceType]string, config Config,
+) (string, error) {
 	g := dot.NewGraph(dot.Directed)
 
 	if config.Orientation != "" {

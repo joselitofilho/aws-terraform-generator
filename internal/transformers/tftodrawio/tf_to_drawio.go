@@ -2,6 +2,7 @@ package tftodrawio
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/ettle/strcase"
@@ -231,7 +232,7 @@ func (t *Transformer) processCronResource(
 
 func (t *Transformer) processDBResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixDBHost)
 
 	resource, ok := resourcesByName[value]
@@ -244,7 +245,7 @@ func (t *Transformer) processDBResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) processEndpointResource(
@@ -269,8 +270,7 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 }
 
 func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
-	switch eventSourceARN.key {
-	case arnKinesisKey:
+	if eventSourceARN.key == arnKinesisKey {
 		value := toPascalFromEnvar(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
 
 		if _, ok := t.kinesisResourcesByName[value]; !ok {
@@ -285,7 +285,7 @@ func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
 
 func (t *Transformer) processGoogleBQResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = toKebabFromEnvar(k, value, envarSuffixGoogleBQ)
 
@@ -299,12 +299,12 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) processKinesisResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := toPascalFromEnvar(k, v, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
@@ -317,7 +317,7 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) processKinesisResource(
@@ -350,34 +350,34 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 		case strings.HasSuffix(k, envarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixGoogleBQ):
 			target := t.processGoogleBQResourceFromEnvar(k, v.(string), t.googleBQResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixKinesisStreamURL):
 			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixS3BucketURL):
 			target := t.processS3BucketResourceFromEnvar(k, v.(string), t.s3BucketResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixSQSQueueURL):
 			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, envarSuffixRestfulAPI):
 			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
-				drawio.Relationship{Source: resource, Target: *target})
+				drawio.Relationship{Source: resource, Target: target})
 		}
 	}
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixS3BucketURL)
 
 	resource, ok := resourcesByName[value]
@@ -390,7 +390,7 @@ func (t *Transformer) processS3BucketResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) processS3BucketResource(
@@ -411,7 +411,7 @@ func (t *Transformer) processS3BucketResource(
 
 func (t *Transformer) processSQSResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := toKebabFromEnvar(k, v, envarSuffixSQSQueueURL)
 
 	resource, ok := resourcesByName[value]
@@ -424,7 +424,7 @@ func (t *Transformer) processSQSResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesByName map[string]drawio.Resource) {
@@ -443,7 +443,7 @@ func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesB
 
 func (t *Transformer) processRestfulAPIResourceFromEnvar(
 	k, v string, resourcesByName map[string]drawio.Resource,
-) *drawio.Resource {
+) drawio.Resource {
 	value := toCamelFromEnvar(k, v, envarSuffixRestfulAPI)
 
 	resource, ok := resourcesByName[value]
@@ -456,7 +456,7 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 		t.resources = append(t.resources, resource)
 	}
 
-	return &resource
+	return resource
 }
 
 func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resource) {
@@ -478,29 +478,60 @@ func (t *Transformer) getResourceByARN(arn resourceARN) (resource drawio.Resourc
 	return resource
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 func replaceVars(str string, tfLocals []*terraform.Local) string {
 	result := str
 
+	keyValue := map[string]string{}
+
 	for i := range tfLocals {
 		for k, v := range tfLocals[i].Attributes {
+			varName := fmt.Sprintf("local.%s", k)
+
 			switch v := v.(type) {
-			// TODO: Implement others
 			case string:
-				result = strings.ReplaceAll(result, k, v)
+				keyValue[varName] = v
 			case []string:
-				result = fmt.Sprintf("%slocal.%s[]", result, k)
+				finalValue := varName
+
+				if len(v) > 0 {
+					finalValue = v[0]
+				}
+
+				keyValue[varName] = finalValue
+			case map[string]any:
+				finalValue := varName
+
+				arr := make([]string, 0, len(v))
+				for k := range v {
+					arr = append(arr, k)
+				}
+
+				if len(arr) > 0 {
+					slices.Sort(arr)
+
+					finalValue = arr[0]
+				}
+
+				keyValue[varName] = finalValue
 			default:
-				result = fmt.Sprintf("%slocal.%s", result, k)
+				// TODO: Implement other types
+				keyValue[varName] = varName
 			}
+		}
+	}
+
+	for {
+		for varName, finalValue := range keyValue {
+			result = strings.ReplaceAll(result, varName, finalValue)
+		}
+
+		if !strings.Contains(result, "local.") {
+			break
 		}
 	}
 
 	return result
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 func strTransformFromEnvar(
 	key, value, suffix string, f func(s string) string,
@@ -562,8 +593,6 @@ func sqsName(str, suffix string) string {
 	return strcase.ToKebab(str[:len(str)-len(suffix)])
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 type resourceARN struct {
 	key  string
 	name string
@@ -576,8 +605,8 @@ func resourceByARN(arn string) resourceARN {
 		parts := strings.Split(arn, ":")
 
 		key = parts[2]
-		switch key {
-		case arnKinesisKey:
+
+		if key == arnKinesisKey {
 			parts = strings.Split(arn, "/")
 		}
 
