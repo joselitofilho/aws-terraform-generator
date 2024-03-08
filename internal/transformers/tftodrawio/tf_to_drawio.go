@@ -550,10 +550,6 @@ func toPascalFromEnvar(key, value, suffix string) string {
 	return strTransformFromEnvar(key, value, suffix, strcase.ToPascal)
 }
 
-func kinesisName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
-}
-
 func lambdaName(str, suffix string) string {
 	return strcase.ToCamel(str[:len(str)-len(suffix)])
 }
@@ -604,11 +600,11 @@ func resourceByARN(arn string) resourceARN {
 
 		switch key {
 		case arnKinesisKey:
-			name = kinesisName(name, suffixKinesis)
+			name = toPascalFromEnvar(name, name, suffixKinesis)
 		case arnLambdaKey:
-			name = lambdaName(name, suffixLambda)
+			name = toCamelFromEnvar(name, name, suffixLambda)
 		case arnSQSKey:
-			name = sqsName(name, suffixSQS)
+			name = toKebabFromEnvar(name, name, suffixSQS)
 		}
 	}
 
