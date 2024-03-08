@@ -10,109 +10,103 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildCronToLambda(cronsByLambdaID map[string]resources.Resource, cron, lambda resources.Resource) {
-	cronsByLambdaID[lambda.ID()] = cron
+func (t *Transformer) buildCronToLambda(cron, lambda resources.Resource) {
+	t.cronsByLambdaID[lambda.ID()] = cron
 }
 
-func buildEndpointToAPIGateway(
-	apiGatewaysByID map[string]resources.Resource,
-	endpointsByAPIGatewayID map[string]resources.Resource,
-	endpoint resources.Resource,
-	apiGateways resources.Resource,
-) {
-	apiGatewayID := apiGateways.ID()
-	apiGatewaysByID[apiGatewayID] = apiGateways
-	endpointsByAPIGatewayID[apiGatewayID] = endpoint
+func (t *Transformer) buildEndpointToAPIGateway(endpoint, apiGateway resources.Resource) {
+	apiGatewayID := apiGateway.ID()
+	t.apiGatewaysByID[apiGatewayID] = apiGateway
+	t.endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 
-func buildKinesisToLambda(
-	kinesisTriggersByLambdaID map[string][]resources.Resource, kinesis, lambda resources.Resource,
+func (t *Transformer) buildKinesisToLambda(kinesis, lambda resources.Resource,
 ) {
 	lambdaID := lambda.ID()
-	kinesisTriggersByLambdaID[lambdaID] = append(kinesisTriggersByLambdaID[lambdaID], kinesis)
+	t.kinesisTriggersByLambdaID[lambdaID] = append(t.kinesisTriggersByLambdaID[lambdaID], kinesis)
 }
 
-func buildLambdaVars(lambda, target resources.Resource, variables []string, envars map[string]map[string]string) {
-	targetName := initLambdaEnvarsAndGetTargetName(lambda, target, envars)
+func (t *Transformer) buildLambdaVars(lambda, target resources.Resource, variables []string) {
+	targetName := t.initLambdaEnvarsAndGetTargetName(lambda, target)
 
 	for _, v := range variables {
-		envars[lambda.ID()][strcase.ToSNAKE(fmt.Sprintf("%s%s",
+		t.envars[lambda.ID()][strcase.ToSNAKE(fmt.Sprintf("%s%s",
 			targetName, v))] = "var." + strcase.ToSnake(fmt.Sprintf("%s%s", targetName, v))
 	}
 }
 
-func buildLambdaToDatabase(lambda, database resources.Resource, envars map[string]map[string]string) {
-	buildLambdaVars(lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"}, envars)
+func (t *Transformer) buildLambdaToDatabase(lambda, database resources.Resource) {
+	t.buildLambdaVars(lambda, database, []string{"DB_HOST", "DB_USER", "DB_PASSWORD_SECRET"})
 }
 
-func buildLambdaToGoogleBQ(lambda, googleBQ resources.Resource, envars map[string]map[string]string) {
-	buildLambdaVars(lambda, googleBQ,
-		[]string{"BQ_PROJECT_ID", "BQ_API_KEY_SECRET", "BQ_PARTITION_FIELD", "BQ_CLUSTERING_FIELDS"}, envars)
+func (t *Transformer) buildLambdaToGoogleBQ(lambda, googleBQ resources.Resource) {
+	t.buildLambdaVars(lambda, googleBQ,
+		[]string{"BQ_PROJECT_ID", "BQ_API_KEY_SECRET", "BQ_PARTITION_FIELD", "BQ_CLUSTERING_FIELDS"})
 }
 
-func buildLambdaToKinesis(lambda, kinesis resources.Resource, envars map[string]map[string]string) {
-	kinesisName := initLambdaEnvarsAndGetTargetName(lambda, kinesis, envars)
+func (t *Transformer) buildLambdaToKinesis(lambda, kinesis resources.Resource) {
+	kinesisName := t.initLambdaEnvarsAndGetTargetName(lambda, kinesis)
 
-	envars[lambda.ID()][fmt.Sprintf("%s_KINESIS_STREAM_URL",
+	t.envars[lambda.ID()][fmt.Sprintf("%s_KINESIS_STREAM_URL",
 		strcase.ToSNAKE(kinesisName))] = fmt.Sprintf("aws_kinesis_stream.%s_kinesis.name", strcase.ToSnake(kinesisName))
 }
 
-func buildLambdaToRestfulAPI(lambda, restfulAPI resources.Resource, envars map[string]map[string]string) {
-	buildLambdaVars(lambda, restfulAPI, []string{"API_BASE_URL", "HOST", "USER"}, envars)
+func (t *Transformer) buildLambdaToRestfulAPI(lambda, restfulAPI resources.Resource) {
+	t.buildLambdaVars(lambda, restfulAPI, []string{"API_BASE_URL", "HOST", "USER"})
 }
 
-func buildLambdaToS3(lambda, s3Bucket resources.Resource, envars map[string]map[string]string) {
-	bucketName := initLambdaEnvarsAndGetTargetName(lambda, s3Bucket, envars)
+func (t *Transformer) buildLambdaToS3(lambda, s3Bucket resources.Resource) {
+	bucketName := t.initLambdaEnvarsAndGetTargetName(lambda, s3Bucket)
 
-	envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
+	t.envars[lambda.ID()][fmt.Sprintf("%s_S3_BUCKET",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf("aws_s3_bucket.%s_bucket.bucket", strcase.ToSnake(bucketName))
-	envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
+	t.envars[lambda.ID()][fmt.Sprintf("%s_S3_DIRECTORY",
 		strcase.ToSNAKE(bucketName))] = fmt.Sprintf(`"%s_files"`, strings.ToLower(strcase.ToSnake(lambda.Value())))
 }
 
-func buildLambdaToSQS(lambda, sqs resources.Resource, envars map[string]map[string]string) {
-	sqsName := initLambdaEnvarsAndGetTargetName(lambda, sqs, envars)
+func (t *Transformer) buildLambdaToSQS(lambda, sqs resources.Resource) {
+	sqsName := t.initLambdaEnvarsAndGetTargetName(lambda, sqs)
 
-	envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
+	t.envars[lambda.ID()][fmt.Sprintf("%s_SQS_QUEUE_URL",
 		strcase.ToSNAKE(sqsName))] = fmt.Sprintf("aws_sqs_queue.%s_sqs.name", strcase.ToSnake(sqsName))
 }
 
-func buildS3ToSNS(snsMap map[string]config.SNS, s3Bucket, sns resources.Resource) {
-	snsConfig := snsMap[sns.ID()]
+func (t *Transformer) buildS3ToSNS(s3Bucket, sns resources.Resource) {
+	snsConfig := t.snsMap[sns.ID()]
 	snsConfig.BucketName = s3Bucket.Value()
-	snsMap[sns.ID()] = snsConfig
+	t.snsMap[sns.ID()] = snsConfig
 }
 
-func buildSNSToLambda(snsMap map[string]config.SNS, sns, lambda resources.Resource) {
-	snsConfig := snsMap[sns.ID()]
+func (t *Transformer) buildSNSToLambda(sns, lambda resources.Resource) {
+	snsConfig := t.snsMap[sns.ID()]
 	snsConfig.Lambdas = append(snsConfig.Lambdas, config.SNSResource{
 		Name:   lambda.Value(),
 		Events: []string{"s3:ObjectCreated:*"},
 	})
-	snsMap[sns.ID()] = snsConfig
+	t.snsMap[sns.ID()] = snsConfig
 }
 
-func buildSNSToSQS(snsMap map[string]config.SNS, sns, sqs resources.Resource) {
-	snsConfig := snsMap[sns.ID()]
+func (t *Transformer) buildSNSToSQS(sns, sqs resources.Resource) {
+	snsConfig := t.snsMap[sns.ID()]
 	snsConfig.SQSs = append(snsConfig.SQSs, config.SNSResource{
 		Name:   sqs.Value(),
 		Events: []string{"s3:ObjectCreated:*"},
 	})
-	snsMap[sns.ID()] = snsConfig
+	t.snsMap[sns.ID()] = snsConfig
 }
 
-func buildSQSToLambda(sqsTriggersByLambdaID map[string][]resources.Resource, sqs, lambda resources.Resource) {
+func (t *Transformer) buildSQSToLambda(sqs, lambda resources.Resource) {
 	lambdaID := lambda.ID()
-	sqsTriggersByLambdaID[lambdaID] = append(sqsTriggersByLambdaID[lambdaID], sqs)
+	t.sqsTriggersByLambdaID[lambdaID] = append(t.sqsTriggersByLambdaID[lambdaID], sqs)
 }
 
-func initEnvarsIfNecessaryByKey(key string, envars map[string]map[string]string) {
-	if _, ok := envars[key]; !ok {
-		envars[key] = map[string]string{}
+func (t *Transformer) initEnvarsIfNecessaryByKey(key string) {
+	if _, ok := t.envars[key]; !ok {
+		t.envars[key] = map[string]string{}
 	}
 }
 
-func initLambdaEnvarsAndGetTargetName(lambda, target resources.Resource, envars map[string]map[string]string) string {
-	initEnvarsIfNecessaryByKey(lambda.ID(), envars)
+func (t *Transformer) initLambdaEnvarsAndGetTargetName(lambda, target resources.Resource) string {
+	t.initEnvarsIfNecessaryByKey(lambda.ID())
 	return target.Value()
 }

@@ -5,28 +5,23 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildAPIGatewayRelationship(
-	source, target resources.Resource, apiGatewaysByID, endpointsByAPIGatewayID map[string]resources.Resource,
-) {
+func (t *Transformer) buildAPIGatewayRelationship(source, target resources.Resource) {
 	if source.ResourceType() == resources.EndpointType {
-		buildEndpointToAPIGateway(apiGatewaysByID, endpointsByAPIGatewayID, source, target)
+		t.buildEndpointToAPIGateway(source, target)
 	}
 }
 
-func buildAPIGateways(
-	yamlConfig *config.Config,
-	apiGatewaysByID map[string]resources.Resource,
-	endpointsByAPIGatewayID map[string]resources.Resource,
+func (t *Transformer) buildAPIGateways(
 	apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda,
 ) (apiGateways []config.APIGateway) {
-	for id := range apiGatewaysByID {
+	for id := range t.apiGatewaysByID {
 		var apiDomainValue string
-		if rsc, ok := endpointsByAPIGatewayID[id]; ok {
+		if rsc, ok := t.endpointsByAPIGatewayID[id]; ok {
 			apiDomainValue = rsc.Value()
 		}
 
 		apiGateways = append(apiGateways, config.APIGateway{
-			StackName: yamlConfig.Diagram.StackName,
+			StackName: t.yamlConfig.Diagram.StackName,
 			APIG:      true,
 			APIDomain: apiDomainValue,
 			Lambdas:   apiGatewayLambdasByAPIGatewayID[id],

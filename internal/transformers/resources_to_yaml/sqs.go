@@ -5,21 +5,19 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildSQSRelationships(
-	source, target resources.Resource, envars map[string]map[string]string, snsMap map[string]config.SNS,
-) {
+func (t *Transformer) buildSQSRelationships(source, target resources.Resource) {
 	switch source.ResourceType() {
 	case resources.LambdaType:
-		buildLambdaToSQS(source, target, envars)
+		t.buildLambdaToSQS(source, target)
 	case resources.SNSType:
-		buildSNSToSQS(snsMap, source, target)
+		t.buildSNSToSQS(source, target)
 	}
 }
 
-func buildSQSs(resourcesByTypeMap map[resources.ResourceType][]resources.Resource) []config.SQS {
+func (t *Transformer) buildSQSs() []config.SQS {
 	var sqss []config.SQS
 
-	for _, sqs := range resourcesByTypeMap[resources.SQSType] {
+	for _, sqs := range t.resourcesByTypeMap[resources.SQSType] {
 		sqss = append(sqss, config.SQS{Name: sqs.Value(), MaxReceiveCount: 10})
 	}
 

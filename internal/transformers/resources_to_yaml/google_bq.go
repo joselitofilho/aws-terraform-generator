@@ -4,8 +4,8 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildGoogleBQRelationship(source, target resources.Resource, envars map[string]map[string]string) {
+func (t *Transformer) buildGoogleBQRelationship(source, target resources.Resource) {
 	if source.ResourceType() == resources.LambdaType {
-		buildLambdaToGoogleBQ(source, target, envars)
+		t.buildLambdaToGoogleBQ(source, target)
 	}
 }

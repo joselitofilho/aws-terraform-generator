@@ -10,33 +10,25 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildLambdaRelationships(
-	source, target resources.Resource, cronsByLambdaID map[string]resources.Resource,
-	kinesisTriggersByLambdaID, sqsTriggersByLambdaID map[string][]resources.Resource, snsMap map[string]config.SNS) {
+func (t *Transformer) buildLambdaRelationships(source, target resources.Resource) {
 	switch source.ResourceType() {
 	case resources.CronType:
-		buildCronToLambda(cronsByLambdaID, source, target)
+		t.buildCronToLambda(source, target)
 	case resources.KinesisType:
-		buildKinesisToLambda(kinesisTriggersByLambdaID, source, target)
+		t.buildKinesisToLambda(source, target)
 	case resources.SQSType:
-		buildSQSToLambda(sqsTriggersByLambdaID, source, target)
+		t.buildSQSToLambda(source, target)
 	case resources.SNSType:
-		buildSNSToLambda(snsMap, source, target)
+		t.buildSNSToLambda(source, target)
 	}
 }
 
-func buildLambdas(
-	yamlConfig *config.Config,
-	resourcesByTypeMap map[resources.ResourceType][]resources.Resource,
-	resc *resources.ResourceCollection, envars map[string]map[string]string,
-	cronsByLambdaID map[string]resources.Resource,
-	kinesisTriggersByLambdaID map[string][]resources.Resource,
-	sqsTriggersByLambdaID map[string][]resources.Resource,
-) (lambdas []config.Lambda, apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda) {
-	apiGatewayLambdasByAPIGatewayID = map[string][]config.APIGatewayLambda{}
+func (t *Transformer) buildLambdas() ([]config.Lambda, map[string][]config.APIGatewayLambda) {
+	lambdas := []config.Lambda{}
+	apiGatewayLambdasByAPIGatewayID := map[string][]config.APIGatewayLambda{}
 	apiGatewayLambdaIDs := map[string]struct{}{}
 
-	for _, rel := range resc.Relationships {
+	for _, rel := range t.resc.Relationships {
 		isAPIGatewayLambda := rel.Target.ResourceType() == resources.LambdaType &&
 			rel.Source.ResourceType() == resources.APIGatewayType
 
@@ -44,14 +36,14 @@ func buildLambdas(
 			lambda := rel.Target
 			apiGatewayID := rel.Source.ID()
 
-			envarsList := buildEnvarsList(envars, lambda)
+			envarsList := t.buildEnvarsList(lambda)
 
 			apiGatewayLambdasByAPIGatewayID[apiGatewayID] = append(
 				apiGatewayLambdasByAPIGatewayID[apiGatewayID], config.APIGatewayLambda{
 					Name:        lambda.Value(),
-					Source:      yamlConfig.Diagram.Lambda.Source,
-					RoleName:    yamlConfig.Diagram.Lambda.RoleName,
-					Runtime:     yamlConfig.Diagram.Lambda.Runtime,
+					Source:      t.yamlConfig.Diagram.Lambda.Source,
+					RoleName:    t.yamlConfig.Diagram.Lambda.RoleName,
+					Runtime:     t.yamlConfig.Diagram.Lambda.Runtime,
 					Description: fmt.Sprintf("%s lambda", lambda.Value()),
 					Envars:      envarsList,
 					Verb:        strings.Split(rel.Source.Value(), " ")[0],
@@ -62,21 +54,21 @@ func buildLambdas(
 		}
 	}
 
-	for _, lambda := range resourcesByTypeMap[resources.LambdaType] {
+	for _, lambda := range t.resourcesByTypeMap[resources.LambdaType] {
 		if _, ok := apiGatewayLambdaIDs[lambda.ID()]; ok {
 			continue
 		}
 
-		crons := buildCrons(cronsByLambdaID, lambda)
-		envarsList := buildEnvarsList(envars, lambda)
-		kinesisTriggers := buildKinesisTriggers(kinesisTriggersByLambdaID, lambda)
-		sqsTriggers := buildSQSTriggers(sqsTriggersByLambdaID, lambda)
+		crons := t.buildCrons(lambda)
+		envarsList := t.buildEnvarsList(lambda)
+		kinesisTriggers := t.buildKinesisTriggers(lambda)
+		sqsTriggers := t.buildSQSTriggers(lambda)
 
 		lambdas = append(lambdas, config.Lambda{
 			Name:            lambda.Value(),
-			Source:          yamlConfig.Diagram.Lambda.Source,
-			RoleName:        yamlConfig.Diagram.Lambda.RoleName,
-			Runtime:         yamlConfig.Diagram.Lambda.Runtime,
+			Source:          t.yamlConfig.Diagram.Lambda.Source,
+			RoleName:        t.yamlConfig.Diagram.Lambda.RoleName,
+			Runtime:         t.yamlConfig.Diagram.Lambda.Runtime,
 			Description:     fmt.Sprintf("%s lambda", lambda.Value()),
 			Envars:          envarsList,
 			KinesisTriggers: kinesisTriggers,
@@ -88,9 +80,9 @@ func buildLambdas(
 	return lambdas, apiGatewayLambdasByAPIGatewayID
 }
 
-func buildCrons(cronsByLambdaID map[string]resources.Resource, lambda resources.Resource) []config.Cron {
+func (t *Transformer) buildCrons(lambda resources.Resource) []config.Cron {
 	var crons []config.Cron
-	if cron, ok := cronsByLambdaID[lambda.ID()]; ok {
+	if cron, ok := t.cronsByLambdaID[lambda.ID()]; ok {
 		crons = append(crons, config.Cron{
 			ScheduleExpression: cron.Value(),
 			IsEnabled:          "true",
@@ -100,20 +92,18 @@ func buildCrons(cronsByLambdaID map[string]resources.Resource, lambda resources.
 	return crons
 }
 
-func buildEnvarsList(envars map[string]map[string]string, lambda resources.Resource) []map[string]string {
+func (t *Transformer) buildEnvarsList(lambda resources.Resource) []map[string]string {
 	var envarsList []map[string]string
-	for key, value := range envars[lambda.ID()] {
+	for key, value := range t.envars[lambda.ID()] {
 		envarsList = append(envarsList, map[string]string{key: value})
 	}
 
 	return envarsList
 }
 
-func buildKinesisTriggers(
-	kinesisTriggersByLambdaID map[string][]resources.Resource, lambda resources.Resource,
-) []config.KinesisTrigger {
+func (t *Transformer) buildKinesisTriggers(lambda resources.Resource) []config.KinesisTrigger {
 	var kinesisTriggers []config.KinesisTrigger
-	for _, kinesisTrigger := range kinesisTriggersByLambdaID[lambda.ID()] {
+	for _, kinesisTrigger := range t.kinesisTriggersByLambdaID[lambda.ID()] {
 		kinesisTriggers = append(kinesisTriggers, config.KinesisTrigger{
 			SourceARN: fmt.Sprintf("aws_kinesis_stream.%s_kinesis.arn", strcase.ToSnake(kinesisTrigger.Value())),
 		})
@@ -122,11 +112,9 @@ func buildKinesisTriggers(
 	return kinesisTriggers
 }
 
-func buildSQSTriggers(
-	sqsTriggersByLambdaID map[string][]resources.Resource, lambda resources.Resource,
-) []config.SQSTrigger {
+func (t *Transformer) buildSQSTriggers(lambda resources.Resource) []config.SQSTrigger {
 	var sqsTriggers []config.SQSTrigger
-	for _, sqsTrigger := range sqsTriggersByLambdaID[lambda.ID()] {
+	for _, sqsTrigger := range t.sqsTriggersByLambdaID[lambda.ID()] {
 		sqsTriggers = append(sqsTriggers, config.SQSTrigger{
 			SourceARN: fmt.Sprintf("aws_sqs_queue.%s_sqs.arn", strcase.ToSnake(sqsTrigger.Value())),
 		})

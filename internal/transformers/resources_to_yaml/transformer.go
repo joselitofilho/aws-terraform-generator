@@ -5,43 +5,63 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func Transform(yamlConfig *config.Config, resc *resources.ResourceCollection) (*config.Config, error) {
-	apiGatewaysByID := map[string]resources.Resource{}
-	cronsByLambdaID := map[string]resources.Resource{}
-	endpointsByAPIGatewayID := map[string]resources.Resource{}
-	kinesisTriggersByLambdaID := map[string][]resources.Resource{}
-	sqsTriggersByLambdaID := map[string][]resources.Resource{}
+type Transformer struct {
+	yamlConfig *config.Config
+	resc       *resources.ResourceCollection
 
-	snsMap := map[string]config.SNS{}
+	apiGatewaysByID           map[string]resources.Resource
+	cronsByLambdaID           map[string]resources.Resource
+	endpointsByAPIGatewayID   map[string]resources.Resource
+	kinesisTriggersByLambdaID map[string][]resources.Resource
+	sqsTriggersByLambdaID     map[string][]resources.Resource
 
-	envars := map[string]map[string]string{}
+	snsMap map[string]config.SNS
 
-	resourcesByTypeMap := buildResourcesByTypeMap(resc)
+	envars map[string]map[string]string
 
-	for _, sns := range resourcesByTypeMap[resources.SNSType] {
-		snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
+	resourcesByTypeMap map[resources.ResourceType][]resources.Resource
+}
+
+func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollection) *Transformer {
+	return &Transformer{
+		yamlConfig: yamlConfig,
+		resc:       resc,
+
+		apiGatewaysByID:           map[string]resources.Resource{},
+		cronsByLambdaID:           map[string]resources.Resource{},
+		endpointsByAPIGatewayID:   map[string]resources.Resource{},
+		kinesisTriggersByLambdaID: map[string][]resources.Resource{},
+		sqsTriggersByLambdaID:     map[string][]resources.Resource{},
+
+		snsMap: map[string]config.SNS{},
+
+		envars: map[string]map[string]string{},
+
+		resourcesByTypeMap: map[resources.ResourceType][]resources.Resource{},
+	}
+}
+
+func (t *Transformer) Transform() (*config.Config, error) {
+	t.buildResourcesByTypeMap()
+
+	for _, sns := range t.resourcesByTypeMap[resources.SNSType] {
+		t.snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
 	}
 
-	for i := range resourcesByTypeMap[resources.APIGatewayType] {
-		apiGateway := resourcesByTypeMap[resources.APIGatewayType][i]
-		apiGatewaysByID[apiGateway.ID()] = apiGateway
+	for i := range t.resourcesByTypeMap[resources.APIGatewayType] {
+		apiGateway := t.resourcesByTypeMap[resources.APIGatewayType][i]
+		t.apiGatewaysByID[apiGateway.ID()] = apiGateway
 	}
 
-	buildResourceRelationships(resc, envars,
-		apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID,
-		kinesisTriggersByLambdaID, sqsTriggersByLambdaID,
-		snsMap)
+	t.buildResourceRelationships()
 
-	lambdas, apiGatewayLambdasByAPIGatewayID := buildLambdas(
-		yamlConfig, resourcesByTypeMap, resc, envars, cronsByLambdaID,
-		kinesisTriggersByLambdaID, sqsTriggersByLambdaID)
-	apiGateways := buildAPIGateways(
-		yamlConfig, apiGatewaysByID, endpointsByAPIGatewayID, apiGatewayLambdasByAPIGatewayID)
-	kinesis := buildKinesis(resourcesByTypeMap)
-	snss := buildSNSs(snsMap)
-	sqss := buildSQSs(resourcesByTypeMap)
-	buckets := buildS3Buckets(resourcesByTypeMap)
-	restfulAPIs := buildRestfulAPIs(resourcesByTypeMap)
+	lambdas, apiGatewayLambdasByAPIGatewayID := t.buildLambdas()
+	apiGateways := t.buildAPIGateways(apiGatewayLambdasByAPIGatewayID)
+	kinesis := t.buildKinesis()
+	snss := t.buildSNSs()
+	sqss := t.buildSQSs()
+	buckets := t.buildS3Buckets()
+	restfulAPIs := t.buildRestfulAPIs()
 
 	return &config.Config{
 		Lambdas:     lambdas,
@@ -54,47 +74,36 @@ func Transform(yamlConfig *config.Config, resc *resources.ResourceCollection) (*
 	}, nil
 }
 
-func buildResourcesByTypeMap(resc *resources.ResourceCollection) map[resources.ResourceType][]resources.Resource {
-	resourcesByTypeMap := map[resources.ResourceType][]resources.Resource{}
-
-	for _, resource := range resc.Resources {
-		resourcesByTypeMap[resource.ResourceType()] = append(resourcesByTypeMap[resource.ResourceType()], resource)
+func (t *Transformer) buildResourcesByTypeMap() {
+	for _, resource := range t.resc.Resources {
+		t.resourcesByTypeMap[resource.ResourceType()] = append(t.resourcesByTypeMap[resource.ResourceType()], resource)
 	}
-
-	return resourcesByTypeMap
 }
 
-func buildResourceRelationships(
-	resc *resources.ResourceCollection,
-	envars map[string]map[string]string,
-	apiGatewaysByID, cronsByLambdaID, endpointsByAPIGatewayID map[string]resources.Resource,
-	kinesisTriggersByLambdaID, sqsTriggersByLambdaID map[string][]resources.Resource,
-	snsMap map[string]config.SNS,
-) {
-	for _, rel := range resc.Relationships {
+func (t *Transformer) buildResourceRelationships() {
+	for _, rel := range t.resc.Relationships {
 		target := rel.Target
 		source := rel.Source
 
 		switch target.ResourceType() {
 		case resources.APIGatewayType:
-			buildAPIGatewayRelationship(source, target, apiGatewaysByID, endpointsByAPIGatewayID)
+			t.buildAPIGatewayRelationship(source, target)
 		case resources.GoogleBQType:
-			buildGoogleBQRelationship(source, target, envars)
+			t.buildGoogleBQRelationship(source, target)
 		case resources.DatabaseType:
-			buildDatabaseRelationship(source, target, envars)
+			t.buildDatabaseRelationship(source, target)
 		case resources.KinesisType:
-			buildKinesisRelationship(source, target, envars)
+			t.buildKinesisRelationship(source, target)
 		case resources.LambdaType:
-			buildLambdaRelationships(
-				source, target, cronsByLambdaID, kinesisTriggersByLambdaID, sqsTriggersByLambdaID, snsMap)
+			t.buildLambdaRelationships(source, target)
 		case resources.RestfulAPIType:
-			buildRestfulAPIRelationship(source, target, envars)
+			t.buildRestfulAPIRelationship(source, target)
 		case resources.S3Type:
-			buildS3Relationship(source, target, envars)
+			t.buildS3Relationship(source, target)
 		case resources.SNSType:
-			buildSNSRelationship(source, target, snsMap)
+			t.buildSNSRelationship(source, target)
 		case resources.SQSType:
-			buildSQSRelationships(source, target, envars, snsMap)
+			t.buildSQSRelationships(source, target)
 		}
 	}
 }

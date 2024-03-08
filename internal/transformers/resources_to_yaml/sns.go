@@ -5,16 +5,16 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-func buildSNSRelationship(source, target resources.Resource, snsMap map[string]config.SNS) {
+func (t *Transformer) buildSNSRelationship(source, target resources.Resource) {
 	if source.ResourceType() == resources.S3Type {
-		buildS3ToSNS(snsMap, source, target)
+		t.buildS3ToSNS(source, target)
 	}
 }
 
-func buildSNSs(snsMap map[string]config.SNS) []config.SNS {
+func (t *Transformer) buildSNSs() []config.SNS {
 	var snss []config.SNS
 
-	for _, sns := range snsMap {
+	for _, sns := range t.snsMap {
 		snss = append(snss, sns)
 	}
 
