@@ -1,4 +1,4 @@
-package drawiotoyaml
+package resources_to_yaml
 
 import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
