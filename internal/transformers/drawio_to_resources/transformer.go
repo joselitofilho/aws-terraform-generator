@@ -1,79 +1,15 @@
-package drawio
+package drawio_to_resources
 
 import (
-	"encoding/xml"
-	"fmt"
-	"os"
 	"regexp"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
-// MxFile represents the root element of the draw.io XML file.
-type MxFile struct {
-	XMLName xml.Name `xml:"mxfile"`
-	Diagram Diagram  `xml:"diagram"`
-}
-
-// Diagram represents the diagram element within the draw.io XML file.
-type Diagram struct {
-	XMLName      xml.Name     `xml:"diagram"`
-	MxGraphModel MxGraphModel `xml:"mxGraphModel"`
-}
-
-// MxGraphModel represents the graph model element within the draw.io XML file.
-type MxGraphModel struct {
-	XMLName xml.Name `xml:"mxGraphModel"`
-	Root    Root     `xml:"root"`
-}
-
-// Root represents the root element within the graph model of the draw.io XML file.
-type Root struct {
-	XMLName xml.Name `xml:"root"`
-	MxCells []MxCell `xml:"mxCell"`
-}
-
-// MxCell represents a cell element within the draw.io XML file.
-type MxCell struct {
-	XMLName  xml.Name `xml:"mxCell"`
-	ID       string   `xml:"id,attr"`
-	Value    string   `xml:"value,attr"`
-	Style    string   `xml:"style,attr"`
-	Parent   string   `xml:"parent,attr"`
-	Vertex   bool     `xml:"vertex,attr"`
-	Source   string   `xml:"source,attr"`
-	Target   string   `xml:"target,attr"`
-	Geometry Geometry `xml:"mxGeometry"`
-}
-
-// Geometry represents the geometry element within a cell of the draw.io XML file.
-type Geometry struct {
-	XMLName xml.Name `xml:"mxGeometry"`
-	X       float64  `xml:"x,attr"`
-	Y       float64  `xml:"y,attr"`
-	Width   float64  `xml:"width,attr"`
-	Height  float64  `xml:"height,attr"`
-}
-
-// ParseXML parses a draw.io XML file and returns an MxFile struct.
-func ParseXML(fileName string) (*MxFile, error) {
-	xmlFile, err := os.Open(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("error opening file: %w", err)
-	}
-	defer xmlFile.Close()
-
-	var mxFile MxFile
-	if err := xml.NewDecoder(xmlFile).Decode(&mxFile); err != nil {
-		return nil, fmt.Errorf("error decoding XML: %w", err)
-	}
-
-	return &mxFile, nil
-}
-
-// ParseResources parses resources from the MxFile.
-func ParseResources(mxFile *MxFile) (*resources.ResourceCollection, error) {
+// Transform parses resources from the MxFile.
+func Transform(mxFile *drawio.MxFile) (*resources.ResourceCollection, error) {
 	resc := resources.NewResourceCollection()
 
 	for i := range mxFile.Diagram.MxGraphModel.Root.MxCells {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawio_to_resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resources_to_yaml"
 )
 
@@ -51,7 +52,7 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	resources, err := drawio.ParseResources(mxFile)
+	resources, err := drawio_to_resources.Transform(mxFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

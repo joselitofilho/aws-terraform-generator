@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParse(t *testing.T) {
+func TestParseXML(t *testing.T) {
 	type args struct {
 		fileName string
 	}
