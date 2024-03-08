@@ -42,26 +42,30 @@ type Config struct {
 func Parse(directories, files []string) (Config, error) {
 	config := Config{}
 
-	parser := hclparse.NewParser()
+	hclParser := hclparse.NewParser()
+
+	parseSingleFile := func(file string) error {
+		parsedConfig, err := parseHCLFile(file, hclParser)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		config.Modules = append(config.Modules, parsedConfig.Modules...)
+		config.Resources = append(config.Resources, parsedConfig.Resources...)
+		config.Locals = append(config.Locals, parsedConfig.Locals...)
+
+		return nil
+	}
 
 	for i := range directories {
 		// Walk through all .tf files in the directory.
-		err := filepath.Walk(directories[i], func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(directories[i], func(file string, info os.FileInfo, err error) error {
 			if err != nil {
-				return err
+				return fmt.Errorf("%w", err)
 			}
 
-			if !info.IsDir() && filepath.Ext(path) == ".tf" {
-				file, diags := parser.ParseHCLFile(path)
-				if diags.HasErrors() {
-					return fmt.Errorf("failed to load config file %s: %s", path, diags.Errs())
-				}
-
-				parsedConfig := parseConfig(file)
-
-				config.Modules = append(config.Modules, parsedConfig.Modules...)
-				config.Resources = append(config.Resources, parsedConfig.Resources...)
-				config.Locals = append(config.Locals, parsedConfig.Locals...)
+			if !info.IsDir() && filepath.Ext(file) == ".tf" {
+				return parseSingleFile(file)
 			}
 
 			return nil
@@ -72,25 +76,31 @@ func Parse(directories, files []string) (Config, error) {
 		}
 	}
 
-	for _, f := range files {
-		if filepath.Ext(f) == ".tf" {
-			_, err := os.Stat(f)
-			if !os.IsNotExist(err) {
-				file, diags := parser.ParseHCLFile(f)
-				if diags.HasErrors() {
-					return config, fmt.Errorf("failed to load config file %s: %s", file, diags.Errs())
-				}
-
-				parsedConfig := parseConfig(file)
-
-				config.Modules = append(config.Modules, parsedConfig.Modules...)
-				config.Resources = append(config.Resources, parsedConfig.Resources...)
-				config.Locals = append(config.Locals, parsedConfig.Locals...)
-			}
+	for _, file := range files {
+		if err := parseSingleFile(file); err != nil {
+			return config, fmt.Errorf("%w", err)
 		}
 	}
 
 	return config, nil
+}
+
+func parseHCLFile(file string, parser *hclparse.Parser) (Config, error) {
+	if filepath.Ext(file) == ".tf" {
+		_, err := os.Stat(file)
+		if !os.IsNotExist(err) {
+			file, diags := parser.ParseHCLFile(file)
+			if diags.HasErrors() {
+				return Config{}, fmt.Errorf("failed to load config file %s: %s", file, diags.Errs())
+			}
+
+			parsedConfig := parseConfig(file)
+
+			return parsedConfig, nil
+		}
+	}
+
+	return Config{}, nil
 }
 
 func parseConfig(file *hcl.File) Config {
