@@ -1,4 +1,6 @@
 draw:
+  # images:
+  #   restfulapi: "assets/aws/restful_api2.svg"
   filters:
     kinesis:
       match:

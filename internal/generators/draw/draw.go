@@ -14,7 +14,7 @@ import (
 )
 
 // https://awsicons.dev/
-var defaultResourceImageMap = map[resources.ResourceType]string{
+var defaultResourceImageMap = config.Images{
 	resources.APIGatewayType: "assets/aws/api_gateway.svg",
 	resources.CronType:       "assets/aws/cron.svg",
 	resources.DatabaseType:   "assets/aws/database_dynamo_db.svg",
@@ -57,7 +57,9 @@ func (d *Draw) Build() error {
 
 	dotConfig := graphviz.Config{Orientation: yamlConfig.Draw.Orientation}
 
-	dotContent, err := graphviz.Build(resc, defaultResourceImageMap, dotConfig)
+	resourceImageMap := mergeImages(defaultResourceImageMap, yamlConfig.Draw.Images)
+
+	dotContent, err := graphviz.Build(resc, resourceImageMap, dotConfig)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -77,4 +79,14 @@ func (d *Draw) Build() error {
 	fmt.Println("The graphviz dot file has been generated successfully.")
 
 	return nil
+}
+
+func mergeImages(defaultImages, configImages config.Images) config.Images {
+	result := defaultImages
+
+	for k, v := range configImages {
+		result[k] = v
+	}
+
+	return result
 }
