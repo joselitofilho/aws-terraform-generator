@@ -465,17 +465,17 @@ draw:
   orientation: LR
   # Definitions of images for the available resources
   images:
-    apigateway: "assets/aws/api_gateway.svg"
-    cron: "assets/aws/cron.svg"
-    database: "assets/aws/database_dynamo_db.svg"
-    endpoint: "assets/aws/endpoint.svg"
-    googlebq: "assets/aws/google_bigquery.svg"
-    kinesis: "assets/aws/kinesis_data_stream.svg"
-    lambda: "assets/aws/lambda.svg"
-    restfulapi: "assets/aws/restful_api.svg"
-    s3: "assets/aws/s3_bucket.svg"
-    sns: "assets/aws/sns.svg"
-    sqs: "assets/aws/sqs.svg"
+    apigateway: "assets/diagram/api_gateway.svg"
+    cron: "assets/diagram/cron.svg"
+    database: "assets/diagram/database_dynamo_db.svg"
+    endpoint: "assets/diagram/endpoint.svg"
+    googlebq: "assets/diagram/google_bigquery.svg"
+    kinesis: "assets/diagram/kinesis_data_stream.svg"
+    lambda: "assets/diagram/lambda.svg"
+    restfulapi: "assets/diagram/restful_api.svg"
+    s3: "assets/diagram/s3_bucket.svg"
+    sns: "assets/diagram/sns.svg"
+    sqs: "assets/diagram/sqs.svg"
   # Filters for matching and excluding resources by name.
   filters:
     apigateway:
@@ -517,3 +517,22 @@ draw:
       match:
       not_match:
 ```
+
+Default images:
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/api_gateway.svg)         | apigateway | assets/diagram/api_gateway.svg |
+| ![](assets/diagram/cron.svg)                | cron       | assets/diagram/cron.svg |
+| ![](assets/diagram/database_dynamo_db.svg)  | database   | assets/diagram/database_dynamo_db.svg |
+| ![](assets/diagram/endpoint.svg)            | endpoint   | assets/diagram/endpoint.svg |
+| ![](assets/diagram/google_bigquery.svg)     | googlebq   | assets/diagram/google_bigquery.svg |
+| ![](assets/diagram/kinesis_data_stream.svg) | kinesis    | assets/diagram/kinesis_data_stream.svg |
+| ![](assets/diagram/lambda.svg)              | lambda     | assets/diagram/lambda.svg |
+| ![](assets/diagram/restful_api.svg)         | restfulapi | assets/diagram/restful_api.svg |
+| ![](assets/diagram/s3_bucket.svg)           | s3         | assets/diagram/s3_bucket.svg |
+| ![](assets/diagram/sns.svg)                 | sns        | assets/diagram/sns.svg |
+| ![](assets/diagram/sqs.svg)                 | sqs        | assets/diagram/sqs.svg |
+
+- Available resources: [internal/resources/resource_type_enum.go](internal/resources/resource_type_enum.go)
+- Recommend image size: 48px x 48px

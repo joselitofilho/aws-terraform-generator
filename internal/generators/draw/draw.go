@@ -15,17 +15,17 @@ import (
 
 // https://awsicons.dev/
 var defaultResourceImageMap = config.Images{
-	resources.APIGatewayType: "assets/aws/api_gateway.svg",
-	resources.CronType:       "assets/aws/cron.svg",
-	resources.DatabaseType:   "assets/aws/database_dynamo_db.svg",
-	resources.EndpointType:   "assets/aws/endpoint.svg",
-	resources.GoogleBQType:   "assets/aws/google_bigquery.svg",
-	resources.KinesisType:    "assets/aws/kinesis_data_stream.svg",
-	resources.LambdaType:     "assets/aws/lambda.svg",
-	resources.RestfulAPIType: "assets/aws/restful_api.svg",
-	resources.S3Type:         "assets/aws/s3_bucket.svg",
-	resources.SNSType:        "assets/aws/sns.svg",
-	resources.SQSType:        "assets/aws/sqs.svg",
+	resources.APIGatewayType: "assets/diagram/api_gateway.svg",
+	resources.CronType:       "assets/diagram/cron.svg",
+	resources.DatabaseType:   "assets/diagram/database_dynamo_db.svg",
+	resources.EndpointType:   "assets/diagram/endpoint.svg",
+	resources.GoogleBQType:   "assets/diagram/google_bigquery.svg",
+	resources.KinesisType:    "assets/diagram/kinesis_data_stream.svg",
+	resources.LambdaType:     "assets/diagram/lambda.svg",
+	resources.RestfulAPIType: "assets/diagram/restful_api.svg",
+	resources.S3Type:         "assets/diagram/s3_bucket.svg",
+	resources.SNSType:        "assets/diagram/sns.svg",
+	resources.SQSType:        "assets/diagram/sqs.svg",
 	resources.UnknownType:    "",
 }
 

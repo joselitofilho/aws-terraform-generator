@@ -2,12 +2,12 @@ draw:
   # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
   # orientation: LR
   # Filters for matching and excluding resources by name.
-  filters:
-    kinesis:
-      # Patterns to match
-      match:
-        - "^ProcessedName" # Match regex pattern for ProcessedLocation
-      # Patterns to exclude
-      not_match:
-        - "^ProcessedA" # Exclude regex pattern for ProcessedA
-        - "^ProcessedB" # Exclude regex pattern for ProcessedB
+  # filters:
+  #   kinesis:
+  #     # Patterns to match
+  #     match:
+  #       - "^ProcessedName" # Match regex pattern for ProcessedLocation
+  #     # Patterns to exclude
+  #     not_match:
+  #       - "^ProcessedA" # Exclude regex pattern for ProcessedA
+  #       - "^ProcessedB" # Exclude regex pattern for ProcessedB
