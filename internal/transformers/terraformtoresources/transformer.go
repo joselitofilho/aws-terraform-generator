@@ -212,12 +212,14 @@ func (t *Transformer) processTerraformResources() {
 				t.processEndpointResource(tfResourceConf, t.endpointResourcesByName)
 			case labelAWSKinesisStream:
 				t.processKinesisResource(tfResourceConf, t.kinesisResourcesByName)
+			case labelAWSLambdaEventSourceMapping:
+				t.processEventSourceMapping(tfResourceConf)
+			case labelAWSLambdaFunction:
+				t.processLambdaResource(tfResourceConf)
 			case labelAWSS3Bucket:
 				t.processS3BucketResource(tfResourceConf, t.s3BucketResourcesByName)
 			case labelAWSSQSQueue:
 				t.processSQSResource(tfResourceConf, t.sqsResourcesByName)
-			case labelAWSLambdaEventSourceMapping:
-				t.processEventSourceMapping(tfResourceConf)
 			}
 		}
 	}
@@ -369,8 +371,13 @@ func (t *Transformer) processKinesisResource(
 	}
 }
 
-func (t *Transformer) processLambdaModule(conf *terraform.Module) {
-	value := lambdaName(conf.Labels[0], suffixLambda)
+func (t *Transformer) processLambda(attributes map[string]any, value string) {
+	for k, v := range attributes {
+		if strings.Contains(k, "function_name") {
+			value = replaceVars(v.(string), t.tfConfig.Locals)
+			break
+		}
+	}
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.LambdaType)
 	t.id++
@@ -378,7 +385,7 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	t.resources = append(t.resources, resource)
 	t.lambdaResourcesByName[value] = resource
 
-	for k, v := range conf.Attributes["lambda_function_env_vars"].(map[string]any) {
+	for k, v := range attributes["lambda_function_env_vars"].(map[string]any) {
 		switch {
 		case strings.HasSuffix(k, envarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
@@ -406,6 +413,14 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 				resources.Relationship{Source: resource, Target: target})
 		}
 	}
+}
+
+func (t *Transformer) processLambdaModule(conf *terraform.Module) {
+	t.processLambda(conf.Attributes, lambdaName(conf.Labels[0], suffixLambda))
+}
+
+func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
+	t.processLambda(conf.Attributes, lambdaName(conf.Labels[1], suffixLambda))
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(
