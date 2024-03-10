@@ -155,6 +155,33 @@ func parseResource(block *hclsyntax.Block) *Resource {
 		resource.Attributes[attribute.Name] = value
 	}
 
+	for _, bodyBlock := range block.Body.Blocks {
+		if bodyBlock.Type == "environment" {
+			if _, ok := resource.Attributes["environment"]; !ok {
+				resource.Attributes["environment"] = map[string]map[string]any{}
+			}
+
+			switch environment := resource.Attributes["environment"].(type) {
+			case map[string]map[string]any:
+				for _, attribute := range bodyBlock.Body.Attributes {
+					value := evaluateExpression(attribute.Expr)
+
+					if _, ok := environment[attribute.Name]; !ok {
+						environment[attribute.Name] = map[string]any{}
+					}
+
+					switch value := value.(type) {
+					case map[string]any:
+						for k, v := range value {
+							environment[attribute.Name][k] = v
+						}
+					}
+
+				}
+			}
+		}
+	}
+
 	return resource
 }
 

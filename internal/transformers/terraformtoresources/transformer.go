@@ -371,10 +371,10 @@ func (t *Transformer) processKinesisResource(
 	}
 }
 
-func (t *Transformer) processLambda(attributes map[string]any, value string) {
+func (t *Transformer) processLambda(attributes map[string]any, envars map[string]any, value string) {
 	for k, v := range attributes {
 		if strings.Contains(k, "function_name") {
-			value = replaceVars(v.(string), t.tfConfig.Locals)
+			value = lambdaName(replaceVars(v.(string), t.tfConfig.Locals), suffixLambda)
 			break
 		}
 	}
@@ -385,7 +385,7 @@ func (t *Transformer) processLambda(attributes map[string]any, value string) {
 	t.resources = append(t.resources, resource)
 	t.lambdaResourcesByName[value] = resource
 
-	for k, v := range attributes["lambda_function_env_vars"].(map[string]any) {
+	for k, v := range envars {
 		switch {
 		case strings.HasSuffix(k, envarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
@@ -416,11 +416,29 @@ func (t *Transformer) processLambda(attributes map[string]any, value string) {
 }
 
 func (t *Transformer) processLambdaModule(conf *terraform.Module) {
-	t.processLambda(conf.Attributes, lambdaName(conf.Labels[0], suffixLambda))
+	envars := map[string]any{}
+	if vars, ok := conf.Attributes["lambda_function_env_vars"]; ok {
+		envars = vars.(map[string]any)
+	}
+
+	t.processLambda(conf.Attributes, envars, lambdaName(conf.Labels[0], suffixLambda))
 }
 
 func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
-	t.processLambda(conf.Attributes, lambdaName(conf.Labels[1], suffixLambda))
+	envars := map[string]any{}
+
+	if environment, ok := conf.Attributes["environment"]; ok {
+		switch environment := environment.(type) {
+		case map[string]map[string]any:
+			if vars, ok := environment["variables"]; ok {
+				for k, v := range vars {
+					envars[k] = v
+				}
+			}
+		}
+	}
+
+	t.processLambda(conf.Attributes, envars, lambdaName(conf.Labels[1], suffixLambda))
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(
