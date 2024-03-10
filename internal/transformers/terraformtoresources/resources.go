@@ -114,13 +114,9 @@ func strTransformFromKeyValue(
 
 		result = value
 
-		if strings.HasPrefix(result, "var.client-var.environment-") { // TODO:
-			result = f(strings.ReplaceAll(result, "var.client-var.environment-", "")) // TODO:
-		}
-
 		for s := range suffixMap {
 			if strings.HasPrefix(result, s) {
-				result = f(resourceByARN(result).name)
+				result = resourceByARN(result).name
 				break
 			}
 		}
@@ -129,10 +125,11 @@ func strTransformFromKeyValue(
 
 		result = strings.ReplaceAll(result, "_"+suffix, "")
 		result = strings.ReplaceAll(result, suffix, "")
-		result = f(result)
 	}
 
-	return result
+	result = strings.ReplaceAll(result, "var.client-var.environment-", "") // TODO: Replace vars
+
+	return f(result)
 }
 
 func toCamelFromKeyValue(key, value, suffix string) string {
@@ -145,8 +142,4 @@ func toKebabFromKeyValue(key, value, suffix string) string {
 
 func toPascalFromKeyValue(key, value, suffix string) string {
 	return strTransformFromKeyValue(key, value, suffix, strcase.ToPascal)
-}
-
-func lambdaName(str, suffix string) string {
-	return strcase.ToCamel(str[:len(str)-len(suffix)])
 }

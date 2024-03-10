@@ -279,7 +279,8 @@ func (t *Transformer) processCronResource(
 func (t *Transformer) processDBResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := toKebabFromKeyValue(k, v, envarSuffixDBHost)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toKebabFromKeyValue(k, value, envarSuffixDBHost)
 
 	resource, ok := resourcesByName[value]
 
@@ -340,7 +341,8 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 func (t *Transformer) processKinesisResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := toPascalFromKeyValue(k, v, envarSuffixKinesisStreamURL)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toPascalFromKeyValue(k, value, envarSuffixKinesisStreamURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -358,7 +360,8 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 func (t *Transformer) processKinesisResource(
 	conf *terraform.Resource, resourcesByName map[string]resources.Resource,
 ) {
-	value := toPascalFromKeyValue(suffixKinesis, conf.Attributes["name"].(string), suffixKinesis)
+	value := replaceVars(conf.Attributes["name"].(string), t.tfConfig.Locals)
+	value = toPascalFromKeyValue(suffixKinesis, value, suffixKinesis)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
 	t.id++
@@ -369,8 +372,9 @@ func (t *Transformer) processKinesisResource(
 
 func (t *Transformer) processLambda(attributes, envars map[string]any, value string) {
 	for k, v := range attributes {
-		if strings.Contains(k, "function_name") {
-			value = lambdaName(replaceVars(v.(string), t.tfConfig.Locals), suffixLambda)
+		if strings.HasSuffix(k, "function_name") {
+			value = replaceVars(v.(string), t.tfConfig.Locals)
+			value = toCamelFromKeyValue(value, value, suffixLambda)
 			break
 		}
 	}
@@ -417,7 +421,10 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 		envars = vars.(map[string]any)
 	}
 
-	t.processLambda(conf.Attributes, envars, lambdaName(conf.Labels[0], suffixLambda))
+	value := conf.Labels[0]
+	value = toCamelFromKeyValue(value, value, suffixLambda)
+
+	t.processLambda(conf.Attributes, envars, value)
 }
 
 func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
@@ -431,13 +438,17 @@ func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
 		}
 	}
 
-	t.processLambda(conf.Attributes, envars, lambdaName(conf.Labels[1], suffixLambda))
+	value := conf.Labels[1]
+	value = toCamelFromKeyValue(value, value, suffixLambda)
+
+	t.processLambda(conf.Attributes, envars, value)
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := toKebabFromKeyValue(k, v, envarSuffixS3BucketURL)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toKebabFromKeyValue(k, value, envarSuffixS3BucketURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -455,7 +466,8 @@ func (t *Transformer) processS3BucketResourceFromEnvar(
 func (t *Transformer) processS3BucketResource(
 	conf *terraform.Resource, s3BucketResourcesByName map[string]resources.Resource,
 ) {
-	value := toKebabFromKeyValue(suffixS3Bucket, conf.Attributes["bucket"].(string), suffixS3Bucket)
+	value := replaceVars(conf.Attributes["bucket"].(string), t.tfConfig.Locals)
+	value = toKebabFromKeyValue(suffixS3Bucket, value, suffixS3Bucket)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.S3Type)
 	t.id++
@@ -467,7 +479,8 @@ func (t *Transformer) processS3BucketResource(
 func (t *Transformer) processSQSResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := toKebabFromKeyValue(k, v, envarSuffixSQSQueueURL)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toKebabFromKeyValue(k, value, envarSuffixSQSQueueURL)
 
 	resource, ok := resourcesByName[value]
 
@@ -483,7 +496,8 @@ func (t *Transformer) processSQSResourceFromEnvar(
 }
 
 func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesByName map[string]resources.Resource) {
-	value := toKebabFromKeyValue(suffixSQS, conf.Attributes["name"].(string), suffixSQS)
+	value := replaceVars(conf.Attributes["name"].(string), t.tfConfig.Locals)
+	value = toKebabFromKeyValue(value, value, suffixSQS)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.SQSType)
 	t.id++
@@ -495,7 +509,8 @@ func (t *Transformer) processSQSResource(conf *terraform.Resource, sqsResourcesB
 func (t *Transformer) processRestfulAPIResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := toCamelFromKeyValue(k, v, envarSuffixRestfulAPI)
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = toCamelFromKeyValue(k, value, envarSuffixRestfulAPI)
 
 	resource, ok := resourcesByName[value]
 
@@ -512,7 +527,8 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 
 func (t *Transformer) tryToCreateKinesisResourceByARN(eventSourceARN resourceARN) {
 	if eventSourceARN.key == arnKinesisKey {
-		value := toPascalFromKeyValue(eventSourceARN.name, eventSourceARN.name, envarSuffixKinesisStreamURL)
+		value := replaceVars(eventSourceARN.name, t.tfConfig.Locals)
+		value = toPascalFromKeyValue(eventSourceARN.name, value, envarSuffixKinesisStreamURL)
 
 		if _, ok := t.kinesisResourcesByName[value]; !ok {
 			resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)

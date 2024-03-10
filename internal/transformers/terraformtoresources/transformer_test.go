@@ -206,7 +206,7 @@ func TestTransformer_Transform(t *testing.T) {
 							Name:   "example_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "example_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "example_receiver_lambda",
+								"function_name": "exampleReceiver",
 							},
 						},
 					},
