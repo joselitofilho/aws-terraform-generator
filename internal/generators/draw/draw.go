@@ -59,10 +59,7 @@ func (d *Draw) Build() error {
 
 	resourceImageMap := mergeImages(defaultResourceImageMap, yamlConfig.Draw.Images)
 
-	dotContent, err := graphviz.Build(resc, resourceImageMap, dotConfig)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
+	dotContent := graphviz.Build(resc, resourceImageMap, dotConfig)
 
 	_ = os.Mkdir(d.output, os.ModePerm)
 

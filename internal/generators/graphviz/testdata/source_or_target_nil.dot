@@ -1,0 +1,6 @@
+digraph  {
+	
+	n1[height="0.9",image="images/lambda.svg",imagepos="tc",label="MyLambda",labelloc="b",shape="plaintext"];
+	n2[height="0.9",image="images/sqs.svg",imagepos="tc",label="my-queue",labelloc="b",shape="plaintext"];
+	
+}

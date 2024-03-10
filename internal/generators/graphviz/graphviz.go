@@ -14,7 +14,7 @@ type Config struct {
 
 func Build(
 	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
-) (string, error) {
+) string {
 	g := dot.NewGraph(dot.Directed)
 
 	if config.Orientation != "" {
@@ -41,16 +41,8 @@ func Build(
 			continue
 		}
 
-		if _, ok := nodes[rel.Source.ID()]; !ok {
-			continue
-		}
-
-		if _, ok := nodes[rel.Target.ID()]; !ok {
-			continue
-		}
-
 		g.Edge(nodes[rel.Source.ID()], nodes[rel.Target.ID()])
 	}
 
-	return g.String(), nil
+	return g.String()
 }
