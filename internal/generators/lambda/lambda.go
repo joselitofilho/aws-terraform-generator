@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -84,7 +85,7 @@ func (l *Lambda) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
+		fmtcolor.White.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
 
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
@@ -94,7 +95,7 @@ func (l *Lambda) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaConf.Name)
+		fmtcolor.White.Printf("Lambda '%s' has been generated successfully\n", lambdaConf.Name)
 	}
 
 	return nil

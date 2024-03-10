@@ -12,6 +12,7 @@ import (
 
 	"github.com/ettle/strcase"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/utils"
 )
@@ -184,7 +185,7 @@ func GenerateFile(templatesMap map[string]string, fileName, fileTmpl, outputFile
 
 	err = formatFileBasedOnExt(fileName, outputFile)
 	if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
-		fmt.Println(err)
+		fmtcolor.Yellow.Println(err)
 		err = nil
 	}
 
@@ -227,13 +228,13 @@ func GenerateFiles(templatesMap map[string]string, filesMap map[string]File, dat
 		err := buildFile(data, tmplName, fileTmpl, outputFile)
 		if err != nil {
 			// TODO: Append error
-			fmt.Println(err)
+			fmtcolor.Yellow.Println(err)
 		}
 
 		err = formatFileBasedOnExt(filename, outputFile)
 		if err != nil && !errors.Is(err, ErrUnsupportedFileType) {
 			// TODO: Append error
-			fmt.Println(err)
+			fmtcolor.Yellow.Println(err)
 		}
 	}
 

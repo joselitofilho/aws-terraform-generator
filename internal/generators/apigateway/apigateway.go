@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -67,7 +68,7 @@ func (a *APIGateway) Build() error {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("Terraform '%s' has been generated successfully\n", filenameTfAPIG)
+			fmtcolor.White.Printf("Terraform '%s' has been generated successfully\n", filenameTfAPIG)
 		}
 
 		for j := range apiConf.Lambdas {
@@ -124,7 +125,7 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTe
 		return fmt.Errorf("%w", err)
 	}
 
-	fmt.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
+	fmtcolor.White.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
 
 	outputLambda := path.Join(output, stackName, "lambda", lambdaConf.Name)
 	_ = os.MkdirAll(outputLambda, os.ModePerm)
@@ -134,7 +135,7 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTe
 		return fmt.Errorf("%w", err)
 	}
 
-	fmt.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
+	fmtcolor.White.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
 
 	return nil
 }

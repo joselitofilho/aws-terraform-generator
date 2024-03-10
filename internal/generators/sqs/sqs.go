@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -59,7 +60,7 @@ func (s *SQS) Build() error {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("SQS '%s' has been generated successfully\n", conf.Name)
+			fmtcolor.White.Printf("SQS '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
@@ -80,7 +81,7 @@ func (s *SQS) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Println("SQS has been generated successfully")
+		fmtcolor.White.Println("SQS has been generated successfully")
 	}
 
 	return nil

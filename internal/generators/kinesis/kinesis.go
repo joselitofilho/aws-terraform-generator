@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -63,7 +64,7 @@ func (k *Kinesis) Build() error {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("Kinesis '%s' has been generated successfully\n", conf.Name)
+			fmtcolor.White.Printf("Kinesis '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
@@ -84,7 +85,7 @@ func (k *Kinesis) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Println("Kinesis has been generated successfully")
+		fmtcolor.White.Println("Kinesis has been generated successfully")
 	}
 
 	return nil

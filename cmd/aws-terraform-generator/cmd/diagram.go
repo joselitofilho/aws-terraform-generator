@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawiotoresources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
@@ -37,7 +38,7 @@ var diagramCmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		fmt.Printf("Configuration file '%s' has been generated successfully\n", output)
+		fmtcolor.White.Printf("Configuration file '%s' has been generated successfully\n", output)
 	},
 }
 

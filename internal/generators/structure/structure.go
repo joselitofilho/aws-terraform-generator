@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -51,7 +52,7 @@ func (s *Structure) Build() error {
 			}
 		}
 
-		fmt.Printf("Structure '%s' has been generated successfully\n", conf.Name)
+		fmtcolor.White.Printf("Structure '%s' has been generated successfully\n", conf.Name)
 	}
 
 	return nil

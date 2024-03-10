@@ -1,12 +1,12 @@
 package terraformtoresources
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/ettle/strcase"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
@@ -31,7 +31,7 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 	for _, pattern := range filter.Match {
 		regex, err := regexp.Compile(pattern)
 		if err != nil {
-			fmt.Println("error compiling match regex:", err)
+			fmtcolor.Yellow.Println("error compiling match regex:", err)
 			continue
 		}
 
@@ -44,7 +44,7 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 	for _, pattern := range filter.NotMatch {
 		regex, err := regexp.Compile(pattern)
 		if err != nil {
-			fmt.Println("error compiling not_match regex:", err)
+			fmtcolor.Yellow.Println("error compiling not_match regex:", err)
 			continue
 		}
 
