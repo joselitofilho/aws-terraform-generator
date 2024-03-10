@@ -56,8 +56,7 @@ func buildStringAnyMapVars(varName string, values map[string]any, keyValue map[s
 func replaceVars(str string, tfLocals []*terraform.Local) string {
 	keyValue := buildKeyValueVars(tfLocals)
 
-	for {
-		// TODO: Cycle variables raise a panic here.
+	for i := 0; i <= len(keyValue); i++ {
 		for varName, finalValue := range keyValue {
 			str = strings.ReplaceAll(str, varName, finalValue)
 		}
