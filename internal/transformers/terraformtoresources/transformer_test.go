@@ -22,7 +22,6 @@ func TestTransformer_Transform(t *testing.T) {
 		fields fields
 		want   *resources.ResourceCollection
 	}{
-
 		{
 			name: "empty",
 			fields: fields{
@@ -196,9 +195,6 @@ func TestTransformer_Transform(t *testing.T) {
 				Relationships: []resources.Relationship{},
 			},
 		},
-		// {
-		// 	name: "lambda event source mapping with sqs", // TODO: Implement
-		// },
 		{
 			name: "lambda as resource",
 			fields: fields{
@@ -298,89 +294,7 @@ func TestTransformer_Transform(t *testing.T) {
 	}
 }
 
-func TestTransformer_TransformFromLambdaToDatabase(t *testing.T) {
-	type fields struct {
-		yamlConfig *config.Config
-		tfConfig   *terraform.Config
-	}
-
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	dbResource := resources.NewGenericResource("2", "doc", resources.DatabaseType)
-
-	tests := []struct {
-		name   string
-		fields fields
-		want   *resources.ResourceCollection
-	}{
-		{
-			name: "lambda as resource",
-			fields: fields{
-				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
-						{
-							Type:   "aws_lambda_function",
-							Name:   "my_receiver_lambda",
-							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
-							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
-								"environment": map[string]map[string]any{
-									"variables": {
-										"DOCDB_HOST": "var.doc_db_host",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &resources.ResourceCollection{
-				Resources:     []resources.Resource{lambdaResource, dbResource},
-				Relationships: []resources.Relationship{{Source: lambdaResource, Target: dbResource}},
-			},
-		},
-		{
-			name: "lambda as module with resources from envar",
-			fields: fields{
-				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
-						{
-							Labels: []string{"my_receiver_lambda"},
-							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
-								"lambda_function_env_vars": map[string]any{
-									"DOCDB_HOST": "var.doc_db_host",
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &resources.ResourceCollection{
-				Resources:     []resources.Resource{lambdaResource, dbResource},
-				Relationships: []resources.Relationship{{Source: lambdaResource, Target: dbResource}},
-			},
-		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
-
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestTransformer_TransformFromLambdaToGoogleBQ(t *testing.T) {
+func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
 		tfConfig   *terraform.Config
@@ -388,6 +302,11 @@ func TestTransformer_TransformFromLambdaToGoogleBQ(t *testing.T) {
 
 	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
 	bqResource := resources.NewGenericResource("2", "google", resources.GoogleBQType)
+	dbResource := resources.NewGenericResource("2", "doc", resources.DatabaseType)
+	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
+	restfulAPIResource := resources.NewGenericResource("2", "myRestful", resources.RestfulAPIType)
+	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
+	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
 
 	tests := []struct {
 		name   string
@@ -395,7 +314,7 @@ func TestTransformer_TransformFromLambdaToGoogleBQ(t *testing.T) {
 		want   *resources.ResourceCollection
 	}{
 		{
-			name: "lambda as resource",
+			name: "lambda as resource with google BQ",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -422,7 +341,7 @@ func TestTransformer_TransformFromLambdaToGoogleBQ(t *testing.T) {
 			},
 		},
 		{
-			name: "lambda as module with resources from envar",
+			name: "lambda as module with google BQ",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -444,40 +363,58 @@ func TestTransformer_TransformFromLambdaToGoogleBQ(t *testing.T) {
 				Relationships: []resources.Relationship{{Source: lambdaResource, Target: bqResource}},
 			},
 		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
-
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestTransformer_TransformFromLambdaToKinesis(t *testing.T) {
-	type fields struct {
-		yamlConfig *config.Config
-		tfConfig   *terraform.Config
-	}
-
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
-
-	tests := []struct {
-		name   string
-		fields fields
-		want   *resources.ResourceCollection
-	}{
 		{
-			name: "lambda as resource",
+			name: "lambda as resource with database",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig: &terraform.Config{
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_lambda_function",
+							Name:   "my_receiver_lambda",
+							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
+							Attributes: map[string]any{
+								"function_name": "my_receiver_lambda",
+								"environment": map[string]map[string]any{
+									"variables": {
+										"DOCDB_HOST": "var.doc_db_host",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &resources.ResourceCollection{
+				Resources:     []resources.Resource{lambdaResource, dbResource},
+				Relationships: []resources.Relationship{{Source: lambdaResource, Target: dbResource}},
+			},
+		},
+		{
+			name: "lambda as module with database",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig: &terraform.Config{
+					Modules: []*terraform.Module{
+						{
+							Labels: []string{"my_receiver_lambda"},
+							Attributes: map[string]any{
+								"function_name": "my_receiver_lambda",
+								"lambda_function_env_vars": map[string]any{
+									"DOCDB_HOST": "var.doc_db_host",
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &resources.ResourceCollection{
+				Resources:     []resources.Resource{lambdaResource, dbResource},
+				Relationships: []resources.Relationship{{Source: lambdaResource, Target: dbResource}},
+			},
+		},
+		{
+			name: "lambda as resource with kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -504,7 +441,7 @@ func TestTransformer_TransformFromLambdaToKinesis(t *testing.T) {
 			},
 		},
 		{
-			name: "lambda as module with resources from envar",
+			name: "lambda as module with kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -526,40 +463,8 @@ func TestTransformer_TransformFromLambdaToKinesis(t *testing.T) {
 				Relationships: []resources.Relationship{{Source: lambdaResource, Target: kinesisResource}},
 			},
 		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
-
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestTransformer_TransformFromLambdaToRestfulAPI(t *testing.T) {
-	type fields struct {
-		yamlConfig *config.Config
-		tfConfig   *terraform.Config
-	}
-
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	restfulAPIResource := resources.NewGenericResource("2", "myRestful", resources.RestfulAPIType)
-
-	tests := []struct {
-		name   string
-		fields fields
-		want   *resources.ResourceCollection
-	}{
 		{
-			name: "lambda as resource",
+			name: "lambda as resource with restful API",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -586,7 +491,7 @@ func TestTransformer_TransformFromLambdaToRestfulAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "lambda as module with resources from envar",
+			name: "lambda as module with restful API",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -608,40 +513,8 @@ func TestTransformer_TransformFromLambdaToRestfulAPI(t *testing.T) {
 				Relationships: []resources.Relationship{{Source: lambdaResource, Target: restfulAPIResource}},
 			},
 		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
-
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestTransformer_TransformFromLambdaToS3Bucket(t *testing.T) {
-	type fields struct {
-		yamlConfig *config.Config
-		tfConfig   *terraform.Config
-	}
-
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
-
-	tests := []struct {
-		name   string
-		fields fields
-		want   *resources.ResourceCollection
-	}{
 		{
-			name: "lambda as resource",
+			name: "lambda as resource with S3 Bucket",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -668,7 +541,7 @@ func TestTransformer_TransformFromLambdaToS3Bucket(t *testing.T) {
 			},
 		},
 		{
-			name: "lambda as module with resources from envar",
+			name: "lambda as module with S3 Bucket",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -690,40 +563,8 @@ func TestTransformer_TransformFromLambdaToS3Bucket(t *testing.T) {
 				Relationships: []resources.Relationship{{Source: lambdaResource, Target: s3BucketResource}},
 			},
 		},
-	}
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
-
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestTransformer_TransformFromLambdaToSQS(t *testing.T) {
-	type fields struct {
-		yamlConfig *config.Config
-		tfConfig   *terraform.Config
-	}
-
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
-
-	tests := []struct {
-		name   string
-		fields fields
-		want   *resources.ResourceCollection
-	}{
 		{
-			name: "lambda as resource",
+			name: "lambda as resource with SQS",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
@@ -750,7 +591,7 @@ func TestTransformer_TransformFromLambdaToSQS(t *testing.T) {
 			},
 		},
 		{
-			name: "lambda as module with resources from envar",
+			name: "lambda as module with SQS",
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{

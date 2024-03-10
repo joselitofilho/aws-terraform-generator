@@ -156,33 +156,32 @@ func parseResource(block *hclsyntax.Block) *Resource {
 	}
 
 	for _, bodyBlock := range block.Body.Blocks {
-		if bodyBlock.Type == "environment" {
-			if _, ok := resource.Attributes["environment"]; !ok {
-				resource.Attributes["environment"] = map[string]map[string]any{}
-			}
-
-			switch environment := resource.Attributes["environment"].(type) {
-			case map[string]map[string]any:
-				for _, attribute := range bodyBlock.Body.Attributes {
-					value := evaluateExpression(attribute.Expr)
-
-					if _, ok := environment[attribute.Name]; !ok {
-						environment[attribute.Name] = map[string]any{}
-					}
-
-					switch value := value.(type) {
-					case map[string]any:
-						for k, v := range value {
-							environment[attribute.Name][k] = v
-						}
-					}
-
-				}
-			}
-		}
+		parseResourcesFromEnvironment(bodyBlock, resource)
 	}
 
 	return resource
+}
+
+func parseResourcesFromEnvironment(bodyBlock *hclsyntax.Block, resource *Resource) {
+	if bodyBlock.Type == "environment" {
+		if _, ok := resource.Attributes["environment"]; !ok {
+			resource.Attributes["environment"] = map[string]map[string]any{}
+		}
+
+		environment := resource.Attributes["environment"].(map[string]map[string]any)
+
+		for _, attribute := range bodyBlock.Body.Attributes {
+			value := evaluateExpression(attribute.Expr)
+
+			if _, ok := environment[attribute.Name]; !ok {
+				environment[attribute.Name] = map[string]any{}
+			}
+
+			for k, v := range value.(map[string]any) {
+				environment[attribute.Name][k] = v
+			}
+		}
+	}
 }
 
 func parseLocals(block *hclsyntax.Block) *Local {
@@ -275,12 +274,12 @@ func evaluateExpression(expr hcl.Expression) any {
 }
 
 func evaluateFunctionExpression(expr *hclsyntax.FunctionCallExpr) string {
-	// TODO: Implement other cases
-
 	var args string
 
 	for i := range expr.Args {
 		exp := evaluateExpression(expr.Args[i])
+
+		// TODO: Implement other cases
 
 		switch exp := exp.(type) {
 		case string:

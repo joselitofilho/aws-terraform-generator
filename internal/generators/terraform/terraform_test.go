@@ -18,20 +18,20 @@ func TestParseTerraformFiles(t *testing.T) {
 		want      Config
 		targetErr error
 	}{
-		// {
-		// 	name: "apig.tf",
-		// 	args: args{
-		// 		directories: []string{"testdata/apigateway"},
-		// 	},
-		// 	want: Config{},
-		// },
-		// {
-		// 	name: "lambda as module",
-		// 	args: args{
-		// 		files: []string{"testdata/lambda/lambdaAsModule.tf"},
-		// 	},
-		// 	want: Config{},
-		// },
+		{
+			name: "apig.tf",
+			args: args{
+				directories: []string{"testdata/apigateway"},
+			},
+			want: Config{},
+		},
+		{
+			name: "lambda as module",
+			args: args{
+				files: []string{"testdata/lambda/lambdaAsModule.tf"},
+			},
+			want: Config{},
+		},
 		{
 			name: "lambda as resource",
 			args: args{

@@ -367,7 +367,7 @@ func (t *Transformer) processKinesisResource(
 	resourcesByName[value] = resource
 }
 
-func (t *Transformer) processLambda(attributes map[string]any, envars map[string]any, value string) {
+func (t *Transformer) processLambda(attributes, envars map[string]any, value string) {
 	for k, v := range attributes {
 		if strings.Contains(k, "function_name") {
 			value = lambdaName(replaceVars(v.(string), t.tfConfig.Locals), suffixLambda)
@@ -424,12 +424,9 @@ func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
 	envars := map[string]any{}
 
 	if environment, ok := conf.Attributes["environment"]; ok {
-		switch environment := environment.(type) {
-		case map[string]map[string]any:
-			if vars, ok := environment["variables"]; ok {
-				for k, v := range vars {
-					envars[k] = v
-				}
+		if vars, ok := environment.(map[string]map[string]any)["variables"]; ok {
+			for k, v := range vars {
+				envars[k] = v
 			}
 		}
 	}
