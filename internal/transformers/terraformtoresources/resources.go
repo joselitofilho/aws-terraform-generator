@@ -88,18 +88,18 @@ func resourceByARN(arn string) resourceARN {
 
 		switch key {
 		case arnKinesisKey:
-			name = toPascalFromEnvar(name, name, suffixKinesis)
+			name = toPascalFromKeyValue(name, name, suffixKinesis)
 		case arnLambdaKey:
-			name = toCamelFromEnvar(name, name, suffixLambda)
+			name = toCamelFromKeyValue(name, name, suffixLambda)
 		case arnSQSKey:
-			name = toKebabFromEnvar(name, name, suffixSQS)
+			name = toKebabFromKeyValue(name, name, suffixSQS)
 		}
 	}
 
 	return resourceARN{key: key, name: name}
 }
 
-func strTransformFromEnvar(
+func strTransformFromKeyValue(
 	key, value, suffix string, f func(s string) string,
 ) string {
 	var result string
@@ -135,26 +135,18 @@ func strTransformFromEnvar(
 	return result
 }
 
-func toCamelFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToCamel)
+func toCamelFromKeyValue(key, value, suffix string) string {
+	return strTransformFromKeyValue(key, value, suffix, strcase.ToCamel)
 }
 
-func toKebabFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToKebab)
+func toKebabFromKeyValue(key, value, suffix string) string {
+	return strTransformFromKeyValue(key, value, suffix, strcase.ToKebab)
 }
 
-func toPascalFromEnvar(key, value, suffix string) string {
-	return strTransformFromEnvar(key, value, suffix, strcase.ToPascal)
+func toPascalFromKeyValue(key, value, suffix string) string {
+	return strTransformFromKeyValue(key, value, suffix, strcase.ToPascal)
 }
 
 func lambdaName(str, suffix string) string {
 	return strcase.ToCamel(str[:len(str)-len(suffix)])
-}
-
-func s3BucketName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
-}
-
-func sqsName(str, suffix string) string {
-	return strcase.ToKebab(str[:len(str)-len(suffix)])
 }

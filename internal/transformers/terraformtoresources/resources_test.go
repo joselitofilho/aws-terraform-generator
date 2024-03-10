@@ -234,7 +234,7 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got := strTransformFromEnvar(tc.args.key, tc.args.value, tc.args.suffix, tc.args.f)
+			got := strTransformFromKeyValue(tc.args.key, tc.args.value, tc.args.suffix, tc.args.f)
 
 			require.Equal(t, tc.want, got)
 		})
