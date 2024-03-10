@@ -73,6 +73,8 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 		filters config.Filters
 	}
 
+	lambdaResource := resources.NewGenericResource("id", "myLambda", resources.LambdaType)
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -86,7 +88,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 				tfConfig:   &terraform.Config{},
 			},
 			args: args{
-				res: resources.NewGenericResource("id", "myLambda", resources.LambdaType),
+				res: lambdaResource,
 				filters: config.Filters{
 					"lambda": config.Filter{Match: []string{"^my"}},
 				},
@@ -100,12 +102,38 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 				tfConfig:   &terraform.Config{},
 			},
 			args: args{
-				res: resources.NewGenericResource("id", "myLambda", resources.LambdaType),
+				res: lambdaResource,
 				filters: config.Filters{
 					"lambda": config.Filter{NotMatch: []string{"^my"}},
 				},
 			},
 			want: false,
+		},
+		{
+			name: "nil resource",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res: nil,
+				filters: config.Filters{
+					"lambda": config.Filter{NotMatch: []string{"^my"}},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "no filter",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res:     lambdaResource,
+				filters: nil,
+			},
+			want: true,
 		},
 	}
 

@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
-	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 	"github.com/spf13/cobra"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/guides"
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 )
 
 const (
@@ -32,8 +32,6 @@ const (
 
 var (
 	ErrNoDiagramOrConfigFiles = errors.New("this directory does not contain any diagram or config files")
-
-	fmtRed = color.New(color.FgHiRed)
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -192,6 +190,6 @@ func init() {
 }
 
 func printErrorAndExit(err error) {
-	fmtRed.Printf("🚨 %s\n", err)
+	fmtcolor.Red.Printf("🚨 %s\n", err)
 	os.Exit(1)
 }

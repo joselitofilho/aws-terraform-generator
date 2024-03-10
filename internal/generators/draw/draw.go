@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
@@ -73,7 +74,7 @@ func (d *Draw) Build() error {
 		return fmt.Errorf("%w", err)
 	}
 
-	fmt.Println("The graphviz dot file has been generated successfully.")
+	fmtcolor.White.Println("The graphviz dot file has been generated successfully.")
 
 	return nil
 }

@@ -17,6 +17,10 @@ type resourceARN struct {
 }
 
 func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.Filters) bool {
+	if res == nil {
+		return false
+	}
+
 	filter, hasFilter := filters[res.ResourceType()]
 	if !hasFilter {
 		return true

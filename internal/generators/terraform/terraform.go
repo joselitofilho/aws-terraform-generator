@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
+
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 )
 
 // Resource represents a Terraform resource.
@@ -200,7 +202,7 @@ func convertValueToString(val cty.Value) string {
 
 		return fmt.Sprintf("%v", v)
 	default:
-		fmt.Println("Unsupported type:", val.Type().GoString())
+		fmtcolor.Yellow.Println("unsupported type:", val.Type().GoString())
 		return ""
 	}
 }
@@ -236,8 +238,45 @@ func evaluateExpression(expr hcl.Expression) any {
 		return resultMap
 	case *hclsyntax.IndexExpr:
 		resultString += evaluateExpression(expr.Collection).(string)
-	case *hclsyntax.FunctionCallExpr: // TODO: Implement
+	case *hclsyntax.FunctionCallExpr:
+		resultString += evaluateFunctionExpression(expr)
+	default:
+		fmtcolor.Yellow.Println("unsupported expr:", expr)
 	}
 
 	return resultString
+}
+
+func evaluateFunctionExpression(expr *hclsyntax.FunctionCallExpr) string {
+	// TODO: Implement other cases
+
+	var args string
+
+	for i := range expr.Args {
+		exp := evaluateExpression(expr.Args[i])
+
+		switch exp := exp.(type) {
+		case string:
+			args += exp
+		case map[string]any:
+			var values string
+
+			for k, v := range exp {
+				values += k
+
+				switch v := v.(type) {
+				case string:
+					values += ":" + v
+				default:
+					fmtcolor.Yellow.Println("unsupported function arg value:", expr)
+				}
+			}
+
+			args = fmt.Sprintf("%s{%s}", args, values)
+		default:
+			fmtcolor.Yellow.Println("unsupported function arg:", expr)
+		}
+	}
+
+	return fmt.Sprintf("%s(%s)", expr.Name, args)
 }
