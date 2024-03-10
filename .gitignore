@@ -7,9 +7,13 @@
 *.dll
 *.so
 *.dylib
+*.DS_Store
 
 # Test binary, built with `go test -c`
 *.test
+
+# Mocks
+*mock.go
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -26,6 +30,7 @@ go.work
 # Configuration files for executable
 *.yaml
 *.xml
+*.svg
 
 # VSCode
 .vscode

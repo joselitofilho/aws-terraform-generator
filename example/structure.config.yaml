@@ -1,6 +1,6 @@
 structure:
   stacks:
-    - stack_name: mystack
+    - name: mystack
       folders:
         - name: dev
           files:

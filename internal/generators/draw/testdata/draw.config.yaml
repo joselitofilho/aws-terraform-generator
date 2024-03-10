@@ -1,0 +1,7 @@
+draw:
+  # images:
+  #   restfulapi: "assets/diagram/restful_api2.svg"
+  filters:
+    kinesis:
+      match:
+        - "^ProcessedLocation"

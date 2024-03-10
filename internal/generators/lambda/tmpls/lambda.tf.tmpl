@@ -24,13 +24,13 @@
   region      = var.region
   account_id  = var.account_id
 }{{else}}resource "aws_lambda_function" "{{ToSnake $.Name}}_lambda" {
-  filename      = "{{$.Source}}/{{ToSnake $.Name}}_lambda.zip"
-  function_name = "{{ToSnake $.Name}}_lambda"
+  filename      = "{{$.Source}}/{{ToSnake $.Name}}.zip"
+  function_name = "{{ToSnake $.Name}}"
   description   = "{{$.Description}}"
   role          = aws_iam_role.{{$.RoleName}}.arn
-  handler       = "{{ToSnake $.Name}}_lambda"
+  handler       = "{{ToSnake $.Name}}"
 
-  source_code_hash = filebase64sha256("{{$.Source}}/{{ToSnake $.Name}}_lambda.zip")
+  source_code_hash = filebase64sha256("{{$.Source}}/{{ToSnake $.Name}}.zip")
 
   runtime = "{{$.Runtime}}"
 

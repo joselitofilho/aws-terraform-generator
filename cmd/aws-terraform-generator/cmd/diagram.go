@@ -8,8 +8,10 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawiotoresources"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
 )
 
 // diagramCmd represents the structure command.
@@ -36,7 +38,7 @@ var diagramCmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		fmt.Printf("Configuration file '%s' has been generated successfully\n", output)
+		fmtcolor.White.Printf("Configuration file '%s' has been generated successfully\n", output)
 	},
 }
 
@@ -46,17 +48,17 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	mxFile, err := drawio.Parse(diagram)
+	mxFile, err := drawio.ParseXML(diagram)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	resources, err := drawio.ParseResources(mxFile)
+	resources, err := drawiotoresources.Transform(mxFile)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	yamlConfigOut, err := transformers.TransformDrawIOToYAML(yamlConfig, resources)
+	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resources).Transform()
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

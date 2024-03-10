@@ -8,16 +8,17 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
-	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 	"github.com/spf13/cobra"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/guides"
+	surveyasker "github.com/joselitofilho/aws-terraform-generator/internal/survey"
 )
 
 const (
 	flagConfig  = "config"
 	flagDiagram = "diagram"
+	flagFile    = "file"
 	flagOutput  = "output"
 	flagWorkdir = "workdir"
 )
@@ -31,8 +32,6 @@ const (
 
 var (
 	ErrNoDiagramOrConfigFiles = errors.New("this directory does not contain any diagram or config files")
-
-	fmtRed = color.New(color.FgHiRed)
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -55,7 +54,7 @@ var rootCmd = &cobra.Command{
 		 ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝╚═╝  ╚═══╝
 
 `
-		fmt.Println(title)
+		fmtcolor.White.Println(title)
 
 		surveyAsker := &surveyasker.RealAsker{}
 
@@ -129,37 +128,37 @@ var rootCmd = &cobra.Command{
 
 				stackOutput := fmt.Sprintf("%s/%s", answers.Output, answers.StackName)
 
-				fmt.Println("→ Generating API Gateway code...")
+				fmtcolor.White.Println("→ Generating API Gateway code...")
 				_ = apigatewayCmd.Flags().Set(flagConfig, answers.Config)
 				_ = apigatewayCmd.Flags().Set(flagOutput, answers.Output)
 				apigatewayCmd.Run(apigatewayCmd, []string{})
 				fmt.Println()
 
-				fmt.Println("→ Generating Kinesis code...")
+				fmtcolor.White.Println("→ Generating Kinesis code...")
 				_ = kinesisCmd.Flags().Set(flagConfig, answers.Config)
 				_ = kinesisCmd.Flags().Set(flagOutput, stackOutput)
 				kinesisCmd.Run(kinesisCmd, []string{})
 				fmt.Println()
 
-				fmt.Println("→ Generating Lambda code...")
+				fmtcolor.White.Println("→ Generating Lambda code...")
 				_ = lambdaCmd.Flags().Set(flagConfig, answers.Config)
 				_ = lambdaCmd.Flags().Set(flagOutput, stackOutput)
 				lambdaCmd.Run(lambdaCmd, []string{})
 				fmt.Println()
 
-				fmt.Println("→ Generating S3 code...")
+				fmtcolor.White.Println("→ Generating S3 code...")
 				_ = s3Cmd.Flags().Set(flagConfig, answers.Config)
 				_ = s3Cmd.Flags().Set(flagOutput, stackOutput)
 				s3Cmd.Run(s3Cmd, []string{})
 				fmt.Println()
 
-				fmt.Println("→ Generating SNS code...")
+				fmtcolor.White.Println("→ Generating SNS code...")
 				_ = snsCmd.Flags().Set(flagConfig, answers.Config)
 				_ = snsCmd.Flags().Set(flagOutput, stackOutput)
 				snsCmd.Run(snsCmd, []string{})
 				fmt.Println()
 
-				fmt.Println("→ Generating SQS code...")
+				fmtcolor.White.Println("→ Generating SQS code...")
 				_ = sqsCmd.Flags().Set(flagConfig, answers.Config)
 				_ = sqsCmd.Flags().Set(flagOutput, stackOutput)
 				sqsCmd.Run(sqsCmd, []string{})
@@ -172,7 +171,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("👋 Goodbye. Until next time!")
+		fmtcolor.White.Println("👋 Goodbye. Until next time!")
 	},
 }
 
@@ -191,6 +190,6 @@ func init() {
 }
 
 func printErrorAndExit(err error) {
-	fmtRed.Printf("🚨 %s\n", err)
+	fmtcolor.Red.Printf("🚨 %s\n", err)
 	os.Exit(1)
 }

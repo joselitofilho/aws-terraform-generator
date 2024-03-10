@@ -14,6 +14,7 @@ The configuration is organized into the following sections:
 - [**SQS**](#sqs): Configuration for SQS.
 - [**Buckets**](#buckets): Configuration for S3 buckets.
 - [**RESTful APIs**](#restfulapis): Configuration for RESTful APIs.
+- [**Draw**](#draw): Draw configurations.
 
 ### override_default_templates
 
@@ -453,3 +454,85 @@ restfulapis:
 ## Full example with comments
 
 [fullexample.config.yaml](fullexample.config.yaml)
+
+### draw
+
+Draw configurations includes graph orientation, images and filters.
+
+```yaml
+draw:
+  # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
+  orientation: LR
+  # Definitions of images for the available resources
+  images:
+    apigateway: "assets/diagram/api_gateway.svg"
+    cron: "assets/diagram/cron.svg"
+    database: "assets/diagram/database_dynamo_db.svg"
+    endpoint: "assets/diagram/endpoint.svg"
+    googlebq: "assets/diagram/google_bigquery.svg"
+    kinesis: "assets/diagram/kinesis_data_stream.svg"
+    lambda: "assets/diagram/lambda.svg"
+    restfulapi: "assets/diagram/restful_api.svg"
+    s3: "assets/diagram/s3_bucket.svg"
+    sns: "assets/diagram/sns.svg"
+    sqs: "assets/diagram/sqs.svg"
+  # Filters for matching and excluding resources by name.
+  filters:
+    apigateway:
+      match:
+      not_match:
+    cron:
+      match:
+      not_match:
+    database:
+      match:
+      not_match:
+    endpoint:
+      match:
+      not_match:
+    googlebq:
+      match:
+      not_match:
+    kinesis:
+      # Patterns to match
+      match:
+        - "^ProcessedName" # Match regex pattern for ProcessedLocation
+      # Patterns to exclude
+      not_match:
+        - "^ProcessedA" # Exclude regex pattern for ProcessedA
+        - "^ProcessedB" # Exclude regex pattern for ProcessedB
+    lambda:
+      match:
+      not_match:
+    restfulapi:
+      match:
+      not_match:
+    s3:
+      match:
+      not_match:
+    sns:
+      match:
+      not_match:
+    sqs:
+      match:
+      not_match:
+```
+
+Default images:
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/api_gateway.svg)         | apigateway | assets/diagram/api_gateway.svg |
+| ![](assets/diagram/cron.svg)                | cron       | assets/diagram/cron.svg |
+| ![](assets/diagram/database_dynamo_db.svg)  | database   | assets/diagram/database_dynamo_db.svg |
+| ![](assets/diagram/endpoint.svg)            | endpoint   | assets/diagram/endpoint.svg |
+| ![](assets/diagram/google_bigquery.svg)     | googlebq   | assets/diagram/google_bigquery.svg |
+| ![](assets/diagram/kinesis_data_stream.svg) | kinesis    | assets/diagram/kinesis_data_stream.svg |
+| ![](assets/diagram/lambda.svg)              | lambda     | assets/diagram/lambda.svg |
+| ![](assets/diagram/restful_api.svg)         | restfulapi | assets/diagram/restful_api.svg |
+| ![](assets/diagram/s3_bucket.svg)           | s3         | assets/diagram/s3_bucket.svg |
+| ![](assets/diagram/sns.svg)                 | sns        | assets/diagram/sns.svg |
+| ![](assets/diagram/sqs.svg)                 | sqs        | assets/diagram/sqs.svg |
+
+- Available resources: [internal/resources/resource_type_enum.go](internal/resources/resource_type_enum.go)
+- Recommend image size: 48px x 48px

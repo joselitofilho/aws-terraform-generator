@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
@@ -71,7 +72,7 @@ func (s *SNS) Build() error {
 				return fmt.Errorf("%w", err)
 			}
 
-			fmt.Printf("SNS '%s' has been generated successfully\n", conf.Name)
+			fmtcolor.White.Printf("SNS '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
@@ -92,7 +93,7 @@ func (s *SNS) Build() error {
 			return fmt.Errorf("%w", err)
 		}
 
-		fmt.Println("SNS has been generated successfully")
+		fmtcolor.White.Println("SNS has been generated successfully")
 	}
 
 	return nil

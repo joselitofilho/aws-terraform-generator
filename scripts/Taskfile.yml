@@ -45,6 +45,7 @@ tasks:
   
   cov-badge:
     desc: "Update coverage badge in the README"
+    deps: 
+      - cov
     cmds:
-      # - task: coverage
       - ./update_coverage.sh ./coverage.out {{.USER_WORKING_DIR}}/README.md
