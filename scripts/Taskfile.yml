@@ -41,7 +41,7 @@ tasks:
       - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile=coverage.out -cover ../...
       - cat coverage.out | grep -v "mock" > coverage.nomocks.out
       - go tool cover -html=coverage.nomocks.out
-      - go tool cover -func coverage.nomocks.out > coverage.out
+      - go tool cover -func coverage.nomocks.out > cov.out
   
   cov-badge:
     desc: "Update coverage badge in the README"

@@ -27,15 +27,9 @@ func TestDraw_Build(t *testing.T) {
 		targetErr error
 	}{
 		{
-			name: "",
+			name: "happy path",
 			fields: fields{
-				workdirs: []string{
-					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/location",
-					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/bigquery/mod",
-				},
-				files: []string{
-					"/Users/joselitofilho/dev/mindera/xiatech/flyingtiger/infrastructure/stacks/eventprocessing/mod/location.tf",
-				},
+				workdirs:       []string{path.Join(testdataDir, "mystack")},
 				configFileName: path.Join(testdataDir, "draw.config.yaml"),
 				output:         testOutput,
 			},
@@ -62,6 +56,7 @@ func TestDraw_Build(t *testing.T) {
 			err := d.Build()
 
 			require.ErrorIs(t, err, tc.targetErr)
+			require.FileExists(t, path.Join(testOutput, "diagram.dot"))
 		})
 	}
 }

@@ -20,7 +20,7 @@ func TestParseXML(t *testing.T) {
 		targetErr error
 	}{
 		{
-			name: "",
+			name: "happy path",
 			args: args{
 				fileName: "testdata/diagram.xml",
 			},
