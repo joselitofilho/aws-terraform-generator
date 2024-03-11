@@ -384,6 +384,8 @@ restfulapis:
 
 # Draw configurations includes graph orientation, images and filters.
 draw:
+  # The diagram's name will also serve as the name of the output file. Example: diagram.dot.
+  name: diagram
   # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
   orientation: LR
   # Definitions of images for the available resources

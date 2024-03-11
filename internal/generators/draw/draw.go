@@ -64,7 +64,14 @@ func (d *Draw) Build() error {
 
 	_ = os.Mkdir(d.output, os.ModePerm)
 
-	dotfile, err := os.Create(path.Join(d.output, "diagram.dot"))
+	dotFilename := "diagram"
+	if yamlConfig.Draw.Name != "" {
+		dotFilename = yamlConfig.Draw.Name
+	}
+
+	dotFilename += ".dot"
+
+	dotfile, err := os.Create(path.Join(d.output, dotFilename))
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
