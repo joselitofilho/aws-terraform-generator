@@ -34,3 +34,6 @@ go.work
 
 # VSCode
 .vscode
+
+# Graphiz
+*.dot

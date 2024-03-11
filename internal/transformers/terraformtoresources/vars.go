@@ -66,5 +66,13 @@ func replaceVars(str string, tfLocals []*terraform.Local) string {
 		}
 	}
 
+	// TODO: Replace vars
+	str = strings.ReplaceAll(str, "var.client-var.environment-", "")
+	str = strings.ReplaceAll(str, "-var.client-var.environment", "")
+	str = strings.ReplaceAll(str, "var.client-", "")
+	str = strings.ReplaceAll(str, "-var.client", "")
+	str = strings.ReplaceAll(str, "var.environment-", "")
+	str = strings.ReplaceAll(str, "-var.environment", "")
+
 	return str
 }

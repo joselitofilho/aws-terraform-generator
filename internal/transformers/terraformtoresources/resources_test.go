@@ -166,19 +166,6 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		want string
 	}{
 		{
-			name: "key is equal to suffix and value contains the client and environment vars",
-			args: args{
-				key:    "MY_ENVAR",
-				value:  "var.client-var.environment-value",
-				suffix: "MY_ENVAR",
-				f: func(s string) string {
-					require.Equal(t, s, "value")
-					return s
-				},
-			},
-			want: "value",
-		},
-		{
 			name: "key is equal to suffix and value contains the kinesis arn",
 			args: args{
 				key:    "MY_ENVAR",

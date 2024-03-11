@@ -71,23 +71,35 @@ func resourceByARN(arn string) resourceARN {
 		}
 
 		name = parts[len(parts)-1]
+	} else if strings.HasPrefix(arn, "http") {
+		parts := strings.Split(arn, "//")
+		parts = strings.Split(parts[1], "/")
+
+		key = strings.Split(parts[0], ".")[0]
+
+		name = parts[len(parts)-1]
 	} else {
 		parts := strings.Split(arn, ".")
 
-		label = parts[1]
-
-		keyParts := strings.Split(parts[0], "_")
-
-		if parts[0] == "module" {
+		if len(parts) > 0 && parts[0] == "module" {
 			// TODO: Add support to more type of modules
 			key = arnLambdaKey
-		} else if len(keyParts) > 1 {
-			key = keyParts[1]
-		} else {
-			key = strings.Join(keyParts, "_")
-		}
+			name = parts[1]
+			label = parts[1]
+		} else if len(parts) > 1 && strings.HasPrefix(parts[0], "aws_") {
+			label = parts[1]
+			keyParts := strings.Split(parts[0], "_")
 
-		name = parts[1]
+			if len(keyParts) > 1 {
+				key = keyParts[1]
+			} else {
+				key = strings.Join(keyParts, "_")
+			}
+
+			name = parts[1]
+		} else {
+			name = arn
+		}
 
 		switch key {
 		case arnKinesisKey:
@@ -129,8 +141,6 @@ func strTransformFromKeyValue(
 		result = strings.ReplaceAll(result, "_"+suffix, "")
 		result = strings.ReplaceAll(result, suffix, "")
 	}
-
-	result = strings.ReplaceAll(result, "var.client-var.environment-", "") // TODO: Replace vars
 
 	return f(result)
 }
