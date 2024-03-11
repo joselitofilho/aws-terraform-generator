@@ -630,3 +630,74 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 		})
 	}
 }
+
+func TestTransformer_TransformFromCronToResource(t *testing.T) {
+	type fields struct {
+		yamlConfig *config.Config
+		tfConfig   *terraform.Config
+	}
+
+	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
+	cronResource := resources.NewGenericResource("2", "cron(0 3 * * ? *)", resources.CronType)
+
+	tests := []struct {
+		name   string
+		fields fields
+		want   *resources.ResourceCollection
+	}{
+		{
+			name: "from cron to lambda",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig: &terraform.Config{
+					Modules: []*terraform.Module{
+						{
+							Labels: []string{"my_receiving_lambda"},
+							Attributes: map[string]any{
+								"function_name": "myReceiver",
+							},
+						},
+					},
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_cloudwatch_event_rule",
+							Name:   "cron",
+							Labels: []string{"aws_cloudwatch_event_rule", "cron"},
+							Attributes: map[string]any{
+								"schedule_expression": "cron(0 3 * * ? *)",
+							},
+						},
+						{
+							Type:   "aws_cloudwatch_event_target",
+							Name:   "cron_event",
+							Labels: []string{"aws_cloudwatch_event_target", "cron_event"},
+							Attributes: map[string]any{
+								"rule": "aws_cloudwatch_event_rule.cron.name",
+								"arn":  "module.my_receiving_lambda.function_arn",
+							},
+						},
+					},
+				},
+			},
+			want: &resources.ResourceCollection{
+				Resources:     []resources.Resource{lambdaResource, cronResource},
+				Relationships: []resources.Relationship{{Source: cronResource, Target: lambdaResource}},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			tr := NewTransformer(
+				tc.fields.yamlConfig,
+				tc.fields.tfConfig,
+			)
+
+			got := tr.Transform()
+
+			require.Equal(t, tc.want, got)
+		})
+	}
+}

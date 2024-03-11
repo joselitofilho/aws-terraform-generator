@@ -61,6 +61,7 @@ type Transformer struct {
 	googleBQResourcesByName   map[string]resources.Resource
 	kinesisResourcesByName    map[string]resources.Resource
 	lambdaResourcesByName     map[string]resources.Resource
+	lambdaResourcesByLabel    map[string]resources.Resource
 	restfulAPIResourcesByName map[string]resources.Resource
 	s3BucketResourcesByName   map[string]resources.Resource
 	sqsResourcesByName        map[string]resources.Resource
@@ -88,6 +89,7 @@ func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Tran
 		googleBQResourcesByName:   map[string]resources.Resource{},
 		kinesisResourcesByName:    map[string]resources.Resource{},
 		lambdaResourcesByName:     map[string]resources.Resource{},
+		lambdaResourcesByLabel:    map[string]resources.Resource{},
 		restfulAPIResourcesByName: map[string]resources.Resource{},
 		s3BucketResourcesByName:   map[string]resources.Resource{},
 		sqsResourcesByName:        map[string]resources.Resource{},
@@ -176,7 +178,11 @@ func (t *Transformer) getResourceByARN(arn resourceARN) (resource resources.Reso
 	case arnKinesisKey:
 		resource = t.kinesisResourcesByName[arn.name]
 	case arnLambdaKey:
-		resource = t.lambdaResourcesByName[arn.name]
+		if arn.label == "" {
+			resource = t.lambdaResourcesByName[arn.name]
+		} else {
+			resource = t.lambdaResourcesByLabel[arn.label]
+		}
 	case arnSQSKey:
 		resource = t.sqsResourcesByName[arn.name]
 	}
@@ -267,9 +273,12 @@ func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
 func (t *Transformer) processCronResource(
 	conf *terraform.Resource, resourcesByName map[string]resources.Resource,
 ) {
-	value := conf.Attributes["schedule_expression"].(string)
+	value, ok := conf.Attributes["schedule_expression"]
+	if !ok {
+		return
+	}
 
-	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.CronType)
+	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value.(string), resources.CronType)
 	t.id++
 
 	t.resources = append(t.resources, resource)
@@ -316,6 +325,7 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 	// TODO: tryToCreateSQSResourceByARN
 	// TODO: tryToCreateLambdaResourceByARN
 
+	// TODO: This should be in buildRelationship
 	t.tryToCreateKinesisResourceByARN(eventSourceARN)
 }
 
@@ -370,11 +380,14 @@ func (t *Transformer) processKinesisResource(
 	resourcesByName[value] = resource
 }
 
-func (t *Transformer) processLambda(attributes, envars map[string]any, value string) {
+func (t *Transformer) processLambda(attributes, envars map[string]any, label string) {
+	value := toCamelFromKeyValue(label, label, suffixLambda)
+
 	for k, v := range attributes {
 		if strings.HasSuffix(k, "function_name") {
 			value = replaceVars(v.(string), t.tfConfig.Locals)
 			value = toCamelFromKeyValue(value, value, suffixLambda)
+
 			break
 		}
 	}
@@ -384,6 +397,7 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, value str
 
 	t.resources = append(t.resources, resource)
 	t.lambdaResourcesByName[value] = resource
+	t.lambdaResourcesByLabel[label] = resource
 
 	for k, v := range envars {
 		switch {
@@ -421,10 +435,7 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 		envars = vars.(map[string]any)
 	}
 
-	value := conf.Labels[0]
-	value = toCamelFromKeyValue(value, value, suffixLambda)
-
-	t.processLambda(conf.Attributes, envars, value)
+	t.processLambda(conf.Attributes, envars, conf.Labels[0])
 }
 
 func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
@@ -438,10 +449,7 @@ func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
 		}
 	}
 
-	value := conf.Labels[1]
-	value = toCamelFromKeyValue(value, value, suffixLambda)
-
-	t.processLambda(conf.Attributes, envars, value)
+	t.processLambda(conf.Attributes, envars, conf.Labels[1])
 }
 
 func (t *Transformer) processS3BucketResourceFromEnvar(

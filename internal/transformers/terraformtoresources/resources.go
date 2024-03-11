@@ -12,8 +12,9 @@ import (
 )
 
 type resourceARN struct {
-	key  string
-	name string
+	key   string
+	name  string
+	label string
 }
 
 func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.Filters) bool {
@@ -58,7 +59,7 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 }
 
 func resourceByARN(arn string) resourceARN {
-	var key, name string
+	var key, name, label string
 
 	if strings.HasPrefix(arn, "arn:") {
 		parts := strings.Split(arn, ":")
@@ -72,6 +73,8 @@ func resourceByARN(arn string) resourceARN {
 		name = parts[len(parts)-1]
 	} else {
 		parts := strings.Split(arn, ".")
+
+		label = parts[1]
 
 		keyParts := strings.Split(parts[0], "_")
 
@@ -96,7 +99,7 @@ func resourceByARN(arn string) resourceARN {
 		}
 	}
 
-	return resourceARN{key: key, name: name}
+	return resourceARN{key: key, name: name, label: label}
 }
 
 func strTransformFromKeyValue(

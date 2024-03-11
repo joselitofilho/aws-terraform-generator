@@ -35,8 +35,9 @@ func Test_resourceByARN(t *testing.T) {
 				arn: "aws_lambda_function.location_store_data_receiver_lambda.arn",
 			},
 			want: resourceARN{
-				key:  "lambda",
-				name: "locationStoreDataReceiver",
+				key:   "lambda",
+				name:  "locationStoreDataReceiver",
+				label: "location_store_data_receiver_lambda",
 			},
 		},
 		{
@@ -45,8 +46,9 @@ func Test_resourceByARN(t *testing.T) {
 				arn: "module.location_store_data_receiver_lambda.lambda_invoke_arn",
 			},
 			want: resourceARN{
-				key:  "lambda",
-				name: "locationStoreDataReceiver",
+				key:   "lambda",
+				name:  "locationStoreDataReceiver",
+				label: "location_store_data_receiver_lambda",
 			},
 		},
 	}
