@@ -15,10 +15,10 @@ var ErrEmptyConfig = errors.New("config file is empty")
 type Transformer struct {
 	yamlConfig *config.Config
 
-	apigatewayByName map[string]struct{}
+	apigatewayByName map[string]resources.Resource
 	endpointByName   map[string]struct{}
 	kinesisByName    map[string]struct{}
-	lambdaByName     map[string]struct{}
+	lambdaByName     map[string]resources.Resource
 	restfulAPIByName map[string]struct{}
 	s3BucketByName   map[string]struct{}
 	sqsByName        map[string]struct{}
@@ -29,10 +29,10 @@ func NewTransformer(yamlConfig *config.Config) *Transformer {
 	return &Transformer{
 		yamlConfig: yamlConfig,
 
-		apigatewayByName: map[string]struct{}{},
+		apigatewayByName: map[string]resources.Resource{},
 		endpointByName:   map[string]struct{}{},
 		kinesisByName:    map[string]struct{}{},
-		lambdaByName:     map[string]struct{}{},
+		lambdaByName:     map[string]resources.Resource{},
 		restfulAPIByName: map[string]struct{}{},
 		s3BucketByName:   map[string]struct{}{},
 		sqsByName:        map[string]struct{}{},
@@ -49,7 +49,7 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	rscs := []resources.Resource{}
 	relationships := []resources.Relationship{}
 
-	t.transformAPIGateways(&rscs, &id)
+	t.transformAPIGateways(&rscs, &relationships, &id)
 
 	t.transformKinesis(&rscs, &id)
 
@@ -97,19 +97,28 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	}, nil
 }
 
-func (t *Transformer) transformAPIGateways(rscs *[]resources.Resource, id *int) {
+func (t *Transformer) transformAPIGateways(rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int) {
 	for _, res := range t.yamlConfig.APIGateways {
 		for i := range res.Lambdas {
 			l := res.Lambdas[i]
 			apigValue := fmt.Sprintf("%s %s", l.Verb, l.Path)
 
-			if _, ok := t.apigatewayByName[apigValue]; !ok {
-				*rscs = append(*rscs,
-					resources.NewGenericResource(fmt.Sprintf("%d", *id), apigValue, resources.APIGatewayType))
+			apigRes, ok := t.apigatewayByName[apigValue]
+
+			if !ok {
+				apigRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), apigValue, resources.APIGatewayType)
+				*rscs = append(*rscs, apigRes)
 				*id++
 
-				t.apigatewayByName[apigValue] = struct{}{}
+				t.apigatewayByName[apigValue] = apigRes
 			}
+
+			t.transformLambda(config.Lambda{Name: l.Name}, rscs, relationships, id)
+
+			*relationships = append(*relationships, resources.Relationship{
+				Source: apigRes,
+				Target: t.lambdaByName[l.Name],
+			})
 		}
 
 		endpointValue := res.APIDomain
@@ -137,47 +146,53 @@ func (t *Transformer) transformKinesis(rscs *[]resources.Resource, id *int) {
 	}
 }
 
+func (t *Transformer) transformLambda(
+	res config.Lambda, rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
+) {
+	if _, ok := t.lambdaByName[res.Name]; ok {
+		return
+	}
+
+	lambda := resources.NewGenericResource(fmt.Sprintf("%d", *id), res.Name, resources.LambdaType)
+	*rscs = append(*rscs, lambda)
+	*id++
+
+	t.lambdaByName[res.Name] = lambda
+
+	for _, r := range res.Crons {
+		cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.ScheduleExpression, resources.CronType)
+		*id++
+
+		*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+	}
+
+	t.transformLambdaEnvars(&res, lambda, relationships, id)
+
+	for _, r := range res.KinesisTriggers {
+		cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.KinesisType)
+		*id++
+
+		*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+	}
+
+	for _, r := range res.SQSTriggers {
+		cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.SQSType)
+		*id++
+
+		*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+	}
+}
+
 func (t *Transformer) transformLambdas(rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int) {
 	for i := range t.yamlConfig.Lambdas {
 		res := t.yamlConfig.Lambdas[i]
 
-		if _, ok := t.lambdaByName[res.Name]; ok {
-			continue
-		}
-
-		lambda := resources.NewGenericResource(fmt.Sprintf("%d", *id), res.Name, resources.LambdaType)
-		*rscs = append(*rscs, lambda)
-		*id++
-
-		t.lambdaByName[res.Name] = struct{}{}
-
-		for _, r := range res.Crons {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.ScheduleExpression, resources.CronType)
-			*id++
-
-			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
-
-		t.transformLambdaEnvars(&res, id, relationships, lambda)
-
-		for _, r := range res.KinesisTriggers {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.KinesisType)
-			*id++
-
-			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
-
-		for _, r := range res.SQSTriggers {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.SQSType)
-			*id++
-
-			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
+		t.transformLambda(res, rscs, relationships, id)
 	}
 }
 
 func (*Transformer) transformLambdaEnvars(
-	res *config.Lambda, id *int, relationships *[]resources.Relationship, lambda *resources.GenericResource,
+	res *config.Lambda, lambda *resources.GenericResource, relationships *[]resources.Relationship, id *int,
 ) {
 	for _, envars := range res.Envars {
 		for k := range envars {
