@@ -8,7 +8,7 @@ import (
 
 // FindDifferences finds the differences between two resource collections.
 func FindDifferences(
-	rc1, rc2 *ResourceCollection) (addedResources, removedResources []Resource,
+	rc1, rc2 *ResourceCollection) (addedResourcesByType, removedResourcesByType map[ResourceType][]Resource,
 	addedRelationships, removedRelationships []Relationship,
 ) {
 	// Find added and removed resources.
@@ -22,15 +22,19 @@ func FindDifferences(
 		rc2Resources[res.Value()] = struct{}{}
 	}
 
+	removedResourcesByType = map[ResourceType][]Resource{}
+
 	for _, res := range rc1.Resources {
 		if _, exists := rc2Resources[res.Value()]; !exists {
-			removedResources = append(removedResources, res)
+			removedResourcesByType[res.ResourceType()] = append(removedResourcesByType[res.ResourceType()], res)
 		}
 	}
 
+	addedResourcesByType = map[ResourceType][]Resource{}
+
 	for _, res := range rc2.Resources {
 		if _, exists := rc1Resources[res.Value()]; !exists {
-			addedResources = append(addedResources, res)
+			addedResourcesByType[res.ResourceType()] = append(addedResourcesByType[res.ResourceType()], res)
 		}
 	}
 
@@ -47,26 +51,12 @@ func FindDifferences(
 		}
 	}
 
-	return addedResources, removedResources, addedRelationships, removedRelationships
+	return addedResourcesByType, removedResourcesByType, addedRelationships, removedRelationships
 }
 
 // PrintDiff prints the differences between two resource collections.
 func PrintDiff(rc1, rc2 *ResourceCollection) {
-	addedResources, removedResources, addedRelationships, removedRelationships := FindDifferences(rc1, rc2)
-
-	addedResourcesByType := map[ResourceType][]Resource{}
-
-	for i := range addedResources {
-		r := addedResources[i]
-		addedResourcesByType[r.ResourceType()] = append(addedResourcesByType[r.ResourceType()], r)
-	}
-
-	removedResourcesByType := map[ResourceType][]Resource{}
-
-	for i := range removedResources {
-		r := removedResources[i]
-		removedResourcesByType[r.ResourceType()] = append(removedResourcesByType[r.ResourceType()], r)
-	}
+	addedResourcesByType, removedResourcesByType, addedRelationships, removedRelationships := FindDifferences(rc1, rc2)
 
 	for _, k := range AvailableTypes {
 		if len(addedResourcesByType[k]) > 0 || len(removedResourcesByType[k]) > 0 {
