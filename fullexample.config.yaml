@@ -221,7 +221,7 @@ apigateways:
         path: /v1/examples
         # Environment variables for the Lambda function
         envars:
-          MYVAR: MYVAR_VALUE
+          - MYVAR: MYVAR_VALUE
         # File configuration for the lambda associated with the API Gateway
         files:
           - name: lambda.go
@@ -269,13 +269,13 @@ lambdas:
     description: "Trigger on schedule and initiate the execution of example receiver"
     # Environment variables for the Lambda function
     envars:
-      MYAPI_API_BASE_URL: var.myapi_api_base_url
-      MYAPI_USER: var.myapi_user
-      MYAPI_PASSWORD_SECRET: aws_secretsmanager_secret.myapi_password.name
-      DOCDB_HOST: var.docdb_host
-      DOCDB_USER: var.docdb_user
-      DOCDB_PASSWORD_SECRET: var.docdb_password_secret
-      SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+      - MYAPI_API_BASE_URL: var.myapi_api_base_url
+      - MYAPI_USER: var.myapi_user
+      - MYAPI_PASSWORD_SECRET: aws_secretsmanager_secret.myapi_password.name
+      - DOCDB_HOST: var.docdb_host
+      - DOCDB_USER: var.docdb_user
+      - DOCDB_PASSWORD_SECRET: var.docdb_password_secret
+      - SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
     # Kinesis triggers for the Lambda function
     kinesis-triggers:
       - source_arn: aws_kinesis_stream.mykinesis_kinesis.arn

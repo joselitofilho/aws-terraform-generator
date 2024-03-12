@@ -4,17 +4,16 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ettle/strcase"
-
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
-type resourceARN struct {
-	key   string
-	name  string
-	label string
+type ResourceARN struct {
+	Key   string
+	Name  string
+	Label string
 }
 
 func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.Filters) bool {
@@ -58,7 +57,7 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 	return match
 }
 
-func resourceByARN(arn string) resourceARN {
+func ResourceByARN(arn string) ResourceARN {
 	var key, name, label string
 
 	if strings.HasPrefix(arn, "arn:") {
@@ -103,22 +102,20 @@ func resourceByARN(arn string) resourceARN {
 
 		switch key {
 		case arnKinesisKey:
-			name = toPascalFromKeyValue(name, name, suffixKinesis)
+			name = strTransformFromKeyValue(name, name, suffixKinesis, resources.ToKinesisCase)
 		case arnLambdaKey:
-			name = toCamelFromKeyValue(name, name, suffixLambda)
+			name = strTransformFromKeyValue(name, name, suffixLambda, resources.ToLambdaCase)
 		case arnSQSKey:
-			name = toKebabFromKeyValue(name, name, suffixSQS)
+			name = strTransformFromKeyValue(name, name, suffixSQS, resources.ToSQSCase)
 		}
 	}
 
-	return resourceARN{key: key, name: name, label: label}
+	return ResourceARN{Key: key, Name: name, Label: label}
 }
 
 func strTransformFromKeyValue(
 	key, value, suffix string, f func(s string) string,
 ) string {
-	var result string
-
 	if key == suffix {
 		suffixMap := map[string]struct{}{
 			labelAWSKinesisStream:  {},
@@ -127,32 +124,17 @@ func strTransformFromKeyValue(
 			labelAWSSQSQueue:       {},
 		}
 
-		result = value
+		result := value
 
 		for s := range suffixMap {
 			if strings.HasPrefix(result, s) {
-				result = resourceByARN(result).name
+				result = ResourceByARN(result).Name
 				break
 			}
 		}
-	} else {
-		result = key
 
-		result = strings.ReplaceAll(result, "_"+suffix, "")
-		result = strings.ReplaceAll(result, suffix, "")
+		return f(result)
 	}
 
-	return f(result)
-}
-
-func toCamelFromKeyValue(key, value, suffix string) string {
-	return strTransformFromKeyValue(key, value, suffix, strcase.ToCamel)
-}
-
-func toKebabFromKeyValue(key, value, suffix string) string {
-	return strTransformFromKeyValue(key, value, suffix, strcase.ToKebab)
-}
-
-func toPascalFromKeyValue(key, value, suffix string) string {
-	return strTransformFromKeyValue(key, value, suffix, strcase.ToPascal)
+	return transformers.ReplaceSuffix(key, suffix, f)
 }

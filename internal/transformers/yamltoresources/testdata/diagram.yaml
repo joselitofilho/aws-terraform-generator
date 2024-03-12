@@ -1,0 +1,70 @@
+apigateways:
+  - stack_name: mystack
+    api_domain: mystack-api.domain-${var.environment}.com
+    apig: true
+    lambdas:
+      - name: exampleAPIReceiver
+        source: git@github.com:username/terraform-aws-lambda?ref=reference
+        role_name: execute_lambda
+        runtime: go1.x
+        description: Trigger the example API receiver via API Gateway
+        verb: POST
+        path: /v1/examples
+        envars:
+          - MYVAR: MYVAR_VALUE
+
+lambdas:
+  - name: exampleReceiver
+    source: git@github.com:username/terraform-aws-lambda?ref=reference
+    role_name: execute_lambda
+    runtime: go1.x
+    description: "Trigger on schedule and initiate the execution of example receiver"
+    envars:
+      - SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+    kinesis-triggers:
+      - source_arn: aws_kinesis_stream.my_kinesis_kinesis.arn
+    sqs-triggers:
+      - source_arn: aws_sqs_queue.source_sqs.arn
+    crons:
+      - schedule_expression: cron(0 1 * * ? *)
+        is_enabled: var.trigger_enabled
+    files:
+      - name: lambda.go
+        imports:
+          - "github.com/mylogging/logging"
+        tmpl: |-
+          package main
+
+kinesis:
+  - name: myKinesis
+    retention_period: 24
+    kms_key_id: var.lambda_function_kms_key_arn
+
+sqs:
+  - name: target
+    max_receive_count: 15
+  - name: source
+    max_receive_count: 10
+
+sns:
+  - name: example
+    bucket_name: my-bucket
+    lambdas:
+      - name: exampleReceiver
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+    sqs:
+      - name: target
+        events:
+          - "s3:ObjectCreated:*"
+        filter_prefix: "my_prefix"
+        filter_suffix: ".txt"
+
+buckets:
+  - name: my-bucket
+    expiration-days: 90
+
+restfulapis:
+  - name: MyAPI

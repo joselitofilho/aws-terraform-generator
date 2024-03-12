@@ -17,16 +17,16 @@ func Test_resourceByARN(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want resourceARN
+		want ResourceARN
 	}{
 		{
 			name: "kinesis arn",
 			args: args{
 				arn: "arn:aws:kinesis:${var.region}:${var.account_id}:stream/ProcessedLocationEvents",
 			},
-			want: resourceARN{
-				key:  "kinesis",
-				name: "ProcessedLocationEvents",
+			want: ResourceARN{
+				Key:  "kinesis",
+				Name: "ProcessedLocationEvents",
 			},
 		},
 		{
@@ -34,10 +34,10 @@ func Test_resourceByARN(t *testing.T) {
 			args: args{
 				arn: "aws_lambda_function.location_store_data_receiver_lambda.arn",
 			},
-			want: resourceARN{
-				key:   "lambda",
-				name:  "locationStoreDataReceiver",
-				label: "location_store_data_receiver_lambda",
+			want: ResourceARN{
+				Key:   "lambda",
+				Name:  "locationStoreDataReceiver",
+				Label: "location_store_data_receiver_lambda",
 			},
 		},
 		{
@@ -45,10 +45,20 @@ func Test_resourceByARN(t *testing.T) {
 			args: args{
 				arn: "module.location_store_data_receiver_lambda.lambda_invoke_arn",
 			},
-			want: resourceARN{
-				key:   "lambda",
-				name:  "locationStoreDataReceiver",
-				label: "location_store_data_receiver_lambda",
+			want: ResourceARN{
+				Key:   "lambda",
+				Name:  "locationStoreDataReceiver",
+				Label: "location_store_data_receiver_lambda",
+			},
+		},
+		{
+			name: "http arn",
+			args: args{
+				arn: "https://sqs.eu-west-1.amazonaws.com/var.account_id/pre-pipeline-events",
+			},
+			want: ResourceARN{
+				Key:  "sqs",
+				Name: "pre-pipeline-events",
 			},
 		},
 	}
@@ -57,7 +67,7 @@ func Test_resourceByARN(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got := resourceByARN(tc.args.arn)
+			got := ResourceByARN(tc.args.arn)
 
 			require.Equal(t, tc.want, got)
 		})

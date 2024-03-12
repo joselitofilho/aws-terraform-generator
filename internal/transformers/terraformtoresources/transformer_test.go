@@ -304,7 +304,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 	bqResource := resources.NewGenericResource("2", "google", resources.GoogleBQType)
 	dbResource := resources.NewGenericResource("2", "doc", resources.DatabaseType)
 	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
-	restfulAPIResource := resources.NewGenericResource("2", "myRestful", resources.RestfulAPIType)
+	restfulAPIResource := resources.NewGenericResource("2", "MyRestful", resources.RestfulAPIType)
 	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
 	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
 
@@ -477,7 +477,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								"function_name": "my_receiver_lambda",
 								"environment": map[string]map[string]any{
 									"variables": {
-										"MY_RESTFUL_API_BASE_URL": "myRestful",
+										"MY_RESTFUL_API_BASE_URL": "MyRestful",
 									},
 								},
 							},
@@ -501,7 +501,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Attributes: map[string]any{
 								"function_name": "my_receiver_lambda",
 								"lambda_function_env_vars": map[string]any{
-									"API_BASE_URL": "myRestful",
+									"API_BASE_URL": "MyRestful",
 								},
 							},
 						},
@@ -551,7 +551,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Attributes: map[string]any{
 								"function_name": "my_receiver_lambda",
 								"lambda_function_env_vars": map[string]any{
-									"S3_BUCKET": "my-bucket",
+									"BUCKET_NAME": "my-bucket",
 								},
 							},
 						},
