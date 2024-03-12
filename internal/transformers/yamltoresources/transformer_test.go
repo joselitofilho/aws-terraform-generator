@@ -6,9 +6,8 @@ import (
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
-	"gopkg.in/yaml.v3"
-
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed testdata/diagram.yaml
@@ -94,6 +93,158 @@ func TestTransformer_Transform(t *testing.T) {
 
 			require.ErrorIs(t, err, tc.targetErr)
 			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestTransformer_transformLambdaEnvars(t *testing.T) {
+	type fields struct {
+		yamlConfig *config.Config
+	}
+
+	type args struct {
+		res           *config.Lambda
+		lambda        *resources.GenericResource
+		relationships *[]resources.Relationship
+		id            *int
+	}
+
+	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
+
+	var (
+		id             int
+		targetResource resources.Resource
+	)
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		setup  func()
+	}{
+		{
+			name: "lambda and sqs",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"DOCDB_HOST": "var.doc_db_host",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "doc", resources.DatabaseType)
+			},
+		},
+		{
+			name: "lambda and google BQ",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"GOOGLE_BQ_PROJECT_ID": "google",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "google", resources.GoogleBQType)
+			},
+		},
+		{
+			name: "lambda and kinesis",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"MY_KINESIS_KINESIS_STREAM_URL": "MyKinesis",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "MyKinesis", resources.KinesisType)
+			},
+		},
+		{
+			name: "lambda and s3 bucket S3_BUCKET",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"PAYLOADS_S3_BUCKET": "payloads",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "payloads", resources.S3Type)
+			},
+		},
+		{
+			name: "lambda and s3 bucket BUCKET_NAME",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"PAYLOADS_BUCKET_NAME": "payloads",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "payloads", resources.S3Type)
+			},
+		},
+		{
+			name: "lambda and restful API",
+			fields: fields{
+				yamlConfig: &config.Config{},
+			},
+			args: args{
+				res: &config.Lambda{Envars: []map[string]string{{
+					"MY_REST_API_BASE_URL": "myRest",
+				}}},
+				lambda:        lambdaResource,
+				relationships: &[]resources.Relationship{},
+				id:            &id,
+			},
+			setup: func() {
+				id = 2
+				targetResource = resources.NewGenericResource("2", "myRest", resources.RestfulAPIType)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			tr := NewTransformer(tt.fields.yamlConfig)
+
+			tr.transformLambdaEnvars(tt.args.res, tt.args.lambda, tt.args.relationships, tt.args.id)
+
+			require.Equal(t, 3, *tt.args.id)
+			require.Equal(t, tt.args.relationships, &[]resources.Relationship{{
+				Source: lambdaResource,
+				Target: targetResource,
+			}})
 		})
 	}
 }
