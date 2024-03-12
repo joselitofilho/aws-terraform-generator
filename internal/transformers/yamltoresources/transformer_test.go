@@ -17,7 +17,7 @@ var (
 	endpointResource = resources.NewGenericResource("1", "mystack-api.domain-${var.environment}.com",
 		resources.EndpointType)
 	apiGateway        = resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
-	lambdaAPIGateway  = resources.NewGenericResource("3", "exampleAPIReceiver", resources.LambdaType)
+	lambdaAPIGateway  = resources.NewGenericResource("3", "exampleApiReceiver", resources.LambdaType)
 	kinesisResource   = resources.NewGenericResource("4", "MyKinesis", resources.KinesisType)
 	lambdaResource    = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
 	cronResource      = resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType)

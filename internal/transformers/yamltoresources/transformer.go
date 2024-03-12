@@ -153,12 +153,14 @@ func (t *Transformer) transformAPIGateways(
 				t.apigatewayByName[apigValue] = apigRes
 			}
 
-			t.transformLambda(&config.Lambda{Name: l.Name, Envars: l.Envars}, rscs, relationships, id)
+			lambdaName := resources.ToLambdaCase(l.Name)
+
+			t.transformLambda(&config.Lambda{Name: lambdaName, Envars: l.Envars}, rscs, relationships, id)
 
 			*relationships = append(*relationships,
 				resources.Relationship{
 					Source: apigRes,
-					Target: t.lambdaByName[l.Name],
+					Target: t.lambdaByName[lambdaName],
 				}, resources.Relationship{
 					Source: endpointRes,
 					Target: apigRes,
