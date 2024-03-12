@@ -97,7 +97,9 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	}, nil
 }
 
-func (t *Transformer) transformAPIGateways(rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int) {
+func (t *Transformer) transformAPIGateways(
+	rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
+) {
 	for _, res := range t.yamlConfig.APIGateways {
 		for i := range res.Lambdas {
 			l := res.Lambdas[i]
@@ -113,7 +115,7 @@ func (t *Transformer) transformAPIGateways(rscs *[]resources.Resource, relations
 				t.apigatewayByName[apigValue] = apigRes
 			}
 
-			t.transformLambda(config.Lambda{Name: l.Name}, rscs, relationships, id)
+			t.transformLambda(&config.Lambda{Name: l.Name}, rscs, relationships, id)
 
 			*relationships = append(*relationships, resources.Relationship{
 				Source: apigRes,
@@ -147,7 +149,7 @@ func (t *Transformer) transformKinesis(rscs *[]resources.Resource, id *int) {
 }
 
 func (t *Transformer) transformLambda(
-	res config.Lambda, rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
+	res *config.Lambda, rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
 ) {
 	if _, ok := t.lambdaByName[res.Name]; ok {
 		return
@@ -166,7 +168,7 @@ func (t *Transformer) transformLambda(
 		*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
 	}
 
-	t.transformLambdaEnvars(&res, lambda, relationships, id)
+	t.transformLambdaEnvars(res, lambda, relationships, id)
 
 	for _, r := range res.KinesisTriggers {
 		cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.KinesisType)
@@ -187,7 +189,7 @@ func (t *Transformer) transformLambdas(rscs *[]resources.Resource, relationships
 	for i := range t.yamlConfig.Lambdas {
 		res := t.yamlConfig.Lambdas[i]
 
-		t.transformLambda(res, rscs, relationships, id)
+		t.transformLambda(&res, rscs, relationships, id)
 	}
 }
 
