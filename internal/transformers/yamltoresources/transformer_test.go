@@ -248,11 +248,11 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 			tr.transformLambdaEnvars(tt.args.res, tt.args.lambda, tt.args.resources, tt.args.relationships, tt.args.id)
 
 			require.Equal(t, 3, *tt.args.id)
-			// require.Equal(t, tt.args.resources, &[]resources.Resource{targetResource, lambdaResource})
-			require.Equal(t, tt.args.relationships, &[]resources.Relationship{{
+			require.Equal(t, &[]resources.Resource{targetResource}, tt.args.resources)
+			require.Equal(t, &[]resources.Relationship{{
 				Source: lambdaResource,
 				Target: targetResource,
-			}})
+			}}, tt.args.relationships)
 		})
 	}
 }

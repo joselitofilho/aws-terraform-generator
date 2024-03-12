@@ -153,15 +153,14 @@ func (t *Transformer) transformAPIGateways(
 
 			t.transformLambda(&config.Lambda{Name: l.Name, Envars: l.Envars}, rscs, relationships, id)
 
-			*relationships = append(*relationships, resources.Relationship{
-				Source: apigRes,
-				Target: t.lambdaByName[l.Name],
-			})
-
-			*relationships = append(*relationships, resources.Relationship{
-				Source: endpointRes,
-				Target: apigRes,
-			})
+			*relationships = append(*relationships,
+				resources.Relationship{
+					Source: apigRes,
+					Target: t.lambdaByName[l.Name],
+				}, resources.Relationship{
+					Source: endpointRes,
+					Target: apigRes,
+				})
 		}
 	}
 }
@@ -266,34 +265,7 @@ func (t *Transformer) transformLambdaEnvars(
 ) {
 	for _, envars := range res.Envars {
 		for k := range envars {
-			var (
-				value   string
-				resType resources.ResourceType
-			)
-
-			switch {
-			case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
-				resType = resources.DatabaseType
-			case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
-				resType = resources.GoogleBQType
-			case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
-				resType = resources.KinesisType
-			case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketURL, resources.ToS3BucketCase)
-				resType = resources.S3Type
-			case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketName, resources.ToS3BucketCase)
-				resType = resources.S3Type
-			case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
-				resType = resources.SQSType
-			case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
-				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
-				resType = resources.RestfulAPIType
-			}
+			value, resType := t.getValueTypeFromEnvar(k)
 
 			if value != "" {
 				switch resType {
@@ -318,6 +290,34 @@ func (t *Transformer) transformLambdaEnvars(
 			}
 		}
 	}
+}
+
+func (*Transformer) getValueTypeFromEnvar(k string) (value string, resType resources.ResourceType) {
+	switch {
+	case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
+		resType = resources.DatabaseType
+	case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
+		resType = resources.GoogleBQType
+	case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
+		resType = resources.KinesisType
+	case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketURL, resources.ToS3BucketCase)
+		resType = resources.S3Type
+	case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketName, resources.ToS3BucketCase)
+		resType = resources.S3Type
+	case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
+		resType = resources.SQSType
+	case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
+		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
+		resType = resources.RestfulAPIType
+	}
+
+	return value, resType
 }
 
 func (t *Transformer) fromLambdaToResource(

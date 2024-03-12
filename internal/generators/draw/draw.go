@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// https://awsicons.dev/
+// DefaultResourceImageMap defines the default resource images. Images from here: https://awsicons.dev/
 var DefaultResourceImageMap = config.Images{
 	resources.APIGatewayType: "assets/diagram/api_gateway.svg",
 	resources.CronType:       "assets/diagram/cron.svg",

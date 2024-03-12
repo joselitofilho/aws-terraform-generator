@@ -98,6 +98,7 @@ linters-settings:
     locale: UK
     ignore-words:
       - color
+      - colors
       - center
   nolintlint:
     # Enable to ensure that nolint directives are all used. Default is true.
