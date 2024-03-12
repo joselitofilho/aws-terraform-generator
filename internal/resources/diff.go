@@ -8,7 +8,8 @@ import (
 
 // FindDifferences finds the differences between two resource collections.
 func FindDifferences(
-	rc1, rc2 *ResourceCollection) (addedResourcesByType, removedResourcesByType map[ResourceType][]Resource,
+	rc1, rc2 *ResourceCollection,
+) (addedResourcesByType, removedResourcesByType map[ResourceType][]Resource,
 	addedRelationships, removedRelationships []Relationship,
 ) {
 	// Find added and removed resources.

@@ -10,10 +10,10 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
-type resourceARN struct {
-	key   string
-	name  string
-	label string
+type ResourceARN struct {
+	Key   string
+	Name  string
+	Label string
 }
 
 func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.Filters) bool {
@@ -57,7 +57,7 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 	return match
 }
 
-func resourceByARN(arn string) resourceARN {
+func ResourceByARN(arn string) ResourceARN {
 	var key, name, label string
 
 	if strings.HasPrefix(arn, "arn:") {
@@ -110,7 +110,7 @@ func resourceByARN(arn string) resourceARN {
 		}
 	}
 
-	return resourceARN{key: key, name: name, label: label}
+	return ResourceARN{Key: key, Name: name, Label: label}
 }
 
 func strTransformFromKeyValue(
@@ -128,7 +128,7 @@ func strTransformFromKeyValue(
 
 		for s := range suffixMap {
 			if strings.HasPrefix(result, s) {
-				result = resourceByARN(result).name
+				result = ResourceByARN(result).Name
 				break
 			}
 		}

@@ -1,8 +1,14 @@
 package cmd
 
 import (
+	"os"
+	"path"
+
 	"github.com/spf13/cobra"
 
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/draw"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/yamltoresources"
 )
@@ -33,6 +39,60 @@ var diffCmd = &cobra.Command{
 		}
 
 		resources.PrintDiff(leftRc, rightRc)
+
+		addedResourcesByType, removedResourcesByType, addedRelationships, removedRelationships :=
+			resources.FindDifferences(leftRc, rightRc)
+
+		dotConfig := graphviz.Config{}
+		style := graphviz.Style{Nodes: map[resources.Resource]string{}, Arrows: map[string]map[string]string{}}
+
+		for _, rscs := range addedResourcesByType {
+			for i := range rscs {
+				style.Nodes[rscs[i]] = "green"
+			}
+		}
+
+		for _, rscs := range removedResourcesByType {
+			for i := range rscs {
+				style.Nodes[rscs[i]] = "red"
+			}
+		}
+
+		for i := range addedRelationships {
+			arrowTarget, ok := style.Arrows[addedRelationships[i].Source.Value()]
+			if !ok {
+				arrowTarget = map[string]string{}
+			}
+
+			arrowTarget[addedRelationships[i].Target.Value()] = "green"
+			style.Arrows[addedRelationships[i].Source.Value()] = arrowTarget
+		}
+
+		for i := range removedRelationships {
+			arrowTarget, ok := style.Arrows[removedRelationships[i].Source.Value()]
+			if !ok {
+				arrowTarget = map[string]string{}
+			}
+
+			arrowTarget[removedRelationships[i].Target.Value()] = "red"
+			style.Arrows[removedRelationships[i].Source.Value()] = arrowTarget
+		}
+
+		dotContent := graphviz.BuildWithStyle(leftRc, draw.DefaultResourceImageMap, dotConfig, style)
+
+		dotFilename := "diff.dot"
+
+		dotfile, err := os.Create(path.Join(".", dotFilename))
+		if err != nil {
+			printErrorAndExit(err)
+		}
+		defer dotfile.Close()
+
+		if _, err := dotfile.WriteString(dotContent); err != nil {
+			printErrorAndExit(err)
+		}
+
+		fmtcolor.White.Println("The graphviz dot file has been generated successfully.")
 	},
 }
 

@@ -105,6 +105,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 	type args struct {
 		res           *config.Lambda
 		lambda        *resources.GenericResource
+		resources     *[]resources.Resource
 		relationships *[]resources.Relationship
 		id            *int
 	}
@@ -132,6 +133,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 					"DOCDB_HOST": "var.doc_db_host",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
@@ -150,6 +152,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 					"GOOGLE_BQ_PROJECT_ID": "google",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
@@ -168,6 +171,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 					"MY_KINESIS_KINESIS_STREAM_URL": "MyKinesis",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
@@ -186,6 +190,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 					"PAYLOADS_S3_BUCKET": "payloads",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
@@ -204,6 +209,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 					"PAYLOADS_BUCKET_NAME": "payloads",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
@@ -219,15 +225,16 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 			},
 			args: args{
 				res: &config.Lambda{Envars: []map[string]string{{
-					"MY_REST_API_BASE_URL": "myRest",
+					"MY_REST_API_BASE_URL": "MyRest",
 				}}},
 				lambda:        lambdaResource,
+				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
 			setup: func() {
 				id = 2
-				targetResource = resources.NewGenericResource("2", "myRest", resources.RestfulAPIType)
+				targetResource = resources.NewGenericResource("2", "MyRest", resources.RestfulAPIType)
 			},
 		},
 	}
@@ -238,9 +245,10 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 
 			tr := NewTransformer(tt.fields.yamlConfig)
 
-			tr.transformLambdaEnvars(tt.args.res, tt.args.lambda, tt.args.relationships, tt.args.id)
+			tr.transformLambdaEnvars(tt.args.res, tt.args.lambda, tt.args.resources, tt.args.relationships, tt.args.id)
 
 			require.Equal(t, 3, *tt.args.id)
+			// require.Equal(t, tt.args.resources, &[]resources.Resource{targetResource, lambdaResource})
 			require.Equal(t, tt.args.relationships, &[]resources.Relationship{{
 				Source: lambdaResource,
 				Target: targetResource,

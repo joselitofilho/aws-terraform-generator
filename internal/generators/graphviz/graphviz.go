@@ -15,6 +15,12 @@ type Config struct {
 func Build(
 	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
 ) string {
+	return BuildWithStyle(resc, resourceImageMap, config, Style{})
+}
+
+func BuildWithStyle(
+	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config, style Style,
+) string {
 	g := dot.NewGraph(dot.Directed)
 
 	if config.Orientation != "" {
@@ -30,18 +36,62 @@ func Build(
 	})
 
 	nodes := map[string]dot.Node{}
+	egdes := map[string]struct{}{}
 
-	for _, res := range resc.Resources {
-		nodes[res.ID()] = g.Node(res.Value()).
-			Attr("image", resourceImageMap[res.ResourceType()])
+	for i := range resc.Resources {
+		res := resc.Resources[i]
+
+		node := g.Node(res.Value()).Attr("image", resourceImageMap[res.ResourceType()])
+
+		if color, ok := style.Nodes[res]; ok {
+			node = node.Attr("fontcolor", color)
+		}
+
+		nodes[res.Value()] = node
 	}
 
-	for _, rel := range resc.Relationships {
+	for k, v := range style.Nodes {
+		nodes[k.Value()] = g.Node(k.Value()).Attr("fontcolor", v).Attr("image", resourceImageMap[k.ResourceType()])
+	}
+
+	for i := range resc.Relationships {
+		rel := resc.Relationships[i]
+
 		if rel.Source == nil || rel.Target == nil {
 			continue
 		}
 
-		g.Edge(nodes[rel.Source.ID()], nodes[rel.Target.ID()])
+		edgeKey := rel.Source.Value() + "###" + rel.Target.Value()
+
+		if style.Arrows[rel.Source.Value()] != nil {
+			if color, ok := style.Arrows[rel.Source.Value()][rel.Target.Value()]; ok {
+				if _, ok := egdes[edgeKey]; !ok {
+					g.Edge(nodes[rel.Source.Value()], nodes[rel.Target.Value()]).Attr("color", color)
+					egdes[edgeKey] = struct{}{}
+				}
+			} else {
+				if _, ok := egdes[edgeKey]; !ok {
+					g.Edge(nodes[rel.Source.Value()], nodes[rel.Target.Value()])
+					egdes[edgeKey] = struct{}{}
+				}
+			}
+		} else {
+			if _, ok := egdes[edgeKey]; !ok {
+				g.Edge(nodes[rel.Source.Value()], nodes[rel.Target.Value()])
+				egdes[edgeKey] = struct{}{}
+			}
+		}
+	}
+
+	for source, v := range style.Arrows {
+		for target, color := range v {
+			edgeKey := source + "###" + target
+
+			if _, ok := egdes[edgeKey]; !ok {
+				g.Edge(nodes[source], nodes[target]).Attr("color", color)
+				egdes[edgeKey] = struct{}{}
+			}
+		}
 	}
 
 	return g.String()
