@@ -14,23 +14,28 @@ import (
 var diagramData []byte
 
 var (
-	apiGateway       = resources.NewGenericResource("1", "POST /v1/examples", resources.APIGatewayType)
-	lambdaAPIGateway = resources.NewGenericResource("2", "exampleAPIReceiver", resources.LambdaType)
-	lambdaResource   = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
+	endpointResource = resources.NewGenericResource("1", "mystack-api.domain-${var.environment}.com",
+		resources.EndpointType)
+	apiGateway        = resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
+	lambdaAPIGateway  = resources.NewGenericResource("3", "exampleAPIReceiver", resources.LambdaType)
+	kinesisResource   = resources.NewGenericResource("4", "MyKinesis", resources.KinesisType)
+	lambdaResource    = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
+	cronResource      = resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType)
+	sourceSQSResource = resources.NewGenericResource("7", "source", resources.SQSType)
 
 	wantResourceCollection = &resources.ResourceCollection{
 		Resources: []resources.Resource{
+			endpointResource,
 			apiGateway,
 			lambdaAPIGateway,
-			resources.NewGenericResource("3", "mystack-api.domain-${var.environment}.com",
-				resources.EndpointType),
-			resources.NewGenericResource("4", "myKinesis", resources.KinesisType),
+			kinesisResource,
 			lambdaResource,
-			resources.NewGenericResource("9", "MyAPI", resources.RestfulAPIType),
-			resources.NewGenericResource("10", "my-bucket", resources.S3Type),
-			resources.NewGenericResource("11", "target", resources.SQSType),
-			resources.NewGenericResource("12", "source", resources.SQSType),
-			resources.NewGenericResource("13", "example", resources.SNSType),
+			cronResource,
+			sourceSQSResource,
+			resources.NewGenericResource("8", "MyApi", resources.RestfulAPIType),
+			resources.NewGenericResource("9", "my-bucket", resources.S3Type),
+			resources.NewGenericResource("10", "target", resources.SQSType),
+			resources.NewGenericResource("11", "example", resources.SNSType),
 		},
 		Relationships: []resources.Relationship{
 			{
@@ -38,16 +43,19 @@ var (
 				Target: lambdaAPIGateway,
 			},
 			{
-				Source: resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType),
+				Source: endpointResource,
+				Target: apiGateway,
+			},
+			{
+				Source: cronResource,
 				Target: lambdaResource,
 			},
 			{
-				Source: resources.NewGenericResource("7", "aws_kinesis_stream.mykinesis_kinesis.arn",
-					resources.KinesisType),
+				Source: kinesisResource,
 				Target: lambdaResource,
 			},
 			{
-				Source: resources.NewGenericResource("8", "aws_sqs_queue.source_sqs.arn", resources.SQSType),
+				Source: sourceSQSResource,
 				Target: lambdaResource,
 			},
 		},

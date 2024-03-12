@@ -22,7 +22,7 @@ lambdas:
     envars:
       - SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
     kinesis-triggers:
-      - source_arn: aws_kinesis_stream.mykinesis_kinesis.arn
+      - source_arn: aws_kinesis_stream.my_kinesis_kinesis.arn
     sqs-triggers:
       - source_arn: aws_sqs_queue.source_sqs.arn
     crons:

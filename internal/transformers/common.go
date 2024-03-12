@@ -3,8 +3,11 @@ package transformers
 import "strings"
 
 func ReplaceSuffix(value, suffix string, fn func(s string) string) string {
-	value = strings.ReplaceAll(value, "_"+suffix, "")
-	value = strings.ReplaceAll(value, suffix, "")
+	if strings.HasSuffix(value, "_"+suffix) {
+		value = strings.TrimSuffix(value, "_"+suffix)
+	} else {
+		value = strings.TrimSuffix(value, suffix)
+	}
 
 	if fn != nil {
 		value = fn(value)

@@ -19,5 +19,6 @@ var (
 	ToLambdaCase     = strcase.ToCamel
 	ToS3BucketCase   = strcase.ToKebab
 	ToSQSCase        = strcase.ToKebab
+	ToSNSCase        = strcase.ToKebab
 	ToRestfulAPICase = strcase.ToPascal
 )
