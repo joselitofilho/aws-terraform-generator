@@ -19,7 +19,9 @@ const (
 	flagConfig  = "config"
 	flagDiagram = "diagram"
 	flagFile    = "file"
+	flagLeft    = "left"
 	flagOutput  = "output"
+	flagRight   = "right"
 	flagWorkdir = "workdir"
 )
 

@@ -43,6 +43,10 @@ const (
 	UnknownType ResourceType = "unknown"
 )
 
+var AvailableTypes = []ResourceType{
+	APIGatewayType, CronType, DatabaseType, EndpointType, GoogleBQType, KinesisType, LambdaType, RestfulAPIType,
+	S3Type, SQSType, SNSType}
+
 // String returns the string representation of a ResourceType.
 func (rt ResourceType) String() string {
 	switch rt {

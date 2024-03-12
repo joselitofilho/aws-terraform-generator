@@ -551,7 +551,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Attributes: map[string]any{
 								"function_name": "my_receiver_lambda",
 								"lambda_function_env_vars": map[string]any{
-									"S3_BUCKET": "my-bucket",
+									"BUCKET_NAME": "my-bucket",
 								},
 							},
 						},

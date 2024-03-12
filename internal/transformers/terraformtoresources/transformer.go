@@ -11,16 +11,6 @@ import (
 )
 
 var (
-	envarSuffixDBHost           = "DB_HOST"
-	envarSuffixGoogleBQ         = "BQ_PROJECT_ID"
-	envarSuffixKinesisStreamURL = "KINESIS_STREAM_URL"
-	envarSuffixS3BucketURL      = "S3_BUCKET"
-	envarSuffixS3BucketName     = "BUCKET_NAME"
-	envarSuffixSQSQueueURL      = "SQS_QUEUE_URL"
-	envarSuffixRestfulAPI       = "API_BASE_URL"
-)
-
-var (
 	suffixKinesis  = "_kinesis"
 	suffixLambda   = "_lambda"
 	suffixS3Bucket = "_bucket"
@@ -304,7 +294,7 @@ func (t *Transformer) processDBResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(k, value, envarSuffixDBHost)
+	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
 
 	resource, ok := resourcesByName[value]
 
@@ -350,7 +340,7 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(k, value, envarSuffixGoogleBQ)
+	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
 
 	resource, ok := resourcesByName[value]
 
@@ -370,7 +360,7 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toPascalFromKeyValue(k, value, envarSuffixKinesisStreamURL)
+	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
 
 	resource, ok := resourcesByName[value]
 
@@ -388,7 +378,7 @@ func (t *Transformer) processKinesisResourceFromEnvar(
 func (t *Transformer) processKinesisResource(conf *terraform.Resource) {
 	value := replaceVars(conf.Attributes["name"].(string), t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toPascalFromKeyValue(suffixKinesis, value, suffixKinesis)
+	value = strTransformFromKeyValue(suffixKinesis, value, suffixKinesis, resources.ToKinesisCase)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
 	t.id++
@@ -398,13 +388,13 @@ func (t *Transformer) processKinesisResource(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processLambda(attributes, envars map[string]any, label string) {
-	value := toCamelFromKeyValue(label, label, suffixLambda)
+	value := strTransformFromKeyValue(label, label, suffixLambda, resources.ToLambdaCase)
 
 	for k, v := range attributes {
 		if strings.HasSuffix(k, "function_name") {
 			value = replaceVars(v.(string), t.tfConfig.Locals)
 			value = resourceByARN(value).name
-			value = toCamelFromKeyValue(value, value, suffixLambda)
+			value = strTransformFromKeyValue(value, value, suffixLambda, resources.ToLambdaCase)
 
 			break
 		}
@@ -419,33 +409,33 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, label str
 
 	for k, v := range envars {
 		switch {
-		case strings.HasSuffix(k, envarSuffixDBHost):
+		case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
 			target := t.processDBResourceFromEnvar(k, v.(string), t.dbResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixGoogleBQ):
+		case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
 			target := t.processGoogleBQResourceFromEnvar(k, v.(string), t.googleBQResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixKinesisStreamURL):
+		case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
 			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixS3BucketURL):
+		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
 			target := t.processS3BucketResourceFromEnvar(
-				k, v.(string), envarSuffixS3BucketURL, t.s3BucketResourcesByName)
+				k, v.(string), resources.EnvarSuffixS3BucketURL, t.s3BucketResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixS3BucketName):
+		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
 			target := t.processS3BucketResourceFromEnvar(
-				k, v.(string), envarSuffixS3BucketName, t.s3BucketResourcesByName)
+				k, v.(string), resources.EnvarSuffixS3BucketName, t.s3BucketResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixSQSQueueURL):
+		case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
 			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, envarSuffixRestfulAPI):
+		case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
 			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
@@ -481,7 +471,7 @@ func (t *Transformer) processS3BucketResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(k, value, suffix)
+	value = strTransformFromKeyValue(k, value, suffix, resources.ToS3BucketCase)
 
 	resource, ok := resourcesByName[value]
 
@@ -499,7 +489,7 @@ func (t *Transformer) processS3BucketResourceFromEnvar(
 func (t *Transformer) processS3BucketResource(conf *terraform.Resource) {
 	value := replaceVars(conf.Attributes["bucket"].(string), t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(suffixS3Bucket, value, suffixS3Bucket)
+	value = strTransformFromKeyValue(suffixS3Bucket, value, suffixS3Bucket, resources.ToS3BucketCase)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.S3Type)
 	t.id++
@@ -513,7 +503,7 @@ func (t *Transformer) processSQSResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(k, value, envarSuffixSQSQueueURL)
+	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
 
 	resource, ok := resourcesByName[value]
 
@@ -531,7 +521,7 @@ func (t *Transformer) processSQSResourceFromEnvar(
 func (t *Transformer) processSQSResource(conf *terraform.Resource) {
 	value := replaceVars(conf.Attributes["name"].(string), t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toKebabFromKeyValue(value, value, suffixSQS)
+	value = strTransformFromKeyValue(value, value, suffixSQS, resources.ToSQSCase)
 
 	resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.SQSType)
 	t.id++
@@ -545,7 +535,7 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Locals)
 	value = resourceByARN(value).name
-	value = toCamelFromKeyValue(k, value, envarSuffixRestfulAPI)
+	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
 
 	resource, ok := resourcesByName[value]
 
@@ -564,7 +554,8 @@ func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
 	if eventSourceARN.key == arnKinesisKey {
 		value := replaceVars(eventSourceARN.name, t.tfConfig.Locals)
 		value = resourceByARN(value).name
-		value = toPascalFromKeyValue(eventSourceARN.name, value, envarSuffixKinesisStreamURL)
+		value = strTransformFromKeyValue(eventSourceARN.name,
+			value, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
 
 		if _, ok := t.kinesisResourcesByName[value]; !ok {
 			resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)

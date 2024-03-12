@@ -51,6 +51,16 @@ func Test_resourceByARN(t *testing.T) {
 				label: "location_store_data_receiver_lambda",
 			},
 		},
+		{
+			name: "http arn",
+			args: args{
+				arn: "https://sqs.eu-west-1.amazonaws.com/var.account_id/pre-pipeline-events",
+			},
+			want: resourceARN{
+				key:  "sqs",
+				name: "pre-pipeline-events",
+			},
+		},
 	}
 
 	for i := range tests {
