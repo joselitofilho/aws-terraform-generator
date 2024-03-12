@@ -7,7 +7,11 @@ import (
 )
 
 // FindDifferences finds the differences between two resource collections.
-func FindDifferences(rc1, rc2 *ResourceCollection) (addedResources, removedResources []Resource, addedRelationships, removedRelationships []Relationship) {
+func FindDifferences(
+	rc1, rc2 *ResourceCollection) (addedResources, removedResources []Resource,
+	addedRelationships, removedRelationships []Relationship,
+) {
+	// Find added and removed resources.
 	rc1Resources := make(map[string]struct{})
 	for _, res := range rc1.Resources {
 		rc1Resources[res.Value()] = struct{}{}
@@ -18,7 +22,6 @@ func FindDifferences(rc1, rc2 *ResourceCollection) (addedResources, removedResou
 		rc2Resources[res.Value()] = struct{}{}
 	}
 
-	// Find added and removed resources
 	for _, res := range rc1.Resources {
 		if _, exists := rc2Resources[res.Value()]; !exists {
 			removedResources = append(removedResources, res)
@@ -31,7 +34,7 @@ func FindDifferences(rc1, rc2 *ResourceCollection) (addedResources, removedResou
 		}
 	}
 
-	// Find added and removed relationships
+	// Find added and removed relationships.
 	for _, rel := range rc2.Relationships {
 		if !containsRelationship(rc1.Relationships, rel) {
 			addedRelationships = append(addedRelationships, rel)
@@ -52,12 +55,14 @@ func PrintDiff(rc1, rc2 *ResourceCollection) {
 	addedResources, removedResources, addedRelationships, removedRelationships := FindDifferences(rc1, rc2)
 
 	addedResourcesByType := map[ResourceType][]Resource{}
+
 	for i := range addedResources {
 		r := addedResources[i]
 		addedResourcesByType[r.ResourceType()] = append(addedResourcesByType[r.ResourceType()], r)
 	}
 
 	removedResourcesByType := map[ResourceType][]Resource{}
+
 	for i := range removedResources {
 		r := removedResources[i]
 		removedResourcesByType[r.ResourceType()] = append(removedResourcesByType[r.ResourceType()], r)
@@ -85,30 +90,30 @@ func containsRelationship(relationships []Relationship, rel Relationship) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // printResources prints the resources.
 func printResources(resources []Resource, simbol string) {
-	printf := fmtcolor.Red.Printf
-	if simbol == "+" {
-		printf = fmtcolor.Green.Printf
-	}
-
 	for _, res := range resources {
-		printf("%s %s [%s]\n", simbol, res.Value(), res.ResourceType())
+		if simbol == "+" {
+			fmtcolor.Green.Printf("%s %s\n", simbol, res.Value())
+		} else {
+			fmtcolor.Red.Printf("%s %s\n", simbol, res.Value())
+		}
 	}
 }
 
 // printRelationships prints the relationships.
 func printRelationships(relationships []Relationship, simbol string) {
-	printf := fmtcolor.Red.Printf
-	if simbol == "+" {
-		printf = fmtcolor.Green.Printf
-	}
-
 	for _, rel := range relationships {
-		printf("%s Source: %s [%s]\n", simbol, rel.Source.Value(), rel.Source.ResourceType())
-		printf("  Target: %s [%s]\n", rel.Target.Value(), rel.Target.ResourceType())
+		if simbol == "+" {
+			fmtcolor.Green.Printf("%s Source: %s (%s)\n", simbol, rel.Source.Value(), rel.Source.ResourceType())
+			fmtcolor.Green.Printf("  Target: %s (%s)\n", rel.Target.Value(), rel.Target.ResourceType())
+		} else {
+			fmtcolor.Red.Printf("%s Source: %s (%s)\n", simbol, rel.Source.Value(), rel.Source.ResourceType())
+			fmtcolor.Red.Printf("  Target: %s (%s)\n", rel.Target.Value(), rel.Target.ResourceType())
+		}
 	}
 }

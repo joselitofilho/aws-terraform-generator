@@ -49,110 +49,11 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	rscs := []resources.Resource{}
 	relationships := []resources.Relationship{}
 
-	for _, res := range t.yamlConfig.APIGateways {
-		for i := range res.Lambdas {
-			l := res.Lambdas[i]
-			apigValue := fmt.Sprintf("%s %s", l.Verb, l.Path)
+	t.transformAPIGateways(&rscs, &id)
 
-			if _, ok := t.apigatewayByName[apigValue]; !ok {
-				rscs = append(rscs,
-					resources.NewGenericResource(fmt.Sprintf("%d", id), apigValue, resources.APIGatewayType))
-				id++
+	t.transformKinesis(&rscs, &id)
 
-				t.apigatewayByName[apigValue] = struct{}{}
-			}
-		}
-
-		endpointValue := res.APIDomain
-		if _, ok := t.endpointByName[endpointValue]; !ok {
-			rscs = append(rscs,
-				resources.NewGenericResource(fmt.Sprintf("%d", id), endpointValue, resources.EndpointType))
-			id++
-
-			t.endpointByName[endpointValue] = struct{}{}
-		}
-	}
-
-	for _, res := range t.yamlConfig.Kinesis {
-		if _, ok := t.kinesisByName[res.Name]; !ok {
-			rscs = append(rscs, resources.NewGenericResource(fmt.Sprintf("%d", id), res.Name, resources.KinesisType))
-			id++
-
-			t.kinesisByName[res.Name] = struct{}{}
-		}
-	}
-
-	for _, res := range t.yamlConfig.Lambdas {
-		if _, ok := t.lambdaByName[res.Name]; ok {
-			continue
-		}
-
-		lambda := resources.NewGenericResource(fmt.Sprintf("%d", id), res.Name, resources.LambdaType)
-		rscs = append(rscs, lambda)
-		id++
-
-		t.lambdaByName[res.Name] = struct{}{}
-
-		for _, r := range res.Crons {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", id), r.ScheduleExpression, resources.CronType)
-			id++
-
-			relationships = append(relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
-
-		for _, envars := range res.Envars {
-			for k := range envars {
-				var (
-					value   string
-					resType resources.ResourceType
-				)
-				switch {
-				case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
-					resType = resources.DatabaseType
-				case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
-					resType = resources.GoogleBQType
-				case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
-					resType = resources.KinesisType
-				case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketURL, resources.ToS3BucketCase)
-					resType = resources.S3Type
-				case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketName, resources.ToS3BucketCase)
-					resType = resources.S3Type
-				case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
-					resType = resources.SQSType
-				case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
-					value = transformers.ReplaceSuffix(k, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
-					resType = resources.RestfulAPIType
-				}
-
-				if value != "" {
-					r := resources.NewGenericResource(fmt.Sprintf("%d", id), value, resType)
-					id++
-
-					relationships = append(relationships, resources.Relationship{Source: lambda, Target: r})
-				}
-			}
-		}
-
-		for _, r := range res.KinesisTriggers {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", id), r.SourceARN, resources.KinesisType)
-			id++
-
-			relationships = append(relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
-
-		for _, r := range res.SQSTriggers {
-			cron := resources.NewGenericResource(fmt.Sprintf("%d", id), r.SourceARN, resources.SQSType)
-			id++
-
-			relationships = append(relationships, resources.Relationship{Source: cron, Target: lambda})
-		}
-	}
+	t.transformLambdas(&rscs, &relationships, &id)
 
 	for _, res := range t.yamlConfig.RestfulAPIs {
 		if _, ok := t.restfulAPIByName[res.Name]; !ok {
@@ -194,4 +95,127 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 		Resources:     rscs,
 		Relationships: relationships,
 	}, nil
+}
+
+func (t *Transformer) transformAPIGateways(rscs *[]resources.Resource, id *int) {
+	for _, res := range t.yamlConfig.APIGateways {
+		for i := range res.Lambdas {
+			l := res.Lambdas[i]
+			apigValue := fmt.Sprintf("%s %s", l.Verb, l.Path)
+
+			if _, ok := t.apigatewayByName[apigValue]; !ok {
+				*rscs = append(*rscs,
+					resources.NewGenericResource(fmt.Sprintf("%d", *id), apigValue, resources.APIGatewayType))
+				*id++
+
+				t.apigatewayByName[apigValue] = struct{}{}
+			}
+		}
+
+		endpointValue := res.APIDomain
+
+		if _, ok := t.endpointByName[endpointValue]; !ok {
+			*rscs = append(*rscs,
+				resources.NewGenericResource(fmt.Sprintf("%d", *id), endpointValue, resources.EndpointType))
+			*id++
+
+			t.endpointByName[endpointValue] = struct{}{}
+		}
+	}
+}
+
+func (t *Transformer) transformKinesis(rscs *[]resources.Resource, id *int) {
+	for i := range t.yamlConfig.Kinesis {
+		res := t.yamlConfig.Kinesis[i]
+
+		if _, ok := t.kinesisByName[res.Name]; !ok {
+			*rscs = append(*rscs, resources.NewGenericResource(fmt.Sprintf("%d", *id), res.Name, resources.KinesisType))
+			*id++
+
+			t.kinesisByName[res.Name] = struct{}{}
+		}
+	}
+}
+
+func (t *Transformer) transformLambdas(rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int) {
+	for i := range t.yamlConfig.Lambdas {
+		res := t.yamlConfig.Lambdas[i]
+
+		if _, ok := t.lambdaByName[res.Name]; ok {
+			continue
+		}
+
+		lambda := resources.NewGenericResource(fmt.Sprintf("%d", *id), res.Name, resources.LambdaType)
+		*rscs = append(*rscs, lambda)
+		*id++
+
+		t.lambdaByName[res.Name] = struct{}{}
+
+		for _, r := range res.Crons {
+			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.ScheduleExpression, resources.CronType)
+			*id++
+
+			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+		}
+
+		t.transformLambdaEnvars(&res, id, relationships, lambda)
+
+		for _, r := range res.KinesisTriggers {
+			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.KinesisType)
+			*id++
+
+			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+		}
+
+		for _, r := range res.SQSTriggers {
+			cron := resources.NewGenericResource(fmt.Sprintf("%d", *id), r.SourceARN, resources.SQSType)
+			*id++
+
+			*relationships = append(*relationships, resources.Relationship{Source: cron, Target: lambda})
+		}
+	}
+}
+
+func (*Transformer) transformLambdaEnvars(
+	res *config.Lambda, id *int, relationships *[]resources.Relationship, lambda *resources.GenericResource,
+) {
+	for _, envars := range res.Envars {
+		for k := range envars {
+			var (
+				value   string
+				resType resources.ResourceType
+			)
+
+			switch {
+			case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
+				resType = resources.DatabaseType
+			case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
+				resType = resources.GoogleBQType
+			case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
+				resType = resources.KinesisType
+			case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketURL, resources.ToS3BucketCase)
+				resType = resources.S3Type
+			case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketName, resources.ToS3BucketCase)
+				resType = resources.S3Type
+			case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
+				resType = resources.SQSType
+			case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
+				value = transformers.ReplaceSuffix(k, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
+				resType = resources.RestfulAPIType
+			}
+
+			if value != "" {
+				r := resources.NewGenericResource(fmt.Sprintf("%d", *id), value, resType)
+				*id++
+
+				*relationships = append(*relationships, resources.Relationship{Source: lambda, Target: r})
+			}
+		}
+	}
 }

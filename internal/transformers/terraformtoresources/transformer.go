@@ -292,21 +292,8 @@ func (t *Transformer) processCronResource(conf *terraform.Resource) {
 func (t *Transformer) processDBResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
-	value = resourceByARN(value).name
-	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.DatabaseType)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
+	return t.processResourceFromEnvar(
+		k, v, resources.EnvarSuffixDBHost, resources.DatabaseType, resources.ToDatabaseCase, resourcesByName)
 }
 
 func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
@@ -338,41 +325,15 @@ func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 func (t *Transformer) processGoogleBQResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
-	value = resourceByARN(value).name
-	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.GoogleBQType)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
+	return t.processResourceFromEnvar(
+		k, v, resources.EnvarSuffixGoogleBQ, resources.GoogleBQType, resources.ToGoogleBQCase, resourcesByName)
 }
 
 func (t *Transformer) processKinesisResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
-	value = resourceByARN(value).name
-	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
+	return t.processResourceFromEnvar(
+		k, v, resources.EnvarSuffixKinesisStreamURL, resources.KinesisType, resources.ToKinesisCase, resourcesByName)
 }
 
 func (t *Transformer) processKinesisResource(conf *terraform.Resource) {
@@ -501,21 +462,8 @@ func (t *Transformer) processS3BucketResource(conf *terraform.Resource) {
 func (t *Transformer) processSQSResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
-	value = resourceByARN(value).name
-	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.SQSType)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
+	return t.processResourceFromEnvar(
+		k, v, resources.EnvarSuffixSQSQueueURL, resources.SQSType, resources.ToSQSCase, resourcesByName)
 }
 
 func (t *Transformer) processSQSResource(conf *terraform.Resource) {
@@ -533,21 +481,8 @@ func (t *Transformer) processSQSResource(conf *terraform.Resource) {
 func (t *Transformer) processRestfulAPIResourceFromEnvar(
 	k, v string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
-	value = resourceByARN(value).name
-	value = strTransformFromKeyValue(k, value, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.RestfulAPIType)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
+	return t.processResourceFromEnvar(
+		k, v, resources.EnvarSuffixRestfulAPI, resources.RestfulAPIType, resources.ToRestfulAPICase, resourcesByName)
 }
 
 func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
@@ -565,4 +500,25 @@ func (t *Transformer) tryToCreateResourceByARN(eventSourceARN resourceARN) {
 			t.kinesisResourcesByName[value] = resource
 		}
 	}
+}
+
+func (t *Transformer) processResourceFromEnvar(
+	k, v, suffix string, restType resources.ResourceType, fn func(s string) string,
+	resourcesByName map[string]resources.Resource,
+) resources.Resource {
+	value := replaceVars(v, t.tfConfig.Locals)
+	value = resourceByARN(value).name
+	value = strTransformFromKeyValue(k, value, suffix, fn)
+
+	resource, ok := resourcesByName[value]
+
+	if !ok {
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, restType)
+		t.id++
+
+		resourcesByName[value] = resource
+		t.resources = append(t.resources, resource)
+	}
+
+	return resource
 }

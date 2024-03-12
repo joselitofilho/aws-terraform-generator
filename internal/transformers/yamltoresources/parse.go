@@ -16,14 +16,14 @@ func Parse(filename string) (*resources.ResourceCollection, error) {
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	var config *config.Config
+	var cfg *config.Config
 
-	err = yaml.Unmarshal(data, &config)
+	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	result, err := NewTransformer(config).Transform()
+	result, err := NewTransformer(cfg).Transform()
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
