@@ -71,6 +71,11 @@ func Parse(directories, files []string) (Config, error) {
 				return fmt.Errorf("%w", err)
 			}
 
+			// Ignores terraform folder with cached provider plugins and modules.
+			if strings.Contains(file, ".terraform/") {
+				return nil
+			}
+
 			if !info.IsDir() && filepath.Ext(file) == ".tf" {
 				return parseSingleFile(file)
 			}
@@ -182,8 +187,13 @@ func parseResourcesFromEnvironment(bodyBlock *hclsyntax.Block, resource *Resourc
 				environment[attribute.Name] = map[string]any{}
 			}
 
-			for k, v := range value.(map[string]any) {
-				environment[attribute.Name][k] = v
+			switch value := value.(type) {
+			case map[string]any:
+				for k, v := range value {
+					environment[attribute.Name][k] = v
+				}
+			default:
+				fmtcolor.Yellow.Println("environment.variable is not a map:", bodyBlock)
 			}
 		}
 	}
