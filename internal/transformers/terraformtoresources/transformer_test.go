@@ -249,7 +249,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "my-bucket", resources.S3Type)},
+					resources.NewGenericResource("1", "var-client-var-environment-my-bucket", resources.S3Type)},
 				Relationships: []resources.Relationship{},
 			},
 		},

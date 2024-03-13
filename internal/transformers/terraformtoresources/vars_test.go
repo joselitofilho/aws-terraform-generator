@@ -10,8 +10,10 @@ import (
 
 func Test_replaceVars(t *testing.T) {
 	type args struct {
-		str      string
-		tfLocals []*terraform.Local
+		str             string
+		tfVariables     []*terraform.Variable
+		tfLocals        []*terraform.Local
+		replaceableStrs map[string]string
 	}
 
 	tests := []struct {
@@ -20,7 +22,7 @@ func Test_replaceVars(t *testing.T) {
 		want string
 	}{
 		{
-			name: "string",
+			name: "local string",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -31,7 +33,7 @@ func Test_replaceVars(t *testing.T) {
 			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
 		},
 		{
-			name: "string array",
+			name: "local string array",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -42,7 +44,7 @@ func Test_replaceVars(t *testing.T) {
 			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
 		},
 		{
-			name: "empty string array",
+			name: "local empty string array",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -53,7 +55,7 @@ func Test_replaceVars(t *testing.T) {
 			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
 		},
 		{
-			name: "string map",
+			name: "local string map",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -64,7 +66,7 @@ func Test_replaceVars(t *testing.T) {
 			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
 		},
 		{
-			name: "empty string map",
+			name: "local empty string map",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -75,7 +77,7 @@ func Test_replaceVars(t *testing.T) {
 			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
 		},
 		{
-			name: "other types",
+			name: "local other types",
 			args: args{
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
@@ -85,13 +87,34 @@ func Test_replaceVars(t *testing.T) {
 			},
 			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
 		},
+		{
+			name: "var string",
+			args: args{
+				str: "var.api_domain",
+				tfVariables: []*terraform.Variable{{Attributes: map[string]any{
+					"environment": "dev",
+					"api_domain":  "location-api.flyingtiger-var.environment.xiatechs.co.uk",
+				}}},
+			},
+			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
+		},
+		{
+			name: "replaceable texts",
+			args: args{
+				str: "var.ze-location",
+				replaceableStrs: map[string]string{
+					"var.ze-": "",
+				},
+			},
+			want: "location",
+		},
 	}
 
 	for i := range tests {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got := replaceVars(tc.args.str, tc.args.tfLocals)
+			got := replaceVars(tc.args.str, tc.args.tfVariables, tc.args.tfLocals, tc.args.replaceableStrs)
 
 			require.Equal(t, tc.want, got)
 		})

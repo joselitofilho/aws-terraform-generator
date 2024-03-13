@@ -8,12 +8,35 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 )
 
-func buildKeyValueVars(tfLocals []*terraform.Local) map[string]string {
+func buildKeyValueFromLocals(tfLocals []*terraform.Local) map[string]string {
 	keyValue := map[string]string{}
 
 	for i := range tfLocals {
 		for k, v := range tfLocals[i].Attributes {
 			varName := fmt.Sprintf("local.%s", k)
+
+			switch v := v.(type) {
+			case string:
+				keyValue[varName] = v
+			case []string:
+				buildSliceStringVars(varName, v, keyValue)
+			case map[string]any:
+				buildStringAnyMapVars(varName, v, keyValue)
+			default:
+				keyValue[varName] = varName
+			}
+		}
+	}
+
+	return keyValue
+}
+
+func buildKeyValueFromVariables(tfVariables []*terraform.Variable) map[string]string {
+	keyValue := map[string]string{}
+
+	for i := range tfVariables {
+		for k, v := range tfVariables[i].Attributes {
+			varName := fmt.Sprintf("var.%s", k)
 
 			switch v := v.(type) {
 			case string:
@@ -53,8 +76,22 @@ func buildStringAnyMapVars(varName string, values map[string]any, keyValue map[s
 	}
 }
 
-func replaceVars(str string, tfLocals []*terraform.Local) string {
-	keyValue := buildKeyValueVars(tfLocals)
+func replaceVars(
+	str string, tfVars []*terraform.Variable, tfLocals []*terraform.Local, replaceableStrs map[string]string,
+) string {
+	keyValue := buildKeyValueFromVariables(tfVars)
+
+	for i := 0; i <= len(keyValue); i++ {
+		for varName, finalValue := range keyValue {
+			str = strings.ReplaceAll(str, varName, finalValue)
+		}
+
+		if !strings.Contains(str, "var.") {
+			break
+		}
+	}
+
+	keyValue = buildKeyValueFromLocals(tfLocals)
 
 	for i := 0; i <= len(keyValue); i++ {
 		for varName, finalValue := range keyValue {
@@ -66,13 +103,17 @@ func replaceVars(str string, tfLocals []*terraform.Local) string {
 		}
 	}
 
-	// TODO: Replace vars
-	str = strings.ReplaceAll(str, "var.client-var.environment-", "")
-	str = strings.ReplaceAll(str, "-var.client-var.environment", "")
-	str = strings.ReplaceAll(str, "var.client-", "")
-	str = strings.ReplaceAll(str, "-var.client", "")
-	str = strings.ReplaceAll(str, "var.environment-", "")
-	str = strings.ReplaceAll(str, "-var.environment", "")
+	for i := 0; i <= len(replaceableStrs); i++ {
+		for varName, finalValue := range replaceableStrs {
+			str = strings.ReplaceAll(str, varName, finalValue)
+		}
+
+		for varName := range replaceableStrs {
+			if !strings.Contains(str, varName) {
+				break
+			}
+		}
+	}
 
 	return str
 }

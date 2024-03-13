@@ -34,10 +34,15 @@ type Local struct {
 	Attributes map[string]any
 }
 
+type Variable struct {
+	Attributes map[string]any
+}
+
 // Config represents the Terraform configuration.
 type Config struct {
 	Resources []*Resource
 	Modules   []*Module
+	Variables []*Variable
 	Locals    []*Local
 }
 

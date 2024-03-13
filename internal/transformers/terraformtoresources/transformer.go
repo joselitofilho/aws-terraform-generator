@@ -224,7 +224,8 @@ func (t *Transformer) processTerraformResources() {
 }
 
 func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
-	routeKeyValue := replaceVars(conf.Attributes["route_key"].(string), t.tfConfig.Locals)
+	routeKeyValue := replaceVars(conf.Attributes["route_key"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	routeKeyValue = ResourceByARN(routeKeyValue).Name
 
 	_, ok := t.apiGatewayResourcesByName[routeKeyValue]
@@ -236,13 +237,16 @@ func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
 		t.apiGatewayResourcesByName[routeKeyValue] = resource
 	}
 
-	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Locals)
+	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	apiIDARN := ResourceByARN(apiIDValue)
 
 	routeKeyARNlabel := conf.Labels[0]
-	routeKeyARN := ResourceARN{Key: strings.Split(routeKeyARNlabel, "_")[2], Name: routeKeyValue, Label: routeKeyARNlabel}
+	routeKeyARN := ResourceARN{Key: strings.Split(routeKeyARNlabel, "_")[2], Name: routeKeyValue,
+		Label: routeKeyARNlabel}
 
-	targetValue := replaceVars(conf.Attributes["target"].(string), t.tfConfig.Locals)
+	targetValue := replaceVars(conf.Attributes["target"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	targetARN := ResourceARN{Key: strings.Split(targetValue, ".")[1]}
 
 	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], routeKeyARN)
@@ -252,10 +256,12 @@ func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
 func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
 	label := ResourceARN{Key: conf.Labels[1]}
 
-	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Locals)
+	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	apiIDARN := ResourceByARN(apiIDValue)
 
-	integrationURIValue := replaceVars(conf.Attributes["integration_uri"].(string), t.tfConfig.Locals)
+	integrationURIValue := replaceVars(conf.Attributes["integration_uri"].(string), t.tfConfig.Variables,
+		t.tfConfig.Locals, t.yamlConfig.Draw.ReplaceableTexts)
 	integrationURIARN := ResourceByARN(integrationURIValue)
 
 	// TODO: tryToCreateLambdaResourceByARN
@@ -266,10 +272,12 @@ func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
-	ruleValue := replaceVars(conf.Attributes["rule"].(string), t.tfConfig.Locals)
+	ruleValue := replaceVars(conf.Attributes["rule"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	ruleARN := ResourceByARN(ruleValue)
 
-	arnValue := replaceVars(conf.Attributes["arn"].(string), t.tfConfig.Locals)
+	arnValue := replaceVars(conf.Attributes["arn"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	arn := ResourceByARN(arnValue)
 
 	// TODO: tryToCreateLambdaResourceByARN
@@ -305,7 +313,8 @@ func (t *Transformer) processDBResourceFromEnvar(
 func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
 	label := conf.Labels[1]
 	if _, ok := t.endpointResourcesByName[label]; !ok {
-		value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Locals)
+		value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+			t.yamlConfig.Draw.ReplaceableTexts)
 		value = ResourceByARN(value).Name
 
 		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.EndpointType)
@@ -317,10 +326,12 @@ func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
-	eventSourceValue := replaceVars(conf.Attributes["event_source_arn"].(string), t.tfConfig.Locals)
+	eventSourceValue := replaceVars(conf.Attributes["event_source_arn"].(string), t.tfConfig.Variables,
+		t.tfConfig.Locals, t.yamlConfig.Draw.ReplaceableTexts)
 	eventSourceARN := ResourceByARN(eventSourceValue)
 
-	functionNameValue := replaceVars(conf.Attributes["function_name"].(string), t.tfConfig.Locals)
+	functionNameValue := replaceVars(conf.Attributes["function_name"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	functionNameARN := ResourceByARN(functionNameValue)
 
 	t.relationshipsMap[eventSourceARN] = append(t.relationshipsMap[eventSourceARN], functionNameARN)
@@ -355,7 +366,8 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, label str
 
 	for k, v := range attributes {
 		if strings.HasSuffix(k, "function_name") {
-			value = replaceVars(v.(string), t.tfConfig.Locals)
+			value = replaceVars(v.(string), t.tfConfig.Variables, t.tfConfig.Locals,
+				t.yamlConfig.Draw.ReplaceableTexts)
 			value = ResourceByARN(value).Name
 			value = strTransformFromKeyValue(value, value, suffixLambda, resources.ToLambdaCase)
 
@@ -436,7 +448,8 @@ func (t *Transformer) processResource(
 	conf *terraform.Resource, resourceType resources.ResourceType, attributeName string, suffix string,
 	caseTransformer func(string) string, resourcesMap map[string]resources.Resource,
 ) {
-	value := replaceVars(conf.Attributes[attributeName].(string), t.tfConfig.Locals)
+	value := replaceVars(conf.Attributes[attributeName].(string), t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	value = ResourceByARN(value).Name
 	value = strTransformFromKeyValue(value, value, suffix, caseTransformer)
 
@@ -452,7 +465,8 @@ func (t *Transformer) processResource(
 func (t *Transformer) processS3BucketResourceFromEnvar(
 	k, v, suffix string, resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
+	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	value = ResourceByARN(value).Name
 	value = strTransformFromKeyValue(k, value, suffix, resources.ToS3BucketCase)
 
@@ -494,7 +508,8 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 
 func (t *Transformer) tryToCreateResourceByARN(eventSourceARN ResourceARN) {
 	if eventSourceARN.Key == arnKinesisKey {
-		value := replaceVars(eventSourceARN.Name, t.tfConfig.Locals)
+		value := replaceVars(eventSourceARN.Name, t.tfConfig.Variables, t.tfConfig.Locals,
+			t.yamlConfig.Draw.ReplaceableTexts)
 		value = ResourceByARN(value).Name
 		value = strTransformFromKeyValue(eventSourceARN.Name,
 			value, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
@@ -513,7 +528,8 @@ func (t *Transformer) processResourceFromEnvar(
 	k, v, suffix string, restType resources.ResourceType, fn func(s string) string,
 	resourcesByName map[string]resources.Resource,
 ) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Locals)
+	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
 	value = ResourceByARN(value).Name
 	value = strTransformFromKeyValue(k, value, suffix, fn)
 

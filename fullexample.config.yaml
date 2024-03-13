@@ -401,6 +401,10 @@ draw:
     s3: "assets/diagram/s3_bucket.svg"
     sns: "assets/diagram/sns.svg"
     sqs: "assets/diagram/sqs.svg"
+  # Define replaceable texts for the diagram.
+  replaceable_texts:
+    "-text-": ""
+    "other-text": "-ot-"
   # Filters for matching and excluding resources by name.
   filters:
     apigateway:
