@@ -63,7 +63,7 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	t.transformLambdas(&rscs, &relationships, &id)
 
 	for _, res := range t.yamlConfig.RestfulAPIs {
-		name := terraformtoresources.ResourceByARN(res.Name).Name
+		name := terraformtoresources.ResourceByARN(res.Name, resources.RestfulAPIType).Name
 		name = resources.ToRestfulAPICase(name)
 
 		if _, ok := t.restfulAPIByName[name]; !ok {
@@ -77,7 +77,7 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	}
 
 	for _, res := range t.yamlConfig.Buckets {
-		name := terraformtoresources.ResourceByARN(res.Name).Name
+		name := terraformtoresources.ResourceByARN(res.Name, resources.S3Type).Name
 		name = resources.ToS3BucketCase(name)
 
 		if _, ok := t.s3BucketByName[name]; !ok {
@@ -91,7 +91,7 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	}
 
 	for _, res := range t.yamlConfig.SQSs {
-		name := terraformtoresources.ResourceByARN(res.Name).Name
+		name := terraformtoresources.ResourceByARN(res.Name, resources.SQSType).Name
 		name = resources.ToSQSCase(name)
 
 		if _, ok := t.sqsByName[name]; !ok {
@@ -105,7 +105,7 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	}
 
 	for _, res := range t.yamlConfig.SNSs {
-		name := terraformtoresources.ResourceByARN(res.Name).Name
+		name := terraformtoresources.ResourceByARN(res.Name, resources.SNSType).Name
 		name = resources.ToSNSCase(name)
 
 		if _, ok := t.snsByName[name]; !ok {
@@ -172,7 +172,7 @@ func (t *Transformer) transformAPIGateways(
 func (t *Transformer) transformKinesis(rscs *[]resources.Resource, id *int) {
 	for i := range t.yamlConfig.Kinesis {
 		res := t.yamlConfig.Kinesis[i]
-		name := terraformtoresources.ResourceByARN(res.Name).Name
+		name := terraformtoresources.ResourceByARN(res.Name, resources.KinesisType).Name
 		name = resources.ToKinesisCase(name)
 
 		if _, ok := t.kinesisByName[name]; !ok {
@@ -193,7 +193,7 @@ func (t *Transformer) transformLambda(
 		return
 	}
 
-	lambdaName := terraformtoresources.ResourceByARN(res.Name).Name
+	lambdaName := terraformtoresources.ResourceByARN(res.Name, resources.LambdaType).Name
 	lambdaName = resources.ToLambdaCase(lambdaName)
 
 	lambda, ok := t.lambdaByName[lambdaName]
@@ -225,7 +225,7 @@ func (t *Transformer) transformLambda(
 	t.transformLambdaEnvars(res, lambda, rscs, relationships, id)
 
 	for _, r := range res.KinesisTriggers {
-		name := terraformtoresources.ResourceByARN(r.SourceARN).Name
+		name := terraformtoresources.ResourceByARN(r.SourceARN, resources.KinesisType).Name
 		name = resources.ToKinesisCase(name)
 
 		sourceRes, ok := t.kinesisByName[name]
@@ -242,7 +242,7 @@ func (t *Transformer) transformLambda(
 	}
 
 	for _, r := range res.SQSTriggers {
-		name := terraformtoresources.ResourceByARN(r.SourceARN).Name
+		name := terraformtoresources.ResourceByARN(r.SourceARN, resources.SQSType).Name
 		name = resources.ToSQSCase(name)
 
 		sourceRes, ok := t.sqsByName[name]

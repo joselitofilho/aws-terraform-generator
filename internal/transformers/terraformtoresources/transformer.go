@@ -15,9 +15,11 @@ var (
 	suffixLambda   = "_lambda"
 	suffixS3Bucket = "_bucket"
 	suffixSQS      = "_sqs"
+	suffixSNS      = "_sns"
 )
 
 var (
+	labelAWSAPIGatewayAPI            = "aws_apigatewayv2_api"
 	labelAWSAPIGatewayRoute          = "aws_apigatewayv2_route"
 	labelAWSAPIGatewayIntegration    = "aws_apigatewayv2_integration"
 	labelAWSCloudwatchEventTarget    = "aws_cloudwatch_event_target"
@@ -28,16 +30,35 @@ var (
 	labelAWSLambdaEventSourceMapping = "aws_lambda_event_source_mapping"
 	labelAWSS3Bucket                 = "aws_s3_bucket"
 	labelAWSSQSQueue                 = "aws_sqs_queue"
+	labelAWSSNSTopic                 = "aws_sns_topic"
 )
 
 var (
-	arnAPIGateway    = "route"
-	arnCloudwatchKey = "cloudwatch"
-	arnEndpoint      = "apigatewayv2"
-	arnKinesisKey    = "kinesis"
-	arnLambdaKey     = "lambda"
-	arnSQSKey        = "sqs"
+	arnKinesisKey  = "kinesis"
+	arnLambdaKey   = "lambda"
+	arnS3BucketKey = "s3"
+	arnSQSKey      = "sqs"
+	arnSNSKey      = "sns"
 )
+
+var arnKeySuffix = map[string]string{
+	arnKinesisKey:  "stream",
+	arnLambdaKey:   "function",
+	arnS3BucketKey: "bucket",
+	arnSQSKey:      "queue",
+	arnSNSKey:      "topic",
+}
+
+var resourceARNByType = map[resources.ResourceType]string{
+	resources.APIGatewayType: labelAWSAPIGatewayRoute,
+	resources.CronType:       labelAWSCron,
+	resources.EndpointType:   labelAWSEndpoint,
+	resources.KinesisType:    labelAWSKinesisStream,
+	resources.LambdaType:     labelAWSLambdaFunction,
+	resources.S3Type:         labelAWSS3Bucket,
+	resources.SQSType:        labelAWSSQSQueue,
+	resources.SNSType:        labelAWSSNSTopic,
+}
 
 type Transformer struct {
 	yamlConfig *config.Config
@@ -160,22 +181,26 @@ func (t *Transformer) buildRelationships() {
 }
 
 func (t *Transformer) getResourceByARN(arn ResourceARN) (resource resources.Resource) {
-	switch arn.Key {
-	case arnAPIGateway:
-		resource = t.apiGatewayResourcesByName[arn.Name]
-	case arnCloudwatchKey:
-		resource = t.cronResourcesByName[arn.Name]
-	case arnEndpoint:
+	switch arn.Type {
+	case labelAWSAPIGatewayAPI:
 		resource = t.endpointResourcesByName[arn.Name]
-	case arnKinesisKey:
+	case labelAWSAPIGatewayRoute:
+		resource = t.apiGatewayResourcesByName[arn.Name]
+	case labelAWSCron:
+		resource = t.cronResourcesByName[arn.Name]
+	case labelAWSEndpoint:
+		resource = t.endpointResourcesByName[arn.Name]
+	case labelAWSKinesisStream:
 		resource = t.kinesisResourcesByName[arn.Name]
-	case arnLambdaKey:
+	case labelAWSLambdaFunction:
 		if arn.Label == "" {
 			resource = t.lambdaResourcesByName[arn.Name]
 		} else {
 			resource = t.lambdaResourcesByLabel[arn.Label]
 		}
-	case arnSQSKey:
+	case labelAWSS3Bucket:
+		resource = t.s3BucketResourcesByName[arn.Name]
+	case labelAWSSQSQueue:
 		resource = t.sqsResourcesByName[arn.Name]
 	}
 
@@ -226,7 +251,11 @@ func (t *Transformer) processTerraformResources() {
 func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
 	routeKeyValue := replaceVars(conf.Attributes["route_key"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	routeKeyValue = ResourceByARN(routeKeyValue).Name
+
+	routeKeyARN := ResourceByARN(routeKeyValue, resources.APIGatewayType)
+	routeKeyARN.Label = conf.Labels[1]
+
+	routeKeyValue = routeKeyARN.Name
 
 	_, ok := t.apiGatewayResourcesByName[routeKeyValue]
 	if !ok {
@@ -239,48 +268,41 @@ func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
 
 	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	apiIDARN := ResourceByARN(apiIDValue)
-
-	routeKeyARNlabel := conf.Labels[0]
-	routeKeyARN := ResourceARN{Key: strings.Split(routeKeyARNlabel, "_")[2], Name: routeKeyValue,
-		Label: routeKeyARNlabel}
+	apiIDARN := ResourceByARN(apiIDValue, resources.EndpointType)
 
 	targetValue := replaceVars(conf.Attributes["target"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	targetARN := ResourceARN{Key: strings.Split(targetValue, ".")[1]}
+	targetValueParts := strings.Split(strings.Split(targetValue, "/")[1], ".")
+	targetARN := ResourceARN{Type: targetValueParts[0], Label: targetValueParts[1]}
 
 	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], routeKeyARN)
 	t.endpointAPIGatewayMap[targetARN] = append(t.endpointAPIGatewayMap[targetARN], routeKeyARN)
 }
 
 func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
-	label := ResourceARN{Key: conf.Labels[1]}
+	integrationARN := ResourceARN{Type: conf.Labels[0], Label: conf.Labels[1]}
 
 	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	apiIDARN := ResourceByARN(apiIDValue)
+	apiIDARN := ResourceByARN(apiIDValue, resources.EndpointType)
 
 	integrationURIValue := replaceVars(conf.Attributes["integration_uri"].(string), t.tfConfig.Variables,
 		t.tfConfig.Locals, t.yamlConfig.Draw.ReplaceableTexts)
-	integrationURIARN := ResourceByARN(integrationURIValue)
-
-	// TODO: tryToCreateLambdaResourceByARN
+	integrationURIARN := ResourceByARN(integrationURIValue, resources.LambdaType)
 
 	t.relationshipsMap[apiIDARN] = append(t.relationshipsMap[apiIDARN], integrationURIARN)
 
-	t.resourceAPIGIntegration[integrationURIARN] = label
+	t.resourceAPIGIntegration[integrationURIARN] = integrationARN
 }
 
 func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
 	ruleValue := replaceVars(conf.Attributes["rule"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	ruleARN := ResourceByARN(ruleValue)
+	ruleARN := ResourceByARN(ruleValue, resources.CronType)
 
 	arnValue := replaceVars(conf.Attributes["arn"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	arn := ResourceByARN(arnValue)
-
-	// TODO: tryToCreateLambdaResourceByARN
+	arn := ResourceByARN(arnValue, resources.LambdaType)
 
 	t.relationshipsMap[ruleARN] = append(t.relationshipsMap[ruleARN], arn)
 }
@@ -294,8 +316,9 @@ func (t *Transformer) processCronResource(conf *terraform.Resource) {
 
 	label := conf.Labels[1]
 	if _, ok := t.cronResourcesByName[label]; !ok {
+		resType := resources.CronType
 		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id),
-			ResourceByARN(value.(string)).Name, resources.CronType)
+			ResourceByARN(value.(string), resType).Name, resType)
 		t.id++
 
 		t.resources = append(t.resources, resource)
@@ -315,7 +338,7 @@ func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
 	if _, ok := t.endpointResourcesByName[label]; !ok {
 		value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 			t.yamlConfig.Draw.ReplaceableTexts)
-		value = ResourceByARN(value).Name
+		value = ResourceByARN(value, resources.EndpointType).Name
 
 		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.EndpointType)
 		t.id++
@@ -328,18 +351,13 @@ func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
 func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
 	eventSourceValue := replaceVars(conf.Attributes["event_source_arn"].(string), t.tfConfig.Variables,
 		t.tfConfig.Locals, t.yamlConfig.Draw.ReplaceableTexts)
-	eventSourceARN := ResourceByARN(eventSourceValue)
+	eventSourceARN := ResourceByARN(eventSourceValue, resources.UnknownType)
 
 	functionNameValue := replaceVars(conf.Attributes["function_name"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	functionNameARN := ResourceByARN(functionNameValue)
+	functionNameARN := ResourceByARN(functionNameValue, resources.LambdaType)
 
 	t.relationshipsMap[eventSourceARN] = append(t.relationshipsMap[eventSourceARN], functionNameARN)
-
-	// TODO: tryToCreateSQSResourceByARN
-	// TODO: tryToCreateLambdaResourceByARN
-
-	t.tryToCreateResourceByARN(eventSourceARN)
 }
 
 func (t *Transformer) processGoogleBQResourceFromEnvar(
@@ -349,27 +367,21 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 		k, v, resources.EnvarSuffixGoogleBQ, resources.GoogleBQType, resources.ToGoogleBQCase, resourcesByName)
 }
 
-func (t *Transformer) processKinesisResourceFromEnvar(
-	k, v string, resourcesByName map[string]resources.Resource,
-) resources.Resource {
-	return t.processResourceFromEnvar(
-		k, v, resources.EnvarSuffixKinesisStreamURL, resources.KinesisType, resources.ToKinesisCase, resourcesByName)
-}
-
 func (t *Transformer) processKinesisResource(conf *terraform.Resource) {
 	t.processResource(conf, resources.KinesisType, "name", suffixKinesis, resources.ToKinesisCase,
 		t.kinesisResourcesByName)
 }
 
 func (t *Transformer) processLambda(attributes, envars map[string]any, label string) {
-	value := strTransformFromKeyValue(label, label, suffixLambda, resources.ToLambdaCase)
+	restType := resources.LambdaType
+	value := strTransformFromKeyValue(label, label, suffixLambda, restType, resources.ToLambdaCase)
 
 	for k, v := range attributes {
 		if strings.HasSuffix(k, "function_name") {
 			value = replaceVars(v.(string), t.tfConfig.Variables, t.tfConfig.Locals,
 				t.yamlConfig.Draw.ReplaceableTexts)
-			value = ResourceByARN(value).Name
-			value = strTransformFromKeyValue(value, value, suffixLambda, resources.ToLambdaCase)
+			value = ResourceByARN(value, restType).Name
+			value = strTransformFromKeyValue(value, value, suffixLambda, restType, resources.ToLambdaCase)
 
 			break
 		}
@@ -377,13 +389,15 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, label str
 
 	resource, ok := t.lambdaResourcesByName[value]
 	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.LambdaType)
+		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, restType)
 		t.id++
 
 		t.resources = append(t.resources, resource)
 		t.lambdaResourcesByName[value] = resource
 		t.lambdaResourcesByLabel[label] = resource
 	}
+
+	sourceARN := ResourceARN{Type: labelAWSLambdaFunction, Name: resource.Value(), Label: label}
 
 	for k, v := range envars {
 		switch {
@@ -396,27 +410,21 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, label str
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
 		case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
-			target := t.processKinesisResourceFromEnvar(k, v.(string), t.kinesisResourcesByName)
-			t.relationships = append(t.relationships,
-				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
-			target := t.processS3BucketResourceFromEnvar(
-				k, v.(string), resources.EnvarSuffixS3BucketURL, t.s3BucketResourcesByName)
-			t.relationships = append(t.relationships,
-				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
-			target := t.processS3BucketResourceFromEnvar(
-				k, v.(string), resources.EnvarSuffixS3BucketName, t.s3BucketResourcesByName)
-			t.relationships = append(t.relationships,
-				resources.Relationship{Source: resource, Target: target})
-		case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
-			target := t.processSQSResourceFromEnvar(k, v.(string), t.sqsResourcesByName)
-			t.relationships = append(t.relationships,
-				resources.Relationship{Source: resource, Target: target})
+			targetArn := t.processResourceARNFromEnvar(v.(string), resources.KinesisType, resources.ToKinesisCase)
+			t.relationshipsMap[sourceARN] = append(t.relationshipsMap[sourceARN], targetArn)
 		case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
 			target := t.processRestfulAPIResourceFromEnvar(k, v.(string), t.restfulAPIResourcesByName)
 			t.relationships = append(t.relationships,
 				resources.Relationship{Source: resource, Target: target})
+		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
+			targetArn := t.processResourceARNFromEnvar(v.(string), resources.S3Type, resources.ToS3BucketCase)
+			t.relationshipsMap[sourceARN] = append(t.relationshipsMap[sourceARN], targetArn)
+		case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
+			targetArn := t.processResourceARNFromEnvar(v.(string), resources.S3Type, resources.ToS3BucketCase)
+			t.relationshipsMap[sourceARN] = append(t.relationshipsMap[sourceARN], targetArn)
+		case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
+			targetArn := t.processResourceARNFromEnvar(v.(string), resources.SQSType, resources.ToSQSCase)
+			t.relationshipsMap[sourceARN] = append(t.relationshipsMap[sourceARN], targetArn)
 		}
 	}
 }
@@ -450,8 +458,8 @@ func (t *Transformer) processResource(
 ) {
 	value := replaceVars(conf.Attributes[attributeName].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	value = ResourceByARN(value).Name
-	value = strTransformFromKeyValue(value, value, suffix, caseTransformer)
+	value = ResourceByARN(value, resourceType).Name
+	value = strTransformFromKeyValue(value, value, suffix, resourceType, caseTransformer)
 
 	if _, ok := resourcesMap[value]; !ok {
 		resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resourceType)
@@ -462,37 +470,9 @@ func (t *Transformer) processResource(
 	}
 }
 
-func (t *Transformer) processS3BucketResourceFromEnvar(
-	k, v, suffix string, resourcesByName map[string]resources.Resource,
-) resources.Resource {
-	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
-		t.yamlConfig.Draw.ReplaceableTexts)
-	value = ResourceByARN(value).Name
-	value = strTransformFromKeyValue(k, value, suffix, resources.ToS3BucketCase)
-
-	resource, ok := resourcesByName[value]
-
-	if !ok {
-		resource = resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.S3Type)
-		t.id++
-
-		resourcesByName[value] = resource
-		t.resources = append(t.resources, resource)
-	}
-
-	return resource
-}
-
 func (t *Transformer) processS3BucketResource(conf *terraform.Resource) {
 	t.processResource(conf, resources.S3Type, "bucket", suffixS3Bucket, resources.ToS3BucketCase,
 		t.s3BucketResourcesByName)
-}
-
-func (t *Transformer) processSQSResourceFromEnvar(
-	k, v string, resourcesByName map[string]resources.Resource,
-) resources.Resource {
-	return t.processResourceFromEnvar(
-		k, v, resources.EnvarSuffixSQSQueueURL, resources.SQSType, resources.ToSQSCase, resourcesByName)
 }
 
 func (t *Transformer) processSQSResource(conf *terraform.Resource) {
@@ -506,32 +486,14 @@ func (t *Transformer) processRestfulAPIResourceFromEnvar(
 		k, v, resources.EnvarSuffixRestfulAPI, resources.RestfulAPIType, resources.ToRestfulAPICase, resourcesByName)
 }
 
-func (t *Transformer) tryToCreateResourceByARN(eventSourceARN ResourceARN) {
-	if eventSourceARN.Key == arnKinesisKey {
-		value := replaceVars(eventSourceARN.Name, t.tfConfig.Variables, t.tfConfig.Locals,
-			t.yamlConfig.Draw.ReplaceableTexts)
-		value = ResourceByARN(value).Name
-		value = strTransformFromKeyValue(eventSourceARN.Name,
-			value, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
-
-		if _, ok := t.kinesisResourcesByName[value]; !ok {
-			resource := resources.NewGenericResource(fmt.Sprintf("%d", t.id), value, resources.KinesisType)
-			t.id++
-
-			t.resources = append(t.resources, resource)
-			t.kinesisResourcesByName[value] = resource
-		}
-	}
-}
-
 func (t *Transformer) processResourceFromEnvar(
 	k, v, suffix string, restType resources.ResourceType, fn func(s string) string,
 	resourcesByName map[string]resources.Resource,
 ) resources.Resource {
 	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
-	value = ResourceByARN(value).Name
-	value = strTransformFromKeyValue(k, value, suffix, fn)
+	arn := ResourceByARN(value, restType)
+	value = strTransformFromKeyValue(k, arn.Name, suffix, restType, fn)
 
 	resource, ok := resourcesByName[value]
 
@@ -544,4 +506,16 @@ func (t *Transformer) processResourceFromEnvar(
 	}
 
 	return resource
+}
+
+func (t *Transformer) processResourceARNFromEnvar(
+	v string, restType resources.ResourceType, fn func(s string) string,
+) ResourceARN {
+	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
+		t.yamlConfig.Draw.ReplaceableTexts)
+
+	arn := ResourceByARN(value, restType)
+	arn.Name = fn(arn.Name)
+
+	return arn
 }

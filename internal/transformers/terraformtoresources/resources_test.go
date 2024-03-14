@@ -11,7 +11,8 @@ import (
 
 func Test_resourceByARN(t *testing.T) {
 	type args struct {
-		arn string
+		arn      string
+		restType resources.ResourceType
 	}
 
 	tests := []struct {
@@ -22,20 +23,22 @@ func Test_resourceByARN(t *testing.T) {
 		{
 			name: "kinesis arn",
 			args: args{
-				arn: "arn:aws:kinesis:${var.region}:${var.account_id}:stream/ProcessedLocationEvents",
+				arn:      "arn:aws:kinesis:${var.region}:${var.account_id}:stream/ProcessedLocationEvents",
+				restType: resources.KinesisType,
 			},
 			want: ResourceARN{
-				Key:  "kinesis",
+				Type: "aws_kinesis_stream",
 				Name: "ProcessedLocationEvents",
 			},
 		},
 		{
 			name: "lambda as resource",
 			args: args{
-				arn: "aws_lambda_function.location_store_data_receiver_lambda.arn",
+				arn:      "aws_lambda_function.location_store_data_receiver_lambda.arn",
+				restType: resources.LambdaType,
 			},
 			want: ResourceARN{
-				Key:   "lambda",
+				Type:  "aws_lambda_function",
 				Name:  "locationStoreDataReceiver",
 				Label: "location_store_data_receiver_lambda",
 			},
@@ -43,10 +46,11 @@ func Test_resourceByARN(t *testing.T) {
 		{
 			name: "lambda as module",
 			args: args{
-				arn: "module.location_store_data_receiver_lambda.lambda_invoke_arn",
+				arn:      "module.location_store_data_receiver_lambda.lambda_invoke_arn",
+				restType: resources.LambdaType,
 			},
 			want: ResourceARN{
-				Key:   "lambda",
+				Type:  "aws_lambda_function",
 				Name:  "locationStoreDataReceiver",
 				Label: "location_store_data_receiver_lambda",
 			},
@@ -54,10 +58,11 @@ func Test_resourceByARN(t *testing.T) {
 		{
 			name: "http arn",
 			args: args{
-				arn: "https://sqs.eu-west-1.amazonaws.com/var.account_id/pre-pipeline-events",
+				arn:      "https://sqs.eu-west-1.amazonaws.com/var.account_id/pre-pipeline-events",
+				restType: resources.SQSType,
 			},
 			want: ResourceARN{
-				Key:  "sqs",
+				Type: "aws_sqs_queue",
 				Name: "pre-pipeline-events",
 			},
 		},
@@ -67,7 +72,7 @@ func Test_resourceByARN(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got := ResourceByARN(tc.args.arn)
+			got := ResourceByARN(tc.args.arn, tc.args.restType)
 
 			require.Equal(t, tc.want, got)
 		})
@@ -164,10 +169,11 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 
 func Test_strTransformFromEnvar(t *testing.T) {
 	type args struct {
-		key    string
-		value  string
-		suffix string
-		f      func(s string) string
+		key      string
+		value    string
+		suffix   string
+		restType resources.ResourceType
+		f        func(s string) string
 	}
 
 	tests := []struct {
@@ -178,9 +184,10 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		{
 			name: "key is equal to suffix and value contains the kinesis arn",
 			args: args{
-				key:    "MY_ENVAR",
-				value:  "aws_kinesis_stream.myValue.arn",
-				suffix: "MY_ENVAR",
+				key:      "MY_ENVAR",
+				value:    "aws_kinesis_stream.my_value.arn",
+				suffix:   "MY_ENVAR",
+				restType: resources.KinesisType,
 				f: func(s string) string {
 					require.Equal(t, s, "MyValue")
 					return s
@@ -191,9 +198,10 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		{
 			name: "key is equal to suffix and value contains the lambda arn",
 			args: args{
-				key:    "MY_ENVAR",
-				value:  "aws_lambda_function.myValue.arn",
-				suffix: "MY_ENVAR",
+				key:      "MY_ENVAR",
+				value:    "aws_lambda_function.my_value.arn",
+				suffix:   "MY_ENVAR",
+				restType: resources.LambdaType,
 				f: func(s string) string {
 					require.Equal(t, s, "myValue")
 					return s
@@ -204,22 +212,24 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		{
 			name: "key is equal to suffix and value contains the s3 bucket arn",
 			args: args{
-				key:    "MY_ENVAR",
-				value:  "aws_s3_bucket.myValue.arn",
-				suffix: "MY_ENVAR",
+				key:      "MY_ENVAR",
+				value:    "aws_s3_bucket.my_value.arn",
+				suffix:   "MY_ENVAR",
+				restType: resources.S3Type,
 				f: func(s string) string {
-					require.Equal(t, s, "myValue")
+					require.Equal(t, s, "my-value")
 					return s
 				},
 			},
-			want: "myValue",
+			want: "my-value",
 		},
 		{
 			name: "key is equal to suffix and value contains the sqs arn",
 			args: args{
-				key:    "MY_ENVAR",
-				value:  "aws_sqs_queue.myValue.arn",
-				suffix: "MY_ENVAR",
+				key:      "MY_ENVAR",
+				value:    "aws_sqs_queue.my_value.arn",
+				suffix:   "MY_ENVAR",
+				restType: resources.SQSType,
 				f: func(s string) string {
 					require.Equal(t, s, "my-value")
 					return s
@@ -233,7 +243,8 @@ func Test_strTransformFromEnvar(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got := strTransformFromKeyValue(tc.args.key, tc.args.value, tc.args.suffix, tc.args.f)
+			got := strTransformFromKeyValue(
+				tc.args.key, tc.args.value, tc.args.suffix, tc.args.restType, tc.args.f)
 
 			require.Equal(t, tc.want, got)
 		})

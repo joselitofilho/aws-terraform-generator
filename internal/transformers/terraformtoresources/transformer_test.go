@@ -186,6 +186,14 @@ func TestTransformer_Transform(t *testing.T) {
 								"function_name":    "aws_lambda_function.example_checker_lambda.arn",
 							},
 						},
+						{
+							Type:   "aws_kinesis_stream",
+							Name:   "my_stream",
+							Labels: []string{"aws_kinesis_stream", "my_stream"},
+							Attributes: map[string]any{
+								"name": "MyStream",
+							},
+						},
 					},
 				},
 			},
@@ -306,7 +314,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
 	restfulAPIResource := resources.NewGenericResource("2", "MyRestful", resources.RestfulAPIType)
 	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
-	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
+	sqsResource := resources.NewGenericResource("2", "var-variable1-my-queue", resources.SQSType)
 
 	tests := []struct {
 		name   string
@@ -432,6 +440,14 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								},
 							},
 						},
+						{
+							Type:   "aws_kinesis_stream",
+							Name:   "my_stream_kinesis",
+							Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
+							Attributes: map[string]any{
+								"name": "MyStream",
+							},
+						},
 					},
 				},
 			},
@@ -453,6 +469,16 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								"lambda_function_env_vars": map[string]any{
 									"KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name",
 								},
+							},
+						},
+					},
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_kinesis_stream",
+							Name:   "my_stream_kinesis",
+							Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
+							Attributes: map[string]any{
+								"name": "MyStream",
 							},
 						},
 					},
@@ -532,6 +558,14 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								},
 							},
 						},
+						{
+							Type:   "aws_s3_bucket",
+							Name:   "my_bucket",
+							Labels: []string{"aws_s3_bucket", "my_bucket"},
+							Attributes: map[string]any{
+								"bucket": "my-bucket",
+							},
+						},
 					},
 				},
 			},
@@ -556,6 +590,16 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							},
 						},
 					},
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_s3_bucket",
+							Name:   "my_bucket",
+							Labels: []string{"aws_s3_bucket", "my_bucket"},
+							Attributes: map[string]any{
+								"bucket": "my-bucket",
+							},
+						},
+					},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -577,9 +621,18 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								"function_name": "my_receiver_lambda",
 								"environment": map[string]map[string]any{
 									"variables": {
-										"MY_QUEUE_SQS_QUEUE_URL": "my-queue",
+										"MY_QUEUE_SQS_QUEUE_URL": "var.variable1-my-queue",
 									},
 								},
+							},
+						},
+						{
+							Type:   "aws_sqs_queue",
+							Name:   "my_queue",
+							Labels: []string{"aws_sqs_queue", "my_queue"},
+							Attributes: map[string]any{
+								"name":                       "var.variable1-my-queue",
+								"visibility_timeout_seconds": "720",
 							},
 						},
 					},
@@ -601,8 +654,19 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Attributes: map[string]any{
 								"function_name": "my_receiver_lambda",
 								"lambda_function_env_vars": map[string]any{
-									"SQS_QUEUE_URL": "my-queue",
+									"SQS_QUEUE_URL": "var.variable1-my-queue",
 								},
+							},
+						},
+					},
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_sqs_queue",
+							Name:   "my_queue",
+							Labels: []string{"aws_sqs_queue", "my_queue"},
+							Attributes: map[string]any{
+								"name":                       "var.variable1-my-queue",
+								"visibility_timeout_seconds": "720",
 							},
 						},
 					},

@@ -1,6 +1,7 @@
 package terraformtoresources
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type ResourceARN struct {
-	Key   string
+	Type  string
 	Name  string
 	Label string
 }
@@ -57,15 +58,14 @@ func (t *Transformer) hasResourceMatched(res resources.Resource, filters config.
 	return match
 }
 
-func ResourceByARN(arn string) ResourceARN {
-	var key, name, label string
+func ResourceByARN(arn string, restType resources.ResourceType) ResourceARN {
+	var arnType, name, label string
 
 	if strings.HasPrefix(arn, "arn:") {
 		parts := strings.Split(arn, ":")
+		arnType = fmt.Sprintf("aws_%s_%s", parts[2], arnKeySuffix[parts[2]])
 
-		key = parts[2]
-
-		if key == arnKinesisKey {
+		if arnType == labelAWSKinesisStream {
 			parts = strings.Split(arn, "/")
 		}
 
@@ -74,7 +74,8 @@ func ResourceByARN(arn string) ResourceARN {
 		parts := strings.Split(arn, "//")
 		parts = strings.Split(parts[1], "/")
 
-		key = strings.Split(parts[0], ".")[0]
+		resStrType := strings.Split(parts[0], ".")[0]
+		arnType = fmt.Sprintf("aws_%s_%s", resStrType, arnKeySuffix[resStrType])
 
 		name = parts[len(parts)-1]
 	} else {
@@ -82,39 +83,55 @@ func ResourceByARN(arn string) ResourceARN {
 
 		if len(parts) > 0 && parts[0] == "module" {
 			// TODO: Add support to more type of modules
-			key = arnLambdaKey
+			arnType = labelAWSLambdaFunction
 			name = parts[1]
 			label = parts[1]
 		} else if len(parts) > 1 && strings.HasPrefix(parts[0], "aws_") {
+			arnType = parts[0]
 			label = parts[1]
-			keyParts := strings.Split(parts[0], "_")
-
-			if len(keyParts) > 1 {
-				key = keyParts[1]
-			} else {
-				key = strings.Join(keyParts, "_")
-			}
-
 			name = parts[1]
 		} else {
 			name = arn
 		}
 
-		switch key {
-		case arnKinesisKey:
-			name = strTransformFromKeyValue(name, name, suffixKinesis, resources.ToKinesisCase)
-		case arnLambdaKey:
-			name = strTransformFromKeyValue(name, name, suffixLambda, resources.ToLambdaCase)
-		case arnSQSKey:
-			name = strTransformFromKeyValue(name, name, suffixSQS, resources.ToSQSCase)
+		switch arnType {
+		case labelAWSKinesisStream:
+			name = strTransformFromKeyValue(name, name, suffixKinesis, restType, resources.ToKinesisCase)
+		case labelAWSLambdaFunction:
+			name = strTransformFromKeyValue(name, name, suffixLambda, restType, resources.ToLambdaCase)
+		case labelAWSS3Bucket:
+			name = strTransformFromKeyValue(name, name, suffixS3Bucket, restType, resources.ToS3BucketCase)
+		case labelAWSSQSQueue:
+			name = strTransformFromKeyValue(name, name, suffixSQS, restType, resources.ToSQSCase)
+		case labelAWSSNSTopic:
+			name = strTransformFromKeyValue(name, name, suffixSNS, restType, resources.ToSNSCase)
 		}
 	}
 
-	return ResourceARN{Key: key, Name: name, Label: label}
+	if restType == resources.UnknownType {
+		switch arnType {
+		case labelAWSKinesisStream:
+			restType = resources.KinesisType
+		case labelAWSLambdaFunction:
+			restType = resources.LambdaType
+		case labelAWSS3Bucket:
+			restType = resources.S3Type
+		case labelAWSSQSQueue:
+			restType = resources.SQSType
+		case labelAWSSNSTopic:
+			restType = resources.SNSType
+		}
+	}
+
+	if arnType == "" {
+		arnType = resourceARNByType[restType]
+	}
+
+	return ResourceARN{Type: arnType, Name: name, Label: label}
 }
 
 func strTransformFromKeyValue(
-	key, value, suffix string, f func(s string) string,
+	key, value, suffix string, restType resources.ResourceType, f func(s string) string,
 ) string {
 	if key == suffix {
 		suffixMap := map[string]struct{}{
@@ -128,7 +145,7 @@ func strTransformFromKeyValue(
 
 		for s := range suffixMap {
 			if strings.HasPrefix(result, s) {
-				result = ResourceByARN(result).Name
+				result = ResourceByARN(result, restType).Name
 				break
 			}
 		}
