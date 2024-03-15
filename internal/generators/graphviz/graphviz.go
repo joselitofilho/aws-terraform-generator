@@ -42,18 +42,6 @@ func BuildWithStyle(
 
 	applyStyleForArrows(resc, egdes, g, nodes, style)
 
-	for source, v := range style.Arrows {
-		for target, color := range v {
-			edgeKey := source + "###" + target
-
-			if _, ok := egdes[edgeKey]; !ok {
-				g.Edge(nodes[source], nodes[target]).Attr("color", color)
-
-				egdes[edgeKey] = struct{}{}
-			}
-		}
-	}
-
 	return g.String()
 }
 
@@ -93,16 +81,24 @@ func applyStyleForArrows(
 		sourceNode := nodes[rel.Source.Value()]
 		targetNode := nodes[rel.Target.Value()]
 
-		if colors, exists := style.Arrows[rel.Source.Value()]; exists {
-			if color, ok := colors[rel.Target.Value()]; ok {
-				g.Edge(sourceNode, targetNode).Attr("color", color)
-			} else {
-				g.Edge(sourceNode, targetNode)
-			}
+		if color, ok := getArrowColor(style, rel); ok {
+			g.Edge(sourceNode, targetNode).Attr("color", color)
 		} else {
 			g.Edge(sourceNode, targetNode)
 		}
 
 		edges[edgeKey] = struct{}{}
 	}
+}
+
+func getArrowColor(style Style, rel resources.Relationship) (string, bool) {
+	if list, exists := style.Arrows[rel.Source.Value()]; exists {
+		for _, colors := range list {
+			if color, ok := colors[rel.Target.Value()]; ok {
+				return color, true
+			}
+		}
+	}
+
+	return "", false
 }

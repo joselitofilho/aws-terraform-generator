@@ -16,26 +16,30 @@ var diagramData []byte
 var (
 	endpointResource = resources.NewGenericResource("1", "mystack-api.domain-${var.environment}.com",
 		resources.EndpointType)
-	apiGateway        = resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
-	lambdaAPIGateway  = resources.NewGenericResource("3", "exampleApiReceiver", resources.LambdaType)
-	kinesisResource   = resources.NewGenericResource("4", "MyKinesis", resources.KinesisType)
-	lambdaResource    = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
-	cronResource      = resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType)
-	sourceSQSResource = resources.NewGenericResource("7", "source", resources.SQSType)
+	apiGateway       = resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
+	lambdaAPIGateway = resources.NewGenericResource("3", "exampleApiReceiver", resources.LambdaType)
+	kinesis          = resources.NewGenericResource("4", "MyKinesis", resources.KinesisType)
+	lambda           = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
+	cron             = resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType)
+	restAPI          = resources.NewGenericResource("7", "MyApi", resources.RestfulAPIType)
+	s3Bucket         = resources.NewGenericResource("8", "my-bucket", resources.S3Type)
+	sns              = resources.NewGenericResource("9", "example", resources.SNSType)
+	targetSQS        = resources.NewGenericResource("10", "target", resources.SQSType)
+	sourceSQS        = resources.NewGenericResource("11", "source", resources.SQSType)
 
 	wantResourceCollection = &resources.ResourceCollection{
 		Resources: []resources.Resource{
 			endpointResource,
 			apiGateway,
 			lambdaAPIGateway,
-			kinesisResource,
-			lambdaResource,
-			cronResource,
-			sourceSQSResource,
-			resources.NewGenericResource("8", "MyApi", resources.RestfulAPIType),
-			resources.NewGenericResource("9", "my-bucket", resources.S3Type),
-			resources.NewGenericResource("10", "target", resources.SQSType),
-			resources.NewGenericResource("11", "example", resources.SNSType),
+			kinesis,
+			lambda,
+			cron,
+			restAPI,
+			s3Bucket,
+			sns,
+			targetSQS,
+			sourceSQS,
 		},
 		Relationships: []resources.Relationship{
 			{
@@ -47,20 +51,48 @@ var (
 				Target: apiGateway,
 			},
 			{
-				Source: cronResource,
-				Target: lambdaResource,
+				Source: cron,
+				Target: lambda,
 			},
 			{
-				Source: kinesisResource,
-				Target: lambdaResource,
+				Source: lambda,
+				Target: targetSQS,
 			},
 			{
-				Source: sourceSQSResource,
-				Target: lambdaResource,
+				Source: kinesis,
+				Target: lambda,
+			},
+			{
+				Source: sourceSQS,
+				Target: lambda,
 			},
 		},
 	}
 )
+
+func setupEmpty(
+	id *int, wantResources *[]resources.Resource, wantRelationships *[]resources.Relationship,
+) func() {
+	return func() {
+		*id = 2
+		*wantResources = []resources.Resource{}
+		*wantRelationships = []resources.Relationship{}
+	}
+}
+
+func setupWithLambda(
+	lambdaResource, targetResource resources.Resource,
+	id *int, wantResources *[]resources.Resource, wantRelationships *[]resources.Relationship,
+) func() {
+	return func() {
+		*id = 2
+		*wantResources = []resources.Resource{targetResource}
+		*wantRelationships = []resources.Relationship{{
+			Source: lambdaResource,
+			Target: targetResource,
+		}}
+	}
+}
 
 func TestTransformer_Transform(t *testing.T) {
 	type fields struct {
@@ -113,6 +145,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 	type args struct {
 		res           *config.Lambda
 		lambda        *resources.GenericResource
+		lambdaARN     resources.ResourceARN
 		resources     *[]resources.Resource
 		relationships *[]resources.Relationship
 		id            *int
@@ -121,8 +154,9 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
 
 	var (
-		id             int
-		targetResource resources.Resource
+		id                int
+		wantResources     []resources.Resource
+		wantRelationships []resources.Relationship
 	)
 
 	tests := []struct {
@@ -130,9 +164,10 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 		fields fields
 		args   args
 		setup  func()
+		wantID int
 	}{
 		{
-			name: "lambda and sqs",
+			name: "lambda and database",
 			fields: fields{
 				yamlConfig: &config.Config{},
 			},
@@ -145,10 +180,9 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "doc", resources.DatabaseType)
-			},
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "doc", resources.DatabaseType),
+				&id, &wantResources, &wantRelationships),
+			wantID: 3,
 		},
 		{
 			name: "lambda and google BQ",
@@ -164,10 +198,9 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "google", resources.GoogleBQType)
-			},
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "google", resources.GoogleBQType),
+				&id, &wantResources, &wantRelationships),
+			wantID: 3,
 		},
 		{
 			name: "lambda and kinesis",
@@ -183,10 +216,8 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "MyKinesis", resources.KinesisType)
-			},
+			setup:  setupEmpty(&id, &wantResources, &wantRelationships),
+			wantID: 2,
 		},
 		{
 			name: "lambda and s3 bucket S3_BUCKET",
@@ -202,10 +233,8 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "payloads", resources.S3Type)
-			},
+			setup:  setupEmpty(&id, &wantResources, &wantRelationships),
+			wantID: 2,
 		},
 		{
 			name: "lambda and s3 bucket BUCKET_NAME",
@@ -221,10 +250,8 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "payloads", resources.S3Type)
-			},
+			setup:  setupEmpty(&id, &wantResources, &wantRelationships),
+			wantID: 2,
 		},
 		{
 			name: "lambda and restful API",
@@ -240,27 +267,26 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: func() {
-				id = 2
-				targetResource = resources.NewGenericResource("2", "MyRest", resources.RestfulAPIType)
-			},
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "MyRest", resources.RestfulAPIType),
+				&id, &wantResources, &wantRelationships),
+			wantID: 3,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+	for i := range tests {
+		tc := tests[i]
 
-			tr := NewTransformer(tt.fields.yamlConfig)
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
 
-			tr.transformLambdaEnvars(tt.args.res, tt.args.lambda, tt.args.resources, tt.args.relationships, tt.args.id)
+			tr := NewTransformer(tc.fields.yamlConfig)
 
-			require.Equal(t, 3, *tt.args.id)
-			require.Equal(t, &[]resources.Resource{targetResource}, tt.args.resources)
-			require.Equal(t, &[]resources.Relationship{{
-				Source: lambdaResource,
-				Target: targetResource,
-			}}, tt.args.relationships)
+			tr.transformLambdaEnvars(tc.args.res, tc.args.lambda, tc.args.lambdaARN,
+				tc.args.resources, tc.args.relationships, tc.args.id)
+
+			require.Equal(t, tc.wantID, *tc.args.id)
+			require.Equal(t, &wantResources, tc.args.resources)
+			require.Equal(t, &wantRelationships, tc.args.relationships)
 		})
 	}
 }

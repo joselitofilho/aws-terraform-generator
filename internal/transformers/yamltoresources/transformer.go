@@ -3,12 +3,14 @@ package yamltoresources
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
+	"github.com/ettle/strcase"
+	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/terraformtoresources"
 )
 
 var ErrEmptyConfig = errors.New("config file is empty")
@@ -25,8 +27,10 @@ type Transformer struct {
 	lambdaByName     map[string]resources.Resource
 	restfulAPIByName map[string]resources.Resource
 	s3BucketByName   map[string]resources.Resource
-	sqsByName        map[string]resources.Resource
 	snsByName        map[string]resources.Resource
+	sqsByName        map[string]resources.Resource
+
+	relationshipsMap map[resources.ResourceARN][]resources.ResourceARN
 }
 
 func NewTransformer(yamlConfig *config.Config) *Transformer {
@@ -42,8 +46,10 @@ func NewTransformer(yamlConfig *config.Config) *Transformer {
 		lambdaByName:     map[string]resources.Resource{},
 		restfulAPIByName: map[string]resources.Resource{},
 		s3BucketByName:   map[string]resources.Resource{},
-		sqsByName:        map[string]resources.Resource{},
 		snsByName:        map[string]resources.Resource{},
+		sqsByName:        map[string]resources.Resource{},
+
+		relationshipsMap: map[resources.ResourceARN][]resources.ResourceARN{},
 	}
 }
 
@@ -57,71 +63,133 @@ func (t *Transformer) Transform() (*resources.ResourceCollection, error) {
 	relationships := []resources.Relationship{}
 
 	t.transformAPIGateways(&rscs, &relationships, &id)
-
-	t.transformKinesis(&rscs, &id)
-
+	t.extractKinesisResources(&rscs, &id)
 	t.transformLambdas(&rscs, &relationships, &id)
+	t.extractRestfulAPIResources(&rscs, &id)
+	t.extractS3BucketResources(&rscs, &id)
+	t.extractSNSBucketResources(&rscs, &id)
+	t.extractSQSResources(&rscs, &id)
 
-	for _, res := range t.yamlConfig.RestfulAPIs {
-		name := terraformtoresources.ResourceByARN(res.Name, resources.RestfulAPIType).Name
-		name = resources.ToRestfulAPICase(name)
-
-		if _, ok := t.restfulAPIByName[name]; !ok {
-			restfulAPIRes := resources.NewGenericResource(fmt.Sprintf("%d", id), name, resources.RestfulAPIType)
-			id++
-
-			rscs = append(rscs, restfulAPIRes)
-
-			t.restfulAPIByName[name] = restfulAPIRes
-		}
-	}
-
-	for _, res := range t.yamlConfig.Buckets {
-		name := terraformtoresources.ResourceByARN(res.Name, resources.S3Type).Name
-		name = resources.ToS3BucketCase(name)
-
-		if _, ok := t.s3BucketByName[name]; !ok {
-			s3BucketResource := resources.NewGenericResource(fmt.Sprintf("%d", id), name, resources.S3Type)
-			id++
-
-			rscs = append(rscs, s3BucketResource)
-
-			t.s3BucketByName[name] = s3BucketResource
-		}
-	}
-
-	for _, res := range t.yamlConfig.SQSs {
-		name := terraformtoresources.ResourceByARN(res.Name, resources.SQSType).Name
-		name = resources.ToSQSCase(name)
-
-		if _, ok := t.sqsByName[name]; !ok {
-			sqsResource := resources.NewGenericResource(fmt.Sprintf("%d", id), name, resources.SQSType)
-			id++
-
-			rscs = append(rscs, sqsResource)
-
-			t.sqsByName[name] = sqsResource
-		}
-	}
-
-	for _, res := range t.yamlConfig.SNSs {
-		name := terraformtoresources.ResourceByARN(res.Name, resources.SNSType).Name
-		name = resources.ToSNSCase(name)
-
-		if _, ok := t.snsByName[name]; !ok {
-			snsResource := resources.NewGenericResource(fmt.Sprintf("%d", id), name, resources.SNSType)
-			id++
-
-			rscs = append(rscs, snsResource)
-
-			t.snsByName[name] = snsResource
-		}
-	}
+	t.buildRelationships(&relationships)
 
 	return &resources.ResourceCollection{
 		Resources:     rscs,
 		Relationships: relationships,
 	}, nil
+}
+
+func (t *Transformer) buildRelationships(relationships *[]resources.Relationship) {
+	for sourceARN, rel := range t.relationshipsMap {
+		source := t.getResourceByARN(sourceARN)
+
+		for i := range rel {
+			target := t.getResourceByARN(rel[i])
+
+			*relationships = append(*relationships, resources.Relationship{Source: source, Target: target})
+		}
+	}
+}
+
+func (t *Transformer) getResourceByARN(arn resources.ResourceARN) (resource resources.Resource) {
+	key := arn.LabelOrName()
+
+	switch arn.Type {
+	case resources.LabelAWSAPIGatewayAPI:
+		resource = t.endpointByName[key]
+	case resources.LabelAWSAPIGatewayRoute:
+		resource = t.apigatewayByName[key]
+	case resources.LabelAWSCron:
+		resource = t.cronByName[key]
+	case resources.LabelAWSEndpoint:
+		resource = t.endpointByName[key]
+	case resources.LabelAWSKinesisStream:
+		resource = t.kinesisByName[key]
+	case resources.LabelAWSLambdaFunction:
+		resource = t.lambdaByName[key]
+	case resources.LabelAWSS3Bucket:
+		resource = t.s3BucketByName[key]
+	case resources.LabelAWSSQSQueue:
+		resource = t.sqsByName[key]
+	}
+
+	return resource
+}
+
+func (t *Transformer) extractResourcesByType(
+	resourcesList []config.Resource, resourceType resources.ResourceType, resourceMap map[string]resources.Resource,
+	rscs *[]resources.Resource, id *int,
+) {
+	for i := range resourcesList {
+		res := resourcesList[i]
+
+		resARN := resources.ParseResourceARN(res.GetName(), resourceType)
+		if resARN.Label == "" &&
+			(resourceType == resources.KinesisType || resourceType == resources.S3Type || resourceType == resources.SQSType) {
+			arnType := fmt.Sprintf("%s_%s", strcase.ToSnake(resARN.Name), resources.SuffixByResource[resourceType])
+			resARN.Label = arnType
+		}
+
+		key := resARN.LabelOrName()
+
+		if _, ok := resourceMap[key]; !ok {
+			resourceRes := resources.NewGenericResource(fmt.Sprintf("%d", *id), resARN.Name, resourceType)
+			*id++
+
+			*rscs = append(*rscs, resourceRes)
+
+			resourceMap[key] = resourceRes
+		}
+	}
+}
+
+func (t *Transformer) extractKinesisResources(rscs *[]resources.Resource, id *int) {
+	configResources := make([]config.Resource, 0, len(t.yamlConfig.Kinesis))
+	for i := range t.yamlConfig.Kinesis {
+		configResources = append(configResources,
+			reflect.ValueOf(&t.yamlConfig.Kinesis[i]).Interface().(config.Resource))
+	}
+
+	t.extractResourcesByType(configResources, resources.KinesisType, t.kinesisByName, rscs, id)
+}
+
+func (t *Transformer) extractRestfulAPIResources(rscs *[]resources.Resource, id *int) {
+	configResources := make([]config.Resource, 0, len(t.yamlConfig.RestfulAPIs))
+	for i := range t.yamlConfig.RestfulAPIs {
+		configResources = append(configResources,
+			reflect.ValueOf(&t.yamlConfig.RestfulAPIs[i]).Interface().(config.Resource))
+	}
+
+	t.extractResourcesByType(configResources, resources.RestfulAPIType, t.restfulAPIByName, rscs, id)
+}
+
+func (t *Transformer) extractS3BucketResources(rscs *[]resources.Resource, id *int) {
+	configResources := make([]config.Resource, 0, len(t.yamlConfig.Buckets))
+	for i := range t.yamlConfig.Buckets {
+		configResources = append(configResources,
+			reflect.ValueOf(&t.yamlConfig.Buckets[i]).Interface().(config.Resource))
+	}
+
+	t.extractResourcesByType(configResources, resources.S3Type, t.s3BucketByName, rscs, id)
+}
+
+func (t *Transformer) extractSNSBucketResources(rscs *[]resources.Resource, id *int) {
+	configResources := make([]config.Resource, 0, len(t.yamlConfig.SNSs))
+	for i := range t.yamlConfig.SNSs {
+		configResources = append(configResources,
+			reflect.ValueOf(&t.yamlConfig.SNSs[i]).Interface().(config.Resource))
+	}
+
+	t.extractResourcesByType(configResources, resources.SNSType, t.snsByName, rscs, id)
+}
+
+func (t *Transformer) extractSQSResources(rscs *[]resources.Resource, id *int) {
+	configResources := make([]config.Resource, 0, len(t.yamlConfig.SQSs))
+	for i := range t.yamlConfig.SQSs {
+		configResources = append(configResources,
+			reflect.ValueOf(&t.yamlConfig.SQSs[i]).Interface().(config.Resource))
+	}
+
+	t.extractResourcesByType(configResources, resources.SQSType, t.sqsByName, rscs, id)
 }
 
 func (t *Transformer) transformAPIGateways(
@@ -169,23 +237,6 @@ func (t *Transformer) transformAPIGateways(
 	}
 }
 
-func (t *Transformer) transformKinesis(rscs *[]resources.Resource, id *int) {
-	for i := range t.yamlConfig.Kinesis {
-		res := t.yamlConfig.Kinesis[i]
-		name := terraformtoresources.ResourceByARN(res.Name, resources.KinesisType).Name
-		name = resources.ToKinesisCase(name)
-
-		if _, ok := t.kinesisByName[name]; !ok {
-			kinesisResource := resources.NewGenericResource(fmt.Sprintf("%d", *id), name, resources.KinesisType)
-			*id++
-
-			*rscs = append(*rscs, kinesisResource)
-
-			t.kinesisByName[name] = kinesisResource
-		}
-	}
-}
-
 func (t *Transformer) transformLambda(
 	res *config.Lambda, rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
 ) {
@@ -193,8 +244,8 @@ func (t *Transformer) transformLambda(
 		return
 	}
 
-	lambdaName := terraformtoresources.ResourceByARN(res.Name, resources.LambdaType).Name
-	lambdaName = resources.ToLambdaCase(lambdaName)
+	lambdaARN := resources.ParseResourceARN(res.Name, resources.LambdaType)
+	lambdaName := resources.ToLambdaCase(lambdaARN.Name)
 
 	lambda, ok := t.lambdaByName[lambdaName]
 	if !ok {
@@ -222,40 +273,16 @@ func (t *Transformer) transformLambda(
 		*relationships = append(*relationships, resources.Relationship{Source: sourceRes, Target: lambda})
 	}
 
-	t.transformLambdaEnvars(res, lambda, rscs, relationships, id)
+	t.transformLambdaEnvars(res, lambda, lambdaARN, rscs, relationships, id)
 
 	for _, r := range res.KinesisTriggers {
-		name := terraformtoresources.ResourceByARN(r.SourceARN, resources.KinesisType).Name
-		name = resources.ToKinesisCase(name)
-
-		sourceRes, ok := t.kinesisByName[name]
-		if !ok {
-			sourceRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), name, resources.KinesisType)
-			*id++
-
-			*rscs = append(*rscs, sourceRes)
-
-			t.kinesisByName[name] = sourceRes
-		}
-
-		*relationships = append(*relationships, resources.Relationship{Source: sourceRes, Target: lambda})
+		kinesisARN := resources.ParseResourceARN(r.SourceARN, resources.KinesisType)
+		t.relationshipsMap[kinesisARN] = append(t.relationshipsMap[kinesisARN], lambdaARN)
 	}
 
 	for _, r := range res.SQSTriggers {
-		name := terraformtoresources.ResourceByARN(r.SourceARN, resources.SQSType).Name
-		name = resources.ToSQSCase(name)
-
-		sourceRes, ok := t.sqsByName[name]
-		if !ok {
-			sourceRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), name, resources.SQSType)
-			*id++
-
-			*rscs = append(*rscs, sourceRes)
-
-			t.sqsByName[name] = sourceRes
-		}
-
-		*relationships = append(*relationships, resources.Relationship{Source: sourceRes, Target: lambda})
+		sqsARN := resources.ParseResourceARN(r.SourceARN, resources.SQSType)
+		t.relationshipsMap[sqsARN] = append(t.relationshipsMap[sqsARN], lambdaARN)
 	}
 }
 
@@ -268,33 +295,31 @@ func (t *Transformer) transformLambdas(rscs *[]resources.Resource, relationships
 }
 
 func (t *Transformer) transformLambdaEnvars(
-	res *config.Lambda, lambda resources.Resource,
+	res *config.Lambda, lambda resources.Resource, lambdaARN resources.ResourceARN,
 	rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
 ) {
 	for _, envars := range res.Envars {
-		for k := range envars {
+		for k, v := range envars {
 			value, resType := t.getValueTypeFromEnvar(k)
 
-			if value != "" {
-				switch resType {
-				case resources.DatabaseType:
-					t.fromLambdaToResource(value, lambda, t.databaseByName, id, resType, rscs, relationships)
-				case resources.GoogleBQType:
-					t.fromLambdaToResource(value, lambda, t.googleBQByName, id, resType, rscs, relationships)
-				case resources.KinesisType:
-					t.fromLambdaToResource(value, lambda, t.kinesisByName, id, resType, rscs, relationships)
-				case resources.S3Type:
-					t.fromLambdaToResource(value, lambda, t.s3BucketByName, id, resType, rscs, relationships)
-				case resources.SQSType:
-					t.fromLambdaToResource(value, lambda, t.sqsByName, id, resType, rscs, relationships)
-				case resources.RestfulAPIType:
-					t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
-				default:
-					r := resources.NewGenericResource(fmt.Sprintf("%d", *id), value, resType)
-					*id++
-
-					*relationships = append(*relationships, resources.Relationship{Source: lambda, Target: r})
-				}
+			switch resType {
+			case resources.DatabaseType:
+				t.fromLambdaToResource(value, lambda, t.databaseByName, id, resType, rscs, relationships)
+			case resources.GoogleBQType:
+				t.fromLambdaToResource(value, lambda, t.googleBQByName, id, resType, rscs, relationships)
+			case resources.KinesisType:
+				targetARN := resources.ParseResourceARN(v, resType)
+				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+			case resources.S3Type:
+				targetARN := resources.ParseResourceARN(v, resType)
+				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+			case resources.SQSType:
+				targetARN := resources.ParseResourceARN(v, resType)
+				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+			case resources.RestfulAPIType:
+				t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
+			default:
+				fmtcolor.Yellow.Printf("yaml to resource: unsupported type %s\n", resType)
 			}
 		}
 	}

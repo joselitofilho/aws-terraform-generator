@@ -80,7 +80,17 @@ func replaceVars(
 	str string, tfVars []*terraform.Variable, tfLocals []*terraform.Local, replaceableStrs map[string]string,
 ) string {
 	keyValue := buildKeyValueFromVariables(tfVars)
+	str = replaceVariables(str, keyValue)
 
+	keyValue = buildKeyValueFromLocals(tfLocals)
+	str = replaceLocals(str, keyValue)
+
+	str = replaceStrings(str, replaceableStrs)
+
+	return str
+}
+
+func replaceVariables(str string, keyValue map[string]string) string {
 	for i := 0; i <= len(keyValue); i++ {
 		for varName, finalValue := range keyValue {
 			str = strings.ReplaceAll(str, varName, finalValue)
@@ -91,8 +101,10 @@ func replaceVars(
 		}
 	}
 
-	keyValue = buildKeyValueFromLocals(tfLocals)
+	return str
+}
 
+func replaceLocals(str string, keyValue map[string]string) string {
 	for i := 0; i <= len(keyValue); i++ {
 		for varName, finalValue := range keyValue {
 			str = strings.ReplaceAll(str, varName, finalValue)
@@ -103,6 +115,10 @@ func replaceVars(
 		}
 	}
 
+	return str
+}
+
+func replaceStrings(str string, replaceableStrs map[string]string) string {
 	for i := 0; i <= len(replaceableStrs); i++ {
 		for varName, finalValue := range replaceableStrs {
 			str = strings.ReplaceAll(str, varName, finalValue)

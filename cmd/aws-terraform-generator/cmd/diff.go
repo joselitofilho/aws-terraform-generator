@@ -44,7 +44,7 @@ var diffCmd = &cobra.Command{
 			resources.FindDifferences(leftRc, rightRc)
 
 		dotConfig := graphviz.Config{}
-		style := graphviz.Style{Nodes: map[resources.Resource]string{}, Arrows: map[string]map[string]string{}}
+		style := graphviz.Style{Nodes: map[resources.Resource]string{}, Arrows: map[string][]map[string]string{}}
 
 		for _, rscs := range addedResourcesByType {
 			for i := range rscs {
@@ -59,22 +59,16 @@ var diffCmd = &cobra.Command{
 		}
 
 		for i := range addedRelationships {
-			arrowTarget, ok := style.Arrows[addedRelationships[i].Source.Value()]
-			if !ok {
-				arrowTarget = map[string]string{}
-			}
+			arrowTarget := style.Arrows[addedRelationships[i].Source.Value()]
+			arrowTarget = append(arrowTarget, map[string]string{addedRelationships[i].Target.Value(): "green"})
 
-			arrowTarget[addedRelationships[i].Target.Value()] = "green"
 			style.Arrows[addedRelationships[i].Source.Value()] = arrowTarget
 		}
 
 		for i := range removedRelationships {
-			arrowTarget, ok := style.Arrows[removedRelationships[i].Source.Value()]
-			if !ok {
-				arrowTarget = map[string]string{}
-			}
+			arrowTarget := style.Arrows[removedRelationships[i].Source.Value()]
+			arrowTarget = append(arrowTarget, map[string]string{removedRelationships[i].Target.Value(): "red"})
 
-			arrowTarget[removedRelationships[i].Target.Value()] = "red"
 			style.Arrows[removedRelationships[i].Source.Value()] = arrowTarget
 		}
 

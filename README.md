@@ -4,7 +4,7 @@
 
 [![GitHub tag](https://img.shields.io/github/release/joselitofilho/aws-terraform-generator?include_prereleases=&sort=semver&color=2ea44f&style=for-the-badge)](https://github.com/joselitofilho/aws-terraform-generator/releases/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/joselitofilho/aws-terraform-generator?style=for-the-badge)](https://goreportcard.com/report/github.com/joselitofilho/aws-terraform-generator)
-[![Code coverage](https://img.shields.io/badge/Coverage-91.9%25-2ea44f?style=for-the-badge)](#)
+[![Code coverage](https://img.shields.io/badge/Coverage-94.0%25-2ea44f?style=for-the-badge)](#)
 
 [![Made with Golang](https://img.shields.io/badge/Golang-1.21.6-blue?logo=go&logoColor=white&style=for-the-badge)](https://go.dev "Go to Golang homepage")
 [![Using Terraform](https://img.shields.io/badge/Terraform-3.76.1-blueviolet?logo=terraform&logoColor=white&style=for-the-badge)](https://registry.terraform.io/providers/hashicorp/aws/3.76.1/docs "Go to Terraform docs")

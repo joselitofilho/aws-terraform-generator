@@ -16,3 +16,5 @@ type SNS struct {
 	SQSs       []SNSResource `yaml:"sqs,omitempty"`
 	Files      []File        `yaml:"files,omitempty"`
 }
+
+func (r *SNS) GetName() string { return r.Name }

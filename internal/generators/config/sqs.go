@@ -5,3 +5,5 @@ type SQS struct {
 	MaxReceiveCount int32  `yaml:"max_receive_count"`
 	Files           []File `yaml:"files,omitempty"`
 }
+
+func (r *SQS) GetName() string { return r.Name }

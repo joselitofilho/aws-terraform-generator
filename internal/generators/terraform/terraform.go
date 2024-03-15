@@ -48,53 +48,50 @@ type Config struct {
 
 func Parse(directories, files []string) (Config, error) {
 	config := Config{}
-
 	hclParser := hclparse.NewParser()
 
-	parseSingleFile := func(file string) error {
-		parsedConfig, err := parseHCLFile(file, hclParser)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
-
-		config.Modules = append(config.Modules, parsedConfig.Modules...)
-		config.Resources = append(config.Resources, parsedConfig.Resources...)
-		config.Locals = append(config.Locals, parsedConfig.Locals...)
-
-		return nil
-	}
-
-	for i := range directories {
-		// Walk through all .tf files in the directory.
-		err := filepath.Walk(directories[i], func(file string, info os.FileInfo, err error) error {
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
-
-			// Ignores terraform folder with cached provider plugins and modules.
-			if strings.Contains(file, ".terraform/") {
-				return nil
-			}
-
-			if !info.IsDir() && filepath.Ext(file) == ".tf" {
-				return parseSingleFile(file)
-			}
-
-			return nil
-		})
-
+	for _, directory := range directories {
+		err := parseDirectory(directory, hclParser, &config)
 		if err != nil {
 			return Config{}, err
 		}
 	}
 
 	for _, file := range files {
-		if err := parseSingleFile(file); err != nil {
-			return config, fmt.Errorf("%w", err)
+		err := parseSingleFile(file, hclParser, &config)
+		if err != nil {
+			return config, err
 		}
 	}
 
 	return config, nil
+}
+
+func parseDirectory(directory string, hclParser *hclparse.Parser, config *Config) error {
+	return filepath.Walk(directory, func(file string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("error walking directory: %w", err)
+		}
+
+		if info.IsDir() || strings.Contains(file, ".terraform/") || filepath.Ext(file) != ".tf" {
+			return nil
+		}
+
+		return parseSingleFile(file, hclParser, config)
+	})
+}
+
+func parseSingleFile(file string, hclParser *hclparse.Parser, config *Config) error {
+	parsedConfig, err := parseHCLFile(file, hclParser)
+	if err != nil {
+		return fmt.Errorf("error parsing HCL file: %w", err)
+	}
+
+	config.Modules = append(config.Modules, parsedConfig.Modules...)
+	config.Resources = append(config.Resources, parsedConfig.Resources...)
+	config.Locals = append(config.Locals, parsedConfig.Locals...)
+
+	return nil
 }
 
 func parseHCLFile(file string, parser *hclparse.Parser) (Config, error) {

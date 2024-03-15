@@ -84,3 +84,65 @@ func TestFindDifferences(t *testing.T) {
 		})
 	}
 }
+
+func TestPrintDiff(t *testing.T) {
+	type args struct {
+		rc1 *ResourceCollection
+		rc2 *ResourceCollection
+	}
+
+	tests := []struct {
+		name           string
+		args           args
+		logMsgExpected string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				rc1: &ResourceCollection{
+					Resources: []Resource{
+						NewGenericResource("1", "myLambda", LambdaType),
+						NewGenericResource("2", "my-queue", SQSType),
+						NewGenericResource("3", "MyStream", KinesisType),
+					},
+					Relationships: []Relationship{
+						{
+							Source: NewGenericResource("1", "myLambda", LambdaType),
+							Target: NewGenericResource("2", "my-queue", SQSType),
+						},
+						{
+							Source: NewGenericResource("1", "myLambda", LambdaType),
+							Target: NewGenericResource("3", "MyStream", SQSType),
+						},
+					},
+				},
+				rc2: &ResourceCollection{
+					Resources: []Resource{
+						NewGenericResource("1", "myLam", LambdaType),
+						NewGenericResource("2", "my-q", SQSType),
+						NewGenericResource("3", "MyStream", KinesisType),
+					},
+					Relationships: []Relationship{
+						{
+							Target: NewGenericResource("2", "my-q", SQSType),
+							Source: NewGenericResource("1", "myLam", LambdaType),
+						},
+						{
+							Source: NewGenericResource("1", "myLambda", LambdaType),
+							Target: NewGenericResource("3", "MyStream", SQSType),
+						},
+					},
+				},
+			},
+			logMsgExpected: "",
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(_ *testing.T) {
+			PrintDiff(tc.args.rc1, tc.args.rc2)
+		})
+	}
+}

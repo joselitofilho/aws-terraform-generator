@@ -12,6 +12,8 @@ type APIGatewayLambda struct {
 	Files       []File              `yaml:"files,omitempty"`
 }
 
+func (r *APIGatewayLambda) GetName() string { return r.Name }
+
 type APIGateway struct {
 	StackName string             `yaml:"stack_name"`
 	APIDomain string             `yaml:"api_domain"`

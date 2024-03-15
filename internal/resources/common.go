@@ -22,3 +22,9 @@ var (
 	ToSNSCase        = strcase.ToKebab
 	ToRestfulAPICase = strcase.ToPascal
 )
+
+var SuffixByResource = map[ResourceType]string{
+	KinesisType: "kinesis",
+	S3Type:      "bucket",
+	SQSType:     "sqs",
+}

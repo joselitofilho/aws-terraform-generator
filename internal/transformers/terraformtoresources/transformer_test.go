@@ -6,6 +6,7 @@ import (
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -230,7 +231,12 @@ func TestTransformer_Transform(t *testing.T) {
 			fields: fields{
 				yamlConfig: &config.Config{},
 				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{{Labels: []string{"example_receiver_lambda"}}},
+					Modules: []*terraform.Module{{
+						Labels: []string{"example_receiver_lambda"},
+						Attributes: map[string]any{
+							"lambda_function_name": "exampleReceiver",
+						},
+					}},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -257,7 +263,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "var-client-var-environment-my-bucket", resources.S3Type)},
+					resources.NewGenericResource("1", "var.client-var.environment-my-bucket", resources.S3Type)},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -310,11 +316,39 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 
 	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
 	bqResource := resources.NewGenericResource("2", "google", resources.GoogleBQType)
-	dbResource := resources.NewGenericResource("2", "doc", resources.DatabaseType)
+	dbResource := resources.NewGenericResource("2", "var.doc_db_host", resources.DatabaseType)
 	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
 	restfulAPIResource := resources.NewGenericResource("2", "MyRestful", resources.RestfulAPIType)
 	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
-	sqsResource := resources.NewGenericResource("2", "var-variable1-my-queue", resources.SQSType)
+	sqsResource := resources.NewGenericResource("2", "var.variable1-my-queue", resources.SQSType)
+
+	kinesisStreamTerraform := &terraform.Resource{
+		Type:   "aws_kinesis_stream",
+		Name:   "my_stream_kinesis",
+		Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
+		Attributes: map[string]any{
+			"name": "MyStream",
+		},
+	}
+
+	s3BucketTerraform := &terraform.Resource{
+		Type:   "aws_s3_bucket",
+		Name:   "my_bucket",
+		Labels: []string{"aws_s3_bucket", "my_bucket"},
+		Attributes: map[string]any{
+			"bucket": "my-bucket",
+		},
+	}
+
+	sqsTerraform := &terraform.Resource{
+		Type:   "aws_sqs_queue",
+		Name:   "my_queue",
+		Labels: []string{"aws_sqs_queue", "my_queue"},
+		Attributes: map[string]any{
+			"name":                       "var.variable1-my-queue",
+			"visibility_timeout_seconds": "720",
+		},
+	}
 
 	tests := []struct {
 		name   string
@@ -332,7 +366,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"GOOGLE_BQ_PROJECT_ID": "google",
@@ -357,7 +391,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"BQ_PROJECT_ID": "google",
 								},
@@ -382,7 +416,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"DOCDB_HOST": "var.doc_db_host",
@@ -407,7 +441,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"DOCDB_HOST": "var.doc_db_host",
 								},
@@ -432,7 +466,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"MY_STREAM_KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name",
@@ -440,14 +474,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								},
 							},
 						},
-						{
-							Type:   "aws_kinesis_stream",
-							Name:   "my_stream_kinesis",
-							Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
-							Attributes: map[string]any{
-								"name": "MyStream",
-							},
-						},
+						kinesisStreamTerraform,
 					},
 				},
 			},
@@ -465,23 +492,14 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name",
 								},
 							},
 						},
 					},
-					Resources: []*terraform.Resource{
-						{
-							Type:   "aws_kinesis_stream",
-							Name:   "my_stream_kinesis",
-							Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
-							Attributes: map[string]any{
-								"name": "MyStream",
-							},
-						},
-					},
+					Resources: []*terraform.Resource{kinesisStreamTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -500,7 +518,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"MY_RESTFUL_API_BASE_URL": "MyRestful",
@@ -525,7 +543,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"API_BASE_URL": "MyRestful",
 								},
@@ -550,7 +568,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"MY_BUCKET_S3_BUCKET": "my-bucket",
@@ -558,14 +576,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								},
 							},
 						},
-						{
-							Type:   "aws_s3_bucket",
-							Name:   "my_bucket",
-							Labels: []string{"aws_s3_bucket", "my_bucket"},
-							Attributes: map[string]any{
-								"bucket": "my-bucket",
-							},
-						},
+						s3BucketTerraform,
 					},
 				},
 			},
@@ -583,23 +594,14 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"BUCKET_NAME": "my-bucket",
 								},
 							},
 						},
 					},
-					Resources: []*terraform.Resource{
-						{
-							Type:   "aws_s3_bucket",
-							Name:   "my_bucket",
-							Labels: []string{"aws_s3_bucket", "my_bucket"},
-							Attributes: map[string]any{
-								"bucket": "my-bucket",
-							},
-						},
-					},
+					Resources: []*terraform.Resource{s3BucketTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -618,7 +620,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							Name:   "my_receiver_lambda",
 							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"environment": map[string]map[string]any{
 									"variables": {
 										"MY_QUEUE_SQS_QUEUE_URL": "var.variable1-my-queue",
@@ -626,15 +628,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 								},
 							},
 						},
-						{
-							Type:   "aws_sqs_queue",
-							Name:   "my_queue",
-							Labels: []string{"aws_sqs_queue", "my_queue"},
-							Attributes: map[string]any{
-								"name":                       "var.variable1-my-queue",
-								"visibility_timeout_seconds": "720",
-							},
-						},
+						sqsTerraform,
 					},
 				},
 			},
@@ -652,24 +646,14 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
-								"function_name": "my_receiver_lambda",
+								"function_name": "myReceiver",
 								"lambda_function_env_vars": map[string]any{
 									"SQS_QUEUE_URL": "var.variable1-my-queue",
 								},
 							},
 						},
 					},
-					Resources: []*terraform.Resource{
-						{
-							Type:   "aws_sqs_queue",
-							Name:   "my_queue",
-							Labels: []string{"aws_sqs_queue", "my_queue"},
-							Attributes: map[string]any{
-								"name":                       "var.variable1-my-queue",
-								"visibility_timeout_seconds": "720",
-							},
-						},
-					},
+					Resources: []*terraform.Resource{sqsTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -760,6 +744,179 @@ func TestTransformer_TransformFromCronToResource(t *testing.T) {
 			)
 
 			got := tr.Transform()
+
+			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestTransformer_TransformEndpointAPIGatewayLambda(t *testing.T) {
+	type fields struct {
+		yamlConfig *config.Config
+		tfConfig   *terraform.Config
+	}
+
+	endpointResource := resources.NewGenericResource("1", "local.api_domain", resources.EndpointType)
+	apigResource := resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
+	lambdaResource := resources.NewGenericResource("3", "myReceiver", resources.LambdaType)
+
+	tests := []struct {
+		name   string
+		fields fields
+		want   *resources.ResourceCollection
+	}{
+		{
+			name: "happy path",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig: &terraform.Config{
+					Resources: []*terraform.Resource{
+						{
+							Type:   "aws_apigatewayv2_domain_name",
+							Name:   "my_restful_api",
+							Labels: []string{"aws_apigatewayv2_domain_name", "my_stack_api"},
+							Attributes: map[string]any{
+								"domain_name": "local.api_domain",
+							},
+						},
+						{
+							Type:   "aws_apigatewayv2_route",
+							Name:   "apigw_route_example_api_receiver",
+							Labels: []string{"aws_apigatewayv2_route", "apigw_route_example_api_receiver"},
+							Attributes: map[string]any{
+								"api_id":    "aws_apigatewayv2_api.my_stack_api.id",
+								"route_key": "POST /v1/examples",
+								"target":    "integrations/${aws_apigatewayv2_integration.my_receiver.id}",
+							},
+						},
+						{
+							Type:   "aws_lambda_function",
+							Name:   "my_receiver_lambda",
+							Labels: []string{"aws_lambda_function", "my_receiver_lambda"},
+							Attributes: map[string]any{
+								"function_name": "myReceiver",
+							},
+						},
+						{
+							Type:   "aws_apigatewayv2_integration",
+							Name:   "my_receiver",
+							Labels: []string{"aws_apigatewayv2_integration", "my_receiver"},
+							Attributes: map[string]any{
+								"api_id":          "aws_apigatewayv2_api.my_stack_api.id",
+								"integration_uri": "aws_lambda_function.my_receiver_lambda.invoke_arn",
+							},
+						},
+					},
+				},
+			},
+			want: &resources.ResourceCollection{
+				Resources: []resources.Resource{endpointResource, apigResource, lambdaResource},
+				Relationships: []resources.Relationship{
+					{Source: endpointResource, Target: apigResource},
+					{Source: apigResource, Target: lambdaResource},
+				},
+			},
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			tr := NewTransformer(
+				tc.fields.yamlConfig,
+				tc.fields.tfConfig,
+			)
+
+			got := tr.Transform()
+
+			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestTransformer_hasResourceMatched(t *testing.T) {
+	type fields struct {
+		yamlConfig *config.Config
+		tfConfig   *terraform.Config
+	}
+
+	type args struct {
+		res     resources.Resource
+		filters config.Filters
+	}
+
+	lambdaResource := resources.NewGenericResource("id", "myLambda", resources.LambdaType)
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "match",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res: lambdaResource,
+				filters: config.Filters{
+					"lambda": config.Filter{Match: []string{"^my"}},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not match",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res: lambdaResource,
+				filters: config.Filters{
+					"lambda": config.Filter{NotMatch: []string{"^my"}},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "nil resource",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res: nil,
+				filters: config.Filters{
+					"lambda": config.Filter{NotMatch: []string{"^my"}},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "no filter",
+			fields: fields{
+				yamlConfig: &config.Config{},
+				tfConfig:   &terraform.Config{},
+			},
+			args: args{
+				res:     lambdaResource,
+				filters: nil,
+			},
+			want: true,
+		},
+	}
+
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			tr := NewTransformer(tc.fields.yamlConfig, tc.fields.tfConfig)
+
+			got := tr.hasResourceMatched(tc.args.res, tc.args.filters)
 
 			require.Equal(t, tc.want, got)
 		})

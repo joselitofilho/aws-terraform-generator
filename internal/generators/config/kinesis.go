@@ -6,3 +6,5 @@ type Kinesis struct {
 	KMSKeyID        string `yaml:"kms_key_id,omitempty"`
 	Files           []File `yaml:"files,omitempty"`
 }
+
+func (r *Kinesis) GetName() string { return r.Name }

@@ -5,3 +5,5 @@ type S3 struct {
 	ExpirationDays int    `yaml:"expiration-days,omitempty"`
 	Files          []File `yaml:"files,omitempty"`
 }
+
+func (r *S3) GetName() string { return r.Name }

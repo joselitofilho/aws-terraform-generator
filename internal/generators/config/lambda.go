@@ -13,6 +13,8 @@ type Lambda struct {
 	Files           []File              `yaml:"files,omitempty"`
 }
 
+func (r *Lambda) GetName() string { return r.Name }
+
 type SQSTrigger struct {
 	SourceARN string `yaml:"source_arn"`
 }

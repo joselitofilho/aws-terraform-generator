@@ -36,7 +36,7 @@ lambdas:
           package main
 
 kinesis:
-  - name: myKinesis
+  - name: MyKinesis
     retention_period: 24
     kms_key_id: var.lambda_function_kms_key_arn
 
@@ -67,4 +67,4 @@ buckets:
     expiration-days: 90
 
 restfulapis:
-  - name: MyAPI
+  - name: MyApi
