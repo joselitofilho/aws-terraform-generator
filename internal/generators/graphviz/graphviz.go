@@ -36,11 +36,11 @@ func BuildWithStyle(
 	})
 
 	nodes := map[string]dot.Node{}
-	egdes := map[string]struct{}{}
+	edges := map[string]struct{}{}
 
 	applyStyleForNodes(resc, g, resourceImageMap, nodes, style)
 
-	applyStyleForArrows(resc, egdes, g, nodes, style)
+	applyStyleForArrows(resc, edges, g, nodes, style)
 
 	return g.String()
 }
@@ -88,6 +88,24 @@ func applyStyleForArrows(
 		}
 
 		edges[edgeKey] = struct{}{}
+	}
+
+	applyCustomArrowStyles(style, edges, g, nodes)
+}
+
+func applyCustomArrowStyles(style Style, edges map[string]struct{}, g *dot.Graph, nodes map[string]dot.Node) {
+	for source, targets := range style.Arrows {
+		for i := range targets {
+			for target, color := range targets[i] {
+				edgeKey := source + "###" + target
+
+				if _, ok := edges[edgeKey]; !ok {
+					g.Edge(nodes[source], nodes[target]).Attr("color", color)
+
+					edges[edgeKey] = struct{}{}
+				}
+			}
+		}
 	}
 }
 

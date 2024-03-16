@@ -173,6 +173,7 @@ func TestBuildWithStyle(t *testing.T) {
 					Nodes: map[resources.Resource]string{lambdaResource: "green"},
 					Arrows: map[string][]map[string]string{
 						"MyLambda": {{"my-queue": "red"}, {"MyStream": "green"}},
+						"MyStream": {{"MyLambda": "green"}},
 					},
 				},
 			},
