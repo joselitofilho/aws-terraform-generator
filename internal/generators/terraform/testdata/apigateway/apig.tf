@@ -1,5 +1,5 @@
 locals {
-  api_domain     = "location-api.flyingtiger-${var.environment}.xiatechs.co.uk"
+  api_domain     = "stack-api.domain-${var.environment}.com"
   gateway_format = "{\"requestId\":\"$context.requestId\", \"ip\":$context.identity.sourceIp\", \"requestTime\":\"$context.requestTime\", \"httpMethod\":\"$context.httpMethod\", \"routeKey\":\"$context.routeKey\", \"path\":\"$context.path\", \"status\":\"$context.status\", \"protocol\":\"$context.protocol\", \"responseLength\":\"$context.responseLength\", \"ErrMessage\":\"$context.error.message\"}"
 }
 

@@ -27,10 +27,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": "dev",
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
+			want: "stack-api.domain-dev.com",
 		},
 		{
 			name: "local string array",
@@ -38,10 +38,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": []string{"dev", "prd"},
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
+			want: "stack-api.domain-dev.com",
 		},
 		{
 			name: "local empty string array",
@@ -49,10 +49,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": []string{},
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+			want: "stack-api.domain-local.environment.com",
 		},
 		{
 			name: "local string map",
@@ -60,10 +60,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": map[string]any{"dev": struct{}{}, "prd": struct{}{}},
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
+			want: "stack-api.domain-dev.com",
 		},
 		{
 			name: "local empty string map",
@@ -71,10 +71,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": map[string]any{},
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+			want: "stack-api.domain-local.environment.com",
 		},
 		{
 			name: "local other types",
@@ -82,10 +82,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "local.api_domain",
 				tfLocals: []*terraform.Local{{Attributes: map[string]any{
 					"environment": 1,
-					"api_domain":  "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-local.environment.xiatechs.co.uk",
+			want: "stack-api.domain-local.environment.com",
 		},
 		{
 			name: "var string",
@@ -93,10 +93,10 @@ func Test_replaceVars(t *testing.T) {
 				str: "var.api_domain",
 				tfVariables: []*terraform.Variable{{Attributes: map[string]any{
 					"environment": "dev",
-					"api_domain":  "location-api.flyingtiger-var.environment.xiatechs.co.uk",
+					"api_domain":  "stack-api.domain-var.environment.com",
 				}}},
 			},
-			want: "location-api.flyingtiger-dev.xiatechs.co.uk",
+			want: "stack-api.domain-dev.com",
 		},
 		{
 			name: "replaceable texts",
