@@ -1,0 +1,30 @@
+ol {
+    counter-reset:li;
+    margin-left:0;
+    padding-left:0;
+}
+ol > li {
+    position:relative;
+    margin:0 0 6px 2em;
+    padding:2px 8px;
+    list-style:none;
+}
+ol > li:before {
+    content:counter(li);
+    counter-increment:li;
+    position:absolute;
+    top:0;
+    left:-2em;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    box-sizing:border-box;
+    width:2em;
+    padding:2px;
+    border-radius: 50%;
+    color:#000;
+    background:#E5EDF2;
+    text-align:center;
+}
+li ol,
+li ul {margin-top:6px;}
+ol ol li:last-child {margin-bottom:0;}

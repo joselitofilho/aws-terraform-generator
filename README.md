@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="markdown-styles-list.css">
+<link rel="stylesheet" href="markdown-styles-tab.css">
+
 <div align="center">
 
 # AWS Terraform Generator
@@ -24,6 +27,9 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 
 - [Install](#install)
 - [Features](#features)
+  - [Code generator](#code-generator)
+  - [Diagram from code](#diagram-from-code)
+  - [Compare diagrams](#compare-diagrams)
 - [How it works](#how-it-works)
 - [Recommended step by step](#recommended-step-by-step)
 - [Usage](#usage)
@@ -43,16 +49,43 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 - Customization Options: Tailor generated code to your specific requirements using customizable templates and configuration parameters.
 - Best Practices: Adhere to AWS and Terraform best practices with automatically generated code that follows industry standards.
 - [Supported resources](https://drive.google.com/file/d/1Lrh6SikW1bvGXrfJLRDFBB4BChQdAPqz/view?usp=sharing):
-    - APIGateway
-    - Cron
-    - Database
-    - Google BigQuery
-    - Kinesis streams
-    - Lambda
-    - Restful API
-    - SNS
-    - SQS with DLQ
-    - S3
+  - [x] APIGateway
+  - [x] Cron
+  - [x] Database
+  - [x] Google BigQuery
+  - [x] Kinesis streams
+  - [x] Lambda
+  - [x] Restful API
+  - [x] SNS
+  - [x] SQS with DLQ
+  - [x] S3
+- Generate a diagram based on terraform files.
+- Compare and show the difference between two diagrams.
+- Everything is customizable.
+
+### Code generator
+
+<div align="center">
+
+![](assets/code-generator.gif)
+
+</div>
+
+### Generate diagram from code
+
+<div align="center">
+
+![](assets/diagram-generator.gif)
+
+</div>
+
+### Compare diagrams
+
+<div align="center">
+
+![](assets/diff.gif)
+
+</div>
 
 ## How it works
 
