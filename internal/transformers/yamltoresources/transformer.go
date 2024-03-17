@@ -319,7 +319,7 @@ func (t *Transformer) transformLambdaEnvars(
 			case resources.RestfulAPIType:
 				t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
 			default:
-				fmtcolor.Yellow.Printf("yaml to resource: unsupported type %s\n", resType)
+				fmtcolor.Yellow.Printf("yaml to resource: unidentified variable: %s=%s\n", k, v)
 			}
 		}
 	}
