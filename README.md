@@ -214,6 +214,8 @@ For code generation, we are using the standard Golang library [text/template][li
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to create an [issue][issues] or submit a pull request. Your contribution is much appreciated. See [Contributing](CONTRIBUTING.md).
 
+[![open - Contributing](https://img.shields.io/badge/open-contributing-blue?style=for-the-badge)](CONTRIBUTING.md "Go to contributing")
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

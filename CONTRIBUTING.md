@@ -21,11 +21,14 @@ Isn't this just how it works already? Yep. This is widely accepted as the norm i
 ## Submitting a Pull Request
 
 1. Fork it.
-2. Create a branch (`git checkout -b adds-support-to-<name>`)
-3. Commit your changes (`git commit -am "Adds support to the <name> AWS resource"`)
-4. Push to the branch (`git push origin adds-support-to-<name>`)
+2. Create a branch: `git checkout -b adds-support-to-<name>`
+3. Commit your changes: `git commit -am "feat: adds support to the <name> AWS resource"`
+4. Push to the branch: `git push origin adds-support-to-<name>`
 5. Open a [Pull Request][pull_request]
-6. Enjoy a refreshing Drink and wait
+6. Enjoy a refreshing drink and wait
+
+> [!IMPORTANT]
+> Commit messages should be well formatted, and to make that "standardized", we are using [Conventional Commits](https://www.conventionalcommits.org).
 
 ## Testing
 
@@ -45,10 +48,12 @@ If nothing complains, congratulations!
 If you are the current maintainer of this gem:
 
 1. Update documentations if necessary: [README](README.md), [configuration](CONFIGURATION.md), and [template](TEMPLATE.md)
-2. Retrieve the latest tag created for the most recent version generated `git describe --tags --abbrev=0`
-3. Generate a new tag by incrementing the latest one `git tag v0.0.0` (v + major + .minor + .patch)
-4. Push the new tag created `git push --tags`
-5. Create a new release on GitHub for the new tag created [here][release]
+1. Update code coverage badge: `task -d scripts cov-badge`
+1. Commit the changes: `git commit -am "v0.0.0"`
+1. Retrieve the latest tag created for the most recent version generated: `git describe --tags --abbrev=0`
+1. Generate a new tag by incrementing the latest one: `git tag v0.0.0` (v + major + .minor + .patch)
+1. Push the new tag created: `git push --tags`
+1. Create a new release on GitHub for the new tag created [here][release]
 
 [issues]: https://github.com/joselitofilho/aws-terraform-generator/issues
 [pull_request]: https://github.com/joselitofilho/aws-terraform-generator/pulls
