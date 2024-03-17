@@ -70,6 +70,10 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 
 </div>
 
+```bash
+$ aws-terraform-generator --workdir ./example
+```
+
 ### Generate diagram from code
 
 <div align="center">
@@ -78,6 +82,10 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 
 </div>
 
+```bash
+$ aws-terraform-generator draw -c ./example/draw.config.yaml --workdir ./output/mystack -o .
+```
+
 ### Compare diagrams
 
 <div align="center">
@@ -85,6 +93,10 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 ![](assets/diff.gif)
 
 </div>
+
+```bash
+$ aws-terraform-generator diff -l ./example/diagram_original.yaml -r ./example/diagram.yaml
+```
 
 ## How it works
 
@@ -167,16 +179,23 @@ To use these configurations:
 1. Navigate to the desired stack/environment folder.
 2. Customize the Terraform files (`main.tf`, `vars.tf`, etc.) according to your requirements.
 3. Run commands to manage the infrastructure.
+
+User guide: 
+
 ```bash
-$ aws-terraform-generator diagram -s mystack -c examples/diagram.config.yaml -d examples/diagram.drawio.xml -o examples/mystack.yaml
-$ aws-terraform-generator structure -c examples/structure.yaml -o ./output
-$ aws-terraform-generator apigateway -c examples/mystack.yaml -o ./output
-$ aws-terraform-generator lambda -c examples/mystack.yaml -o ./output/mystack
-$ aws-terraform-generator kinesis -c examples/mystack.yaml -o output/mystack
-$ aws-terraform-generator s3 -c examples/mystack.yaml -o output/mystack
-$ aws-terraform-generator sns -c examples/mystack.yaml -o output/mystack
-$ aws-terraform-generator sqs -c examples/mystack.yaml -o output/mystack
-$ aws-terraform-generator --workdir ./examples
+$ aws-terraform-generator --workdir ./example
+```
+
+Or use commands:
+
+```bash
+$ aws-terraform-generator diagram -s mystack -c ./example/diagram.config.yaml -d ./example/diagram.xml -o ./example/diagram.yaml
+$ aws-terraform-generator structure -c ./example/structure.config.yaml -o ./output
+$ aws-terraform-generator apigateway -c ./example/diagram.yaml -o ./output
+$ aws-terraform-generator lambda -c ./example/diagram.yaml -o ./output/mystack
+$ aws-terraform-generator kinesis -c ./example/diagram.yaml -o ./output/mystack
+$ aws-terraform-generator sqs -c ./example/diagram.yaml -o ./output/mystack
+$ aws-terraform-generator s3 -c ./example/diagram.yaml -o ./output/mystack
 ```
 
 ## Configuration
