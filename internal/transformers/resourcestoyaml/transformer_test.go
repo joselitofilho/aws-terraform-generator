@@ -145,10 +145,10 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MY_DATABASE_DB_HOST": "var.my_database_db_host"},
-							{"MY_DATABASE_DB_USER": "var.my_database_db_user"},
-							{"MY_DATABASE_DB_PASSWORD_SECRET": "var.my_database_db_password_secret"},
+						Envars: map[string]string{
+							"MY_DATABASE_DB_HOST":            "var.my_database_db_host",
+							"MY_DATABASE_DB_USER":            "var.my_database_db_user",
+							"MY_DATABASE_DB_PASSWORD_SECRET": "var.my_database_db_password_secret",
 						},
 					},
 				},
@@ -211,11 +211,11 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"GOOGLE_BQ_PROJECT_ID": "var.google_bq_project_id"},
-							{"GOOGLE_BQ_API_KEY_SECRET": "var.google_bq_api_key_secret"},
-							{"GOOGLE_BQ_PARTITION_FIELD": "var.google_bq_partition_field"},
-							{"GOOGLE_BQ_CLUSTERING_FIELDS": "var.google_bq_clustering_fields"},
+						Envars: map[string]string{
+							"GOOGLE_BQ_PROJECT_ID":        "var.google_bq_project_id",
+							"GOOGLE_BQ_API_KEY_SECRET":    "var.google_bq_api_key_secret",
+							"GOOGLE_BQ_PARTITION_FIELD":   "var.google_bq_partition_field",
+							"GOOGLE_BQ_CLUSTERING_FIELDS": "var.google_bq_clustering_fields",
 						},
 					},
 				},
@@ -282,8 +282,8 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MY_STREAM_KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name"},
+						Envars: map[string]string{
+							"MY_STREAM_KINESIS_STREAM_URL": "aws_kinesis_stream.my_stream_kinesis.name",
 						},
 					},
 				},
@@ -525,9 +525,9 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MY_BUCKET_S3_BUCKET": "aws_s3_bucket.my_bucket_bucket.bucket"},
-							{"MY_BUCKET_S3_DIRECTORY": `"my_receiver_files"`},
+						Envars: map[string]string{
+							"MY_BUCKET_S3_BUCKET":    "aws_s3_bucket.my_bucket_bucket.bucket",
+							"MY_BUCKET_S3_DIRECTORY": `"my_receiver_files"`,
 						},
 					},
 				},
@@ -597,9 +597,7 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MY_QUEUE_SQS_QUEUE_URL": "aws_sqs_queue.my_queue_sqs.name"},
-						},
+						Envars:      map[string]string{"MY_QUEUE_SQS_QUEUE_URL": "aws_sqs_queue.my_queue_sqs.name"},
 					},
 				},
 				SQSs: []config.SQS{{Name: "my-queue", MaxReceiveCount: 10}},
@@ -742,10 +740,10 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 						Source:      "git@",
 						RoleName:    "execute_lambda",
 						Description: "myReceiver lambda",
-						Envars: []map[string]string{
-							{"MY_API_API_BASE_URL": "var.my_api_api_base_url"},
-							{"MY_API_HOST": "var.my_api_host"},
-							{"MY_API_USER": "var.my_api_user"},
+						Envars: map[string]string{
+							"MY_API_API_BASE_URL": "var.my_api_api_base_url",
+							"MY_API_HOST":         "var.my_api_host",
+							"MY_API_USER":         "var.my_api_user",
 						},
 					},
 				},

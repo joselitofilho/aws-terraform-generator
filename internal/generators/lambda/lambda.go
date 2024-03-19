@@ -40,14 +40,6 @@ func (l *Lambda) Build() error {
 	for i := range yamlConfig.Lambdas {
 		lambdaConf := yamlConfig.Lambdas[i]
 
-		envars := map[string]string{}
-
-		for i := range lambdaConf.Envars {
-			for key, value := range lambdaConf.Envars[i] {
-				envars[key] = value
-			}
-		}
-
 		crons := buildCrons(&lambdaConf)
 		kinesisTriggers := buildKinesisTriggers(&lambdaConf)
 		sqsTriggers := buildSQSTriggers(&lambdaConf)
@@ -68,7 +60,7 @@ func (l *Lambda) Build() error {
 			RoleName:        roleName,
 			Runtime:         lambdaConf.Runtime,
 			Description:     lambdaConf.Description,
-			Envars:          envars,
+			Envars:          lambdaConf.Envars,
 			KinesisTriggers: kinesisTriggers,
 			SQSTriggers:     sqsTriggers,
 			Crons:           crons,

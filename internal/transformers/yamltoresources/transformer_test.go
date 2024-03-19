@@ -172,9 +172,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"DOCDB_HOST": "var.doc_db_host",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"DOCDB_HOST": "var.doc_db_host"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
@@ -190,9 +188,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"GOOGLE_BQ_PROJECT_ID": "google",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"GOOGLE_BQ_PROJECT_ID": "google"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
@@ -208,9 +204,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"MY_KINESIS_KINESIS_STREAM_URL": "MyKinesis",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"MY_KINESIS_KINESIS_STREAM_URL": "MyKinesis"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
@@ -225,9 +219,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"PAYLOADS_S3_BUCKET": "payloads",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"PAYLOADS_S3_BUCKET": "payloads"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
@@ -242,9 +234,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"PAYLOADS_BUCKET_NAME": "payloads",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"PAYLOADS_BUCKET_NAME": "payloads"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},
@@ -259,9 +249,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				yamlConfig: &config.Config{},
 			},
 			args: args{
-				res: &config.Lambda{Envars: []map[string]string{{
-					"MY_REST_API_BASE_URL": "MyRest",
-				}}},
+				res:           &config.Lambda{Envars: map[string]string{"MY_REST_API_BASE_URL": "MyRest"}},
 				lambda:        lambdaResource,
 				resources:     &[]resources.Resource{},
 				relationships: &[]resources.Relationship{},

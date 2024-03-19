@@ -11,7 +11,7 @@ apigateways:
         verb: POST
         path: /v1/examples
         envars:
-          - MYVAR: MYVAR_VALUE
+          MYVAR: MYVAR_VALUE
         files:
           - name: lambda.go
             imports:

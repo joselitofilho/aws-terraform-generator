@@ -14,7 +14,7 @@ lambdas:
     runtime: go1.x
     description: "Trigger on schedule and initiate the execution of example receiver"
     envars:
-      - SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
+      SQS_QUEUE_URL: aws_sqs_queue.target_sqs.name
     kinesis-triggers:
       - source_arn: aws_kinesis_stream.source_mykinesis_kinesis.arn
     sqs-triggers:

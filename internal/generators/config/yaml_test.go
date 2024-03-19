@@ -44,7 +44,7 @@ func TestYAML_Parse(t *testing.T) {
 					Description: "Trigger the example API receiver via API Gateway",
 					Verb:        "POST",
 					Path:        "/v1/examples",
-					Envars:      []map[string]string{{"MYVAR": "MYVAR_VALUE"}},
+					Envars:      map[string]string{"MYVAR": "MYVAR_VALUE"},
 					Files: []File{
 						{
 							Name:    "lambda.go",
@@ -75,7 +75,7 @@ func TestYAML_Parse(t *testing.T) {
 				RoleName:        "execute_lambda",
 				Runtime:         "go1.x",
 				Description:     "Trigger on schedule and initiate the execution of example receiver",
-				Envars:          []map[string]string{{"SQS_QUEUE_URL": "aws_sqs_queue.target_sqs.name"}},
+				Envars:          map[string]string{"SQS_QUEUE_URL": "aws_sqs_queue.target_sqs.name"},
 				KinesisTriggers: []KinesisTrigger{{SourceARN: "aws_kinesis_stream.source_mykinesis_kinesis.arn"}},
 				SQSTriggers:     []SQSTrigger{{SourceARN: "aws_sqs_queue.source_sqs.arn"}},
 				Crons:           []Cron{{ScheduleExpression: "cron(0 1 * * ? *)", IsEnabled: "var.trigger_enabled"}},

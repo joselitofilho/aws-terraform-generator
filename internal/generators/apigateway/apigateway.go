@@ -86,14 +86,6 @@ func (a *APIGateway) Build() error {
 func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTemplate, outputMod, output string,
 	goTemplates map[string]string,
 ) error {
-	envars := map[string]string{}
-
-	for i := range lambdaConf.Envars {
-		for key, value := range lambdaConf.Envars[i] {
-			envars[key] = value
-		}
-	}
-
 	filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
 	asModule := strings.Contains(lambdaConf.Source, "git@")
@@ -111,7 +103,7 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTe
 		Runtime:     lambdaConf.Runtime,
 		StackName:   stackName,
 		Description: lambdaConf.Description,
-		Envars:      envars,
+		Envars:      lambdaConf.Envars,
 		Verb:        lambdaConf.Verb,
 		Path:        lambdaConf.Path,
 		Files:       filesConf,

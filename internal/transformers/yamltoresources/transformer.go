@@ -298,29 +298,27 @@ func (t *Transformer) transformLambdaEnvars(
 	res *config.Lambda, lambda resources.Resource, lambdaARN resources.ResourceARN,
 	rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
 ) {
-	for _, envars := range res.Envars {
-		for k, v := range envars {
-			value, resType := t.getValueTypeFromEnvar(k)
+	for k, v := range res.Envars {
+		value, resType := t.getValueTypeFromEnvar(k)
 
-			switch resType {
-			case resources.DatabaseType:
-				t.fromLambdaToResource(value, lambda, t.databaseByName, id, resType, rscs, relationships)
-			case resources.GoogleBQType:
-				t.fromLambdaToResource(value, lambda, t.googleBQByName, id, resType, rscs, relationships)
-			case resources.KinesisType:
-				targetARN := resources.ParseResourceARN(v, resType)
-				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-			case resources.S3Type:
-				targetARN := resources.ParseResourceARN(v, resType)
-				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-			case resources.SQSType:
-				targetARN := resources.ParseResourceARN(v, resType)
-				t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-			case resources.RestfulAPIType:
-				t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
-			default:
-				fmtcolor.Yellow.Printf("yaml to resource: unidentified variable: %s=%s\n", k, v)
-			}
+		switch resType {
+		case resources.DatabaseType:
+			t.fromLambdaToResource(value, lambda, t.databaseByName, id, resType, rscs, relationships)
+		case resources.GoogleBQType:
+			t.fromLambdaToResource(value, lambda, t.googleBQByName, id, resType, rscs, relationships)
+		case resources.KinesisType:
+			targetARN := resources.ParseResourceARN(v, resType)
+			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+		case resources.S3Type:
+			targetARN := resources.ParseResourceARN(v, resType)
+			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+		case resources.SQSType:
+			targetARN := resources.ParseResourceARN(v, resType)
+			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
+		case resources.RestfulAPIType:
+			t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
+		default:
+			fmtcolor.Yellow.Printf("yaml to resource: unidentified variable: %s=%s\n", k, v)
 		}
 	}
 }

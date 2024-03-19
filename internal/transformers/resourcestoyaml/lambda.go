@@ -37,8 +37,6 @@ func (t *Transformer) buildLambdas() (
 			lambda := rel.Target
 			apiGatewayID := rel.Source.ID()
 
-			envarsList := t.buildEnvarsList(lambda)
-
 			apiGatewayLambdasByAPIGatewayID[apiGatewayID] = append(
 				apiGatewayLambdasByAPIGatewayID[apiGatewayID], config.APIGatewayLambda{
 					Name:        lambda.Value(),
@@ -46,7 +44,7 @@ func (t *Transformer) buildLambdas() (
 					RoleName:    t.yamlConfig.Diagram.Lambda.RoleName,
 					Runtime:     t.yamlConfig.Diagram.Lambda.Runtime,
 					Description: fmt.Sprintf("%s lambda", lambda.Value()),
-					Envars:      envarsList,
+					Envars:      t.envars[lambda.ID()],
 					Verb:        strings.Split(rel.Source.Value(), " ")[0],
 					Path:        strings.Split(rel.Source.Value(), " ")[1],
 				})
@@ -61,7 +59,6 @@ func (t *Transformer) buildLambdas() (
 		}
 
 		crons := t.buildCrons(lambda)
-		envarsList := t.buildEnvarsList(lambda)
 		kinesisTriggers := t.buildKinesisTriggers(lambda)
 		sqsTriggers := t.buildSQSTriggers(lambda)
 
@@ -71,7 +68,7 @@ func (t *Transformer) buildLambdas() (
 			RoleName:        t.yamlConfig.Diagram.Lambda.RoleName,
 			Runtime:         t.yamlConfig.Diagram.Lambda.Runtime,
 			Description:     fmt.Sprintf("%s lambda", lambda.Value()),
-			Envars:          envarsList,
+			Envars:          t.envars[lambda.ID()],
 			KinesisTriggers: kinesisTriggers,
 			SQSTriggers:     sqsTriggers,
 			Crons:           crons,
@@ -91,15 +88,6 @@ func (t *Transformer) buildCrons(lambda resources.Resource) []config.Cron {
 	}
 
 	return crons
-}
-
-func (t *Transformer) buildEnvarsList(lambda resources.Resource) []map[string]string {
-	var envarsList []map[string]string
-	for key, value := range t.envars[lambda.ID()] {
-		envarsList = append(envarsList, map[string]string{key: value})
-	}
-
-	return envarsList
 }
 
 func (t *Transformer) buildKinesisTriggers(lambda resources.Resource) []config.KinesisTrigger {
