@@ -7,5 +7,6 @@ digraph  {
 	n1->n2[arrowhead="vee",arrowtail="normal",color="red"];
 	n1->n3[arrowhead="vee",arrowtail="normal",color="green"];
 	n1->n4[arrowhead="vee",arrowtail="normal"];
+	n3->n1[arrowhead="vee",arrowtail="normal",color="green"];
 	
 }
