@@ -195,7 +195,7 @@ $ aws-terraform-generator --workdir ./example
 Or use commands:
 
 ```bash
-$ aws-terraform-generator diagram -s mystack -c ./example/diagram.config.yaml -d ./example/diagram.xml -o ./example/diagram.yaml
+$ aws-terraform-generator diagram -c ./example/diagram.config.yaml -d ./example/diagram.xml -o ./example/diagram.yaml
 $ aws-terraform-generator structure -c ./example/structure.config.yaml -o ./output
 $ aws-terraform-generator apigateway -c ./example/diagram.yaml -o ./output
 $ aws-terraform-generator lambda -c ./example/diagram.yaml -o ./output/mystack
