@@ -4,12 +4,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 // Transform parses resources from the MxFile.
-func Transform(mxFile *drawio.MxFile) (*resources.ResourceCollection, error) {
+func Transform(mxFile *drawioxml.MxFile) (*resources.ResourceCollection, error) {
 	resc := resources.NewResourceCollection()
 
 	for i := range mxFile.Diagram.MxGraphModel.Root.MxCells {

@@ -7,7 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawiotoresources"
@@ -48,7 +49,7 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	mxFile, err := drawio.ParseXML(diagram)
+	mxFile, err := drawioxml.Parse(diagram)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

@@ -3,7 +3,8 @@ package drawiotoresources
 import (
 	"testing"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/drawio"
+	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 
 func TestParseResources(t *testing.T) {
 	type args struct {
-		mxFile *drawio.MxFile
+		mxFile *drawioxml.MxFile
 	}
 
 	lambdaResource := resources.NewGenericResource("LAMBDA_ID", "myReceiver", resources.LambdaType)
@@ -26,11 +27,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "API Gateway Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "APIG_ID", Value: "myAPI", Style: "mxgraph.aws3.api_gateway"},
 								},
 							},
@@ -46,11 +47,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Cron Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "CRON_ID", Value: "myScheduler", Style: "mxgraph.aws4.event_time_based"},
 								},
 							},
@@ -66,11 +67,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Database Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "DB_ID", Value: "myDB", Style: "mxgraph.flowchart.database"},
 								},
 							},
@@ -85,11 +86,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Endpoint Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "ENDPOINT_ID", Value: "myEndpoint", Style: "mxgraph.aws4.endpoint"},
 								},
 							},
@@ -105,11 +106,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "GoogleBQ Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "GBC_ID", Value: "myGBC", Style: "google_bigquery"},
 								},
 							},
@@ -125,11 +126,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Kinesis Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "KINESIS_ID", Value: "myKinesis", Style: "mxgraph.aws3.kinesis"},
 								},
 							},
@@ -145,11 +146,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Lambda Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "LAMBDA_ID", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
 								},
 							},
@@ -164,11 +165,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Restful API Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "RESTFULAPI_ID", Value: "myRestAPI", Style: "mxgraph.veeam2.restful_api"},
 								},
 							},
@@ -184,11 +185,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "S3 Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "S3BUCKET_ID", Value: "myBucket", Style: "mxgraph.aws3.s3"},
 								},
 							},
@@ -204,11 +205,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "SQS Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "SQS_ID", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
 								},
 							},
@@ -223,11 +224,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "SNS Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "SNS_ID", Value: "my-sns", Style: "mxgraph.aws3.sns"},
 								},
 							},
@@ -242,11 +243,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Empty MxFile",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{},
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{},
 							},
 						},
 					},
@@ -257,11 +258,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Two Connected Resources",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "LAMBDA_ID", Value: "myReceiver", Style: "mxgraph.aws3.lambda"},
 									{ID: "SQS_ID", Value: "my-sqs", Style: "mxgraph.aws3.sqs"},
 									{ID: "3", Source: "LAMBDA_ID", Target: "SQS_ID"},
@@ -279,11 +280,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Single Unknown Resource",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "1", Value: "Resource A", Style: "styleA"},
 								},
 							},
@@ -296,11 +297,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Two Connected Unknown Resources",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "1", Value: "Resource A", Style: "styleA"},
 									{ID: "2", Value: "Resource B", Style: "styleB"},
 									{ID: "3", Source: "1", Target: "2"},
@@ -315,11 +316,11 @@ func TestParseResources(t *testing.T) {
 		{
 			name: "Multiple Unknown Resources",
 			args: args{
-				mxFile: &drawio.MxFile{
-					Diagram: drawio.Diagram{
-						MxGraphModel: drawio.MxGraphModel{
-							Root: drawio.Root{
-								MxCells: []drawio.MxCell{
+				mxFile: &drawioxml.MxFile{
+					Diagram: drawioxml.Diagram{
+						MxGraphModel: drawioxml.MxGraphModel{
+							Root: drawioxml.Root{
+								MxCells: []drawioxml.MxCell{
 									{ID: "1", Value: "Resource A", Style: "styleA"},
 									{ID: "2", Value: "Resource B", Style: "styleB"},
 								},

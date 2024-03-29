@@ -1,6 +1,6 @@
 module github.com/joselitofilho/aws-terraform-generator
 
-go 1.19
+go 1.21.6
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -22,6 +22,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/joselitofilho/drawio-parser-go v0.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
