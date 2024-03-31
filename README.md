@@ -39,7 +39,7 @@ The AWS Terraform Generator is a powerful tool designed to simplify and streamli
 ## Install
 
  ```bash
- $ go install github.com/joselitofilho/aws-terraform-generator/cmd/aws-terraform-generator@latest
+ $ go install github.com/joselitofilho/aws-terraform-generator@latest
  ```
 
 ## Third Party Tools
