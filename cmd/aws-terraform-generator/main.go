@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/cmd"
+import "github.com/joselitofilho/aws-terraform-generator/cmd"
 
 func main() {
 	cmd.Execute()
