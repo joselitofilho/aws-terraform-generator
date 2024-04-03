@@ -5,31 +5,32 @@ import (
 	"os"
 	"path"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/terraformtoresources"
-	"gopkg.in/yaml.v3"
 )
 
 // DefaultResourceImageMap defines the default resource images. Images from here: https://awsicons.dev/
 var DefaultResourceImageMap = config.Images{
-	resources.APIGatewayType: "assets/diagram/api_gateway.svg",
-	resources.CronType:       "assets/diagram/cron.svg",
-	resources.DatabaseType:   "assets/diagram/database_dynamo_db.svg",
-	resources.EndpointType:   "assets/diagram/endpoint.svg",
-	resources.GoogleBQType:   "assets/diagram/google_bigquery.svg",
-	resources.KinesisType:    "assets/diagram/kinesis_data_stream.svg",
-	resources.LambdaType:     "assets/diagram/lambda.svg",
-	resources.RestfulAPIType: "assets/diagram/restful_api.svg",
-	resources.S3Type:         "assets/diagram/s3_bucket.svg",
-	resources.SNSType:        "assets/diagram/sns.svg",
-	resources.SQSType:        "assets/diagram/sqs.svg",
-	resources.UnknownType:    "",
+	awsresources.APIGatewayType: "assets/diagram/api_gateway.svg",
+	awsresources.CronType:       "assets/diagram/cron.svg",
+	awsresources.DatabaseType:   "assets/diagram/database_dynamo_db.svg",
+	awsresources.EndpointType:   "assets/diagram/endpoint.svg",
+	awsresources.GoogleBQType:   "assets/diagram/google_bigquery.svg",
+	awsresources.KinesisType:    "assets/diagram/kinesis_data_stream.svg",
+	awsresources.LambdaType:     "assets/diagram/lambda.svg",
+	awsresources.RestfulAPIType: "assets/diagram/restful_api.svg",
+	awsresources.S3Type:         "assets/diagram/s3_bucket.svg",
+	awsresources.SNSType:        "assets/diagram/sns.svg",
+	awsresources.SQSType:        "assets/diagram/sqs.svg",
+	awsresources.UnknownType:    "",
 }
 
 type Draw struct {

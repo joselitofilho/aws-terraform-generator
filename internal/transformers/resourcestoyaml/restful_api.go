@@ -1,12 +1,14 @@
 package resourcestoyaml
 
 import (
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildRestfulAPIRelationship(source, target resources.Resource) {
-	if source.ResourceType() == resources.LambdaType {
+	if awsresources.ParseResourceType(source.ResourceType()) == awsresources.LambdaType {
 		t.buildLambdaToRestfulAPI(source, target)
 	}
 }
@@ -16,7 +18,7 @@ func (t *Transformer) buildRestfulAPIs() []config.RestfulAPI {
 
 	restfulAPINames := map[string]struct{}{}
 
-	for _, restfulAPI := range t.resourcesByTypeMap[resources.RestfulAPIType] {
+	for _, restfulAPI := range t.resourcesByTypeMap[awsresources.RestfulAPIType] {
 		name := restfulAPI.Value()
 		if _, ok := restfulAPINames[name]; !ok {
 			restfulAPIs = append(restfulAPIs, config.RestfulAPI{Name: name})

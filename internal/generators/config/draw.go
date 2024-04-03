@@ -1,8 +1,8 @@
 package config
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/resources"
+import awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
-type Images map[resources.ResourceType]string
+type Images map[awsresources.ResourceType]string
 type ReplaceableTexts map[string]string
 
 type Draw struct {

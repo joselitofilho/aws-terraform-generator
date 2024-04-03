@@ -3,7 +3,9 @@ package graphviz
 import (
 	"github.com/emicklei/dot"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 const OrientationLeftRight = "LR"
@@ -13,13 +15,13 @@ type Config struct {
 }
 
 func Build(
-	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config,
+	resc *resources.ResourceCollection, resourceImageMap map[awsresources.ResourceType]string, config Config,
 ) string {
 	return BuildWithStyle(resc, resourceImageMap, config, Style{})
 }
 
 func BuildWithStyle(
-	resc *resources.ResourceCollection, resourceImageMap map[resources.ResourceType]string, config Config, style Style,
+	resc *resources.ResourceCollection, resourceImageMap map[awsresources.ResourceType]string, config Config, style Style,
 ) string {
 	g := dot.NewGraph(dot.Directed)
 
@@ -46,12 +48,12 @@ func BuildWithStyle(
 }
 
 func applyStyleForNodes(
-	resc *resources.ResourceCollection, g *dot.Graph, resourceImageMap map[resources.ResourceType]string,
+	resc *resources.ResourceCollection, g *dot.Graph, resourceImageMap map[awsresources.ResourceType]string,
 	nodes map[string]dot.Node, style Style) {
 	for i := range resc.Resources {
 		res := resc.Resources[i]
 
-		node := g.Node(res.Value()).Attr("image", resourceImageMap[res.ResourceType()])
+		node := g.Node(res.Value()).Attr("image", resourceImageMap[awsresources.ParseResourceType(res.ResourceType())])
 
 		if color, ok := style.Nodes[res]; ok {
 			node = node.Attr("fontcolor", color)
@@ -61,7 +63,9 @@ func applyStyleForNodes(
 	}
 
 	for k, v := range style.Nodes {
-		nodes[k.Value()] = g.Node(k.Value()).Attr("fontcolor", v).Attr("image", resourceImageMap[k.ResourceType()])
+		nodes[k.Value()] = g.Node(k.Value()).
+			Attr("fontcolor", v).
+			Attr("image", resourceImageMap[awsresources.ParseResourceType(k.ResourceType())])
 	}
 }
 

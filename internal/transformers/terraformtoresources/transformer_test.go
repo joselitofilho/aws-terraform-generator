@@ -3,9 +3,11 @@ package terraformtoresources
 import (
 	"testing"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +18,7 @@ func TestTransformer_Transform(t *testing.T) {
 		tfConfig   *terraform.Config
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "exampleReceiver", resources.LambdaType)
+	lambdaResource := resources.NewGenericResource("1", "exampleReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name   string
@@ -55,7 +57,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "POST /v1/examples", resources.APIGatewayType)},
+					resources.NewGenericResource("1", "POST /v1/examples", awsresources.APIGatewayType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -100,7 +102,8 @@ func TestTransformer_Transform(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources:     []resources.Resource{resources.NewGenericResource("1", "cron()", resources.CronType)},
+				Resources: []resources.Resource{resources.NewGenericResource("1", "cron()",
+					awsresources.CronType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -145,7 +148,8 @@ func TestTransformer_Transform(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources:     []resources.Resource{resources.NewGenericResource("1", "local.api_domain", resources.EndpointType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("1", "local.api_domain", awsresources.EndpointType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -168,7 +172,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "MyStream", resources.KinesisType)},
+					resources.NewGenericResource("1", "MyStream", awsresources.KinesisType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -200,7 +204,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "MyStream", resources.KinesisType)},
+					resources.NewGenericResource("1", "MyStream", awsresources.KinesisType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -263,7 +267,8 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "var.client-var.environment-my-bucket", resources.S3Type)},
+					resources.NewGenericResource("1", "var.client-var.environment-my-bucket",
+						awsresources.S3Type.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -286,7 +291,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("1", "my-queue", resources.SQSType)},
+					resources.NewGenericResource("1", "my-queue", awsresources.SQSType.String())},
 				Relationships: []resources.Relationship{},
 			},
 		},
@@ -296,12 +301,7 @@ func TestTransformer_Transform(t *testing.T) {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			tr := NewTransformer(
-				tc.fields.yamlConfig,
-				tc.fields.tfConfig,
-			)
-
-			got := tr.Transform()
+			got := NewTransformer(tc.fields.yamlConfig, tc.fields.tfConfig).Transform()
 
 			require.Equal(t, tc.want, got)
 		})
@@ -314,13 +314,13 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 		tfConfig   *terraform.Config
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	bqResource := resources.NewGenericResource("2", "google", resources.GoogleBQType)
-	dbResource := resources.NewGenericResource("2", "var.doc_db_host", resources.DatabaseType)
-	kinesisResource := resources.NewGenericResource("2", "MyStream", resources.KinesisType)
-	restfulAPIResource := resources.NewGenericResource("2", "MyRestful", resources.RestfulAPIType)
-	s3BucketResource := resources.NewGenericResource("2", "my-bucket", resources.S3Type)
-	sqsResource := resources.NewGenericResource("2", "var.variable1-my-queue", resources.SQSType)
+	lambdaResource := resources.NewGenericResource("1", "myReceiver", awsresources.LambdaType.String())
+	bqResource := resources.NewGenericResource("2", "google", awsresources.GoogleBQType.String())
+	dbResource := resources.NewGenericResource("2", "var.doc_db_host", awsresources.DatabaseType.String())
+	kinesisResource := resources.NewGenericResource("2", "MyStream", awsresources.KinesisType.String())
+	restfulAPIResource := resources.NewGenericResource("2", "MyRestful", awsresources.RestfulAPIType.String())
+	s3BucketResource := resources.NewGenericResource("2", "my-bucket", awsresources.S3Type.String())
+	sqsResource := resources.NewGenericResource("2", "var.variable1-my-queue", awsresources.SQSType.String())
 
 	kinesisStreamTerraform := &terraform.Resource{
 		Type:   "aws_kinesis_stream",
@@ -685,8 +685,8 @@ func TestTransformer_TransformFromCronToResource(t *testing.T) {
 		tfConfig   *terraform.Config
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
-	cronResource := resources.NewGenericResource("2", "cron(0 3 * * ? *)", resources.CronType)
+	lambdaResource := resources.NewGenericResource("1", "myReceiver", awsresources.LambdaType.String())
+	cronResource := resources.NewGenericResource("2", "cron(0 3 * * ? *)", awsresources.CronType.String())
 
 	tests := []struct {
 		name   string
@@ -756,9 +756,9 @@ func TestTransformer_TransformEndpointAPIGatewayLambda(t *testing.T) {
 		tfConfig   *terraform.Config
 	}
 
-	endpointResource := resources.NewGenericResource("1", "local.api_domain", resources.EndpointType)
-	apigResource := resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
-	lambdaResource := resources.NewGenericResource("3", "myReceiver", resources.LambdaType)
+	endpointResource := resources.NewGenericResource("1", "local.api_domain", awsresources.EndpointType.String())
+	apigResource := resources.NewGenericResource("2", "POST /v1/examples", awsresources.APIGatewayType.String())
+	lambdaResource := resources.NewGenericResource("3", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name   string
@@ -846,7 +846,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 		filters config.Filters
 	}
 
-	lambdaResource := resources.NewGenericResource("id", "myLambda", resources.LambdaType)
+	lambdaResource := resources.NewGenericResource("id", "myLambda", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name   string

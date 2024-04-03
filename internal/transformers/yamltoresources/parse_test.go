@@ -3,7 +3,7 @@ package yamltoresources
 import (
 	"testing"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/diagram-code-generator/resources/pkg/resources"
 	"github.com/stretchr/testify/require"
 )
 

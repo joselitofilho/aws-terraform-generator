@@ -1,8 +1,10 @@
 package resourcestoyaml
 
 import (
+	"github.com/diagram-code-generator/resources/pkg/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 type Transformer struct {
@@ -19,7 +21,7 @@ type Transformer struct {
 
 	envars map[string]map[string]string
 
-	resourcesByTypeMap map[resources.ResourceType][]resources.Resource
+	resourcesByTypeMap map[awsresources.ResourceType][]resources.Resource
 }
 
 func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollection) *Transformer {
@@ -37,19 +39,19 @@ func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollectio
 
 		envars: map[string]map[string]string{},
 
-		resourcesByTypeMap: map[resources.ResourceType][]resources.Resource{},
+		resourcesByTypeMap: map[awsresources.ResourceType][]resources.Resource{},
 	}
 }
 
 func (t *Transformer) Transform() (*config.Config, error) {
 	t.buildResourcesByTypeMap()
 
-	for _, sns := range t.resourcesByTypeMap[resources.SNSType] {
+	for _, sns := range t.resourcesByTypeMap[awsresources.SNSType] {
 		t.snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
 	}
 
-	for i := range t.resourcesByTypeMap[resources.APIGatewayType] {
-		apiGateway := t.resourcesByTypeMap[resources.APIGatewayType][i]
+	for i := range t.resourcesByTypeMap[awsresources.APIGatewayType] {
+		apiGateway := t.resourcesByTypeMap[awsresources.APIGatewayType][i]
 		t.apiGatewaysByID[apiGateway.ID()] = apiGateway
 	}
 
@@ -76,7 +78,8 @@ func (t *Transformer) Transform() (*config.Config, error) {
 
 func (t *Transformer) buildResourcesByTypeMap() {
 	for _, resource := range t.resc.Resources {
-		t.resourcesByTypeMap[resource.ResourceType()] = append(t.resourcesByTypeMap[resource.ResourceType()], resource)
+		resType := awsresources.ParseResourceType(resource.ResourceType())
+		t.resourcesByTypeMap[resType] = append(t.resourcesByTypeMap[resType], resource)
 	}
 }
 
@@ -85,24 +88,24 @@ func (t *Transformer) buildResourceRelationships() {
 		target := rel.Target
 		source := rel.Source
 
-		switch target.ResourceType() {
-		case resources.APIGatewayType:
+		switch awsresources.ParseResourceType(target.ResourceType()) {
+		case awsresources.APIGatewayType:
 			t.buildAPIGatewayRelationship(source, target)
-		case resources.GoogleBQType:
+		case awsresources.GoogleBQType:
 			t.buildGoogleBQRelationship(source, target)
-		case resources.DatabaseType:
+		case awsresources.DatabaseType:
 			t.buildDatabaseRelationship(source, target)
-		case resources.KinesisType:
+		case awsresources.KinesisType:
 			t.buildKinesisRelationship(source, target)
-		case resources.LambdaType:
+		case awsresources.LambdaType:
 			t.buildLambdaRelationships(source, target)
-		case resources.RestfulAPIType:
+		case awsresources.RestfulAPIType:
 			t.buildRestfulAPIRelationship(source, target)
-		case resources.S3Type:
+		case awsresources.S3Type:
 			t.buildS3Relationship(source, target)
-		case resources.SNSType:
+		case awsresources.SNSType:
 			t.buildSNSRelationship(source, target)
-		case resources.SQSType:
+		case awsresources.SQSType:
 			t.buildSQSRelationships(source, target)
 		}
 	}

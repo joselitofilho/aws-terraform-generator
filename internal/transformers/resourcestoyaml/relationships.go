@@ -6,8 +6,8 @@ import (
 
 	"github.com/ettle/strcase"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildCronToLambda(cron, lambda resources.Resource) {

@@ -5,7 +5,8 @@ import (
 
 	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/diagram-code-generator/resources/pkg/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
 )
@@ -15,8 +16,8 @@ func TestParseResources(t *testing.T) {
 		mxFile *drawioxml.MxFile
 	}
 
-	lambdaResource := resources.NewGenericResource("LAMBDA_ID", "myReceiver", resources.LambdaType)
-	sqsResource := resources.NewGenericResource("SQS_ID", "my-sqs", resources.SQSType)
+	lambdaResource := resources.NewGenericResource("LAMBDA_ID", "myReceiver", awsresources.LambdaType.String())
+	sqsResource := resources.NewGenericResource("SQS_ID", "my-sqs", awsresources.SQSType.String())
 
 	tests := []struct {
 		name      string
@@ -41,7 +42,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("APIG_ID", "myAPI", resources.APIGatewayType)},
+					resources.NewGenericResource("APIG_ID", "myAPI", awsresources.APIGatewayType.String())},
 			},
 		},
 		{
@@ -61,7 +62,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("CRON_ID", "myScheduler", resources.CronType)},
+					resources.NewGenericResource("CRON_ID", "myScheduler", awsresources.CronType.String())},
 			},
 		},
 		{
@@ -80,7 +81,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("DB_ID", "myDB", resources.DatabaseType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("DB_ID", "myDB", awsresources.DatabaseType.String())},
 			},
 		},
 		{
@@ -100,7 +102,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("ENDPOINT_ID", "myEndpoint", resources.EndpointType)},
+					resources.NewGenericResource("ENDPOINT_ID", "myEndpoint", awsresources.EndpointType.String())},
 			},
 		},
 		{
@@ -120,7 +122,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("GBC_ID", "myGBC", resources.GoogleBQType)},
+					resources.NewGenericResource("GBC_ID", "myGBC", awsresources.GoogleBQType.String())},
 			},
 		},
 		{
@@ -140,7 +142,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("KINESIS_ID", "myKinesis", resources.KinesisType)},
+					resources.NewGenericResource("KINESIS_ID", "myKinesis", awsresources.KinesisType.String())},
 			},
 		},
 		{
@@ -179,7 +181,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("RESTFULAPI_ID", "myRestAPI", resources.RestfulAPIType)},
+					resources.NewGenericResource("RESTFULAPI_ID", "myRestAPI", awsresources.RestfulAPIType.String())},
 			},
 		},
 		{
@@ -199,7 +201,7 @@ func TestParseResources(t *testing.T) {
 			},
 			want: &resources.ResourceCollection{
 				Resources: []resources.Resource{
-					resources.NewGenericResource("S3BUCKET_ID", "myBucket", resources.S3Type)},
+					resources.NewGenericResource("S3BUCKET_ID", "myBucket", awsresources.S3Type.String())},
 			},
 		},
 		{
@@ -237,7 +239,8 @@ func TestParseResources(t *testing.T) {
 				},
 			},
 			want: &resources.ResourceCollection{
-				Resources: []resources.Resource{resources.NewGenericResource("SNS_ID", "my-sns", resources.SNSType)},
+				Resources: []resources.Resource{
+					resources.NewGenericResource("SNS_ID", "my-sns", awsresources.SNSType.String())},
 			},
 		},
 		{

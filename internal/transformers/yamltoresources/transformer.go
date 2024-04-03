@@ -7,9 +7,12 @@ import (
 	"strings"
 
 	"github.com/ettle/strcase"
+
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers"
 )
 
@@ -30,7 +33,7 @@ type Transformer struct {
 	snsByName        map[string]resources.Resource
 	sqsByName        map[string]resources.Resource
 
-	relationshipsMap map[resources.ResourceARN][]resources.ResourceARN
+	relationshipsMap map[awsresources.ResourceARN][]awsresources.ResourceARN
 }
 
 func NewTransformer(yamlConfig *config.Config) *Transformer {
@@ -49,7 +52,7 @@ func NewTransformer(yamlConfig *config.Config) *Transformer {
 		snsByName:        map[string]resources.Resource{},
 		sqsByName:        map[string]resources.Resource{},
 
-		relationshipsMap: map[resources.ResourceARN][]resources.ResourceARN{},
+		relationshipsMap: map[awsresources.ResourceARN][]awsresources.ResourceARN{},
 	}
 }
 
@@ -90,25 +93,25 @@ func (t *Transformer) buildRelationships(relationships *[]resources.Relationship
 	}
 }
 
-func (t *Transformer) getResourceByARN(arn resources.ResourceARN) (resource resources.Resource) {
+func (t *Transformer) getResourceByARN(arn awsresources.ResourceARN) (resource resources.Resource) {
 	key := arn.LabelOrName()
 
 	switch arn.Type {
-	case resources.LabelAWSAPIGatewayAPI:
+	case awsresources.LabelAWSAPIGatewayAPI:
 		resource = t.endpointByName[key]
-	case resources.LabelAWSAPIGatewayRoute:
+	case awsresources.LabelAWSAPIGatewayRoute:
 		resource = t.apigatewayByName[key]
-	case resources.LabelAWSCron:
+	case awsresources.LabelAWSCron:
 		resource = t.cronByName[key]
-	case resources.LabelAWSEndpoint:
+	case awsresources.LabelAWSEndpoint:
 		resource = t.endpointByName[key]
-	case resources.LabelAWSKinesisStream:
+	case awsresources.LabelAWSKinesisStream:
 		resource = t.kinesisByName[key]
-	case resources.LabelAWSLambdaFunction:
+	case awsresources.LabelAWSLambdaFunction:
 		resource = t.lambdaByName[key]
-	case resources.LabelAWSS3Bucket:
+	case awsresources.LabelAWSS3Bucket:
 		resource = t.s3BucketByName[key]
-	case resources.LabelAWSSQSQueue:
+	case awsresources.LabelAWSSQSQueue:
 		resource = t.sqsByName[key]
 	}
 
@@ -116,23 +119,23 @@ func (t *Transformer) getResourceByARN(arn resources.ResourceARN) (resource reso
 }
 
 func (t *Transformer) extractResourcesByType(
-	resourcesList []config.Resource, resourceType resources.ResourceType, resourceMap map[string]resources.Resource,
+	resourcesList []config.Resource, resourceType awsresources.ResourceType, resourceMap map[string]resources.Resource,
 	rscs *[]resources.Resource, id *int,
 ) {
 	for i := range resourcesList {
 		res := resourcesList[i]
 
-		resARN := resources.ParseResourceARN(res.GetName(), resourceType)
+		resARN := awsresources.ParseResourceARN(res.GetName(), resourceType)
 		if resARN.Label == "" &&
-			(resourceType == resources.KinesisType || resourceType == resources.S3Type || resourceType == resources.SQSType) {
-			arnType := fmt.Sprintf("%s_%s", strcase.ToSnake(resARN.Name), resources.SuffixByResource[resourceType])
+			(resourceType == awsresources.KinesisType || resourceType == awsresources.S3Type || resourceType == awsresources.SQSType) {
+			arnType := fmt.Sprintf("%s_%s", strcase.ToSnake(resARN.Name), awsresources.SuffixByResource[resourceType])
 			resARN.Label = arnType
 		}
 
 		key := resARN.LabelOrName()
 
 		if _, ok := resourceMap[key]; !ok {
-			resourceRes := resources.NewGenericResource(fmt.Sprintf("%d", *id), resARN.Name, resourceType)
+			resourceRes := resources.NewGenericResource(fmt.Sprintf("%d", *id), resARN.Name, resourceType.String())
 			*id++
 
 			*rscs = append(*rscs, resourceRes)
@@ -149,7 +152,7 @@ func (t *Transformer) extractKinesisResources(rscs *[]resources.Resource, id *in
 			reflect.ValueOf(&t.yamlConfig.Kinesis[i]).Interface().(config.Resource))
 	}
 
-	t.extractResourcesByType(configResources, resources.KinesisType, t.kinesisByName, rscs, id)
+	t.extractResourcesByType(configResources, awsresources.KinesisType, t.kinesisByName, rscs, id)
 }
 
 func (t *Transformer) extractRestfulAPIResources(rscs *[]resources.Resource, id *int) {
@@ -159,7 +162,7 @@ func (t *Transformer) extractRestfulAPIResources(rscs *[]resources.Resource, id 
 			reflect.ValueOf(&t.yamlConfig.RestfulAPIs[i]).Interface().(config.Resource))
 	}
 
-	t.extractResourcesByType(configResources, resources.RestfulAPIType, t.restfulAPIByName, rscs, id)
+	t.extractResourcesByType(configResources, awsresources.RestfulAPIType, t.restfulAPIByName, rscs, id)
 }
 
 func (t *Transformer) extractS3BucketResources(rscs *[]resources.Resource, id *int) {
@@ -169,7 +172,7 @@ func (t *Transformer) extractS3BucketResources(rscs *[]resources.Resource, id *i
 			reflect.ValueOf(&t.yamlConfig.Buckets[i]).Interface().(config.Resource))
 	}
 
-	t.extractResourcesByType(configResources, resources.S3Type, t.s3BucketByName, rscs, id)
+	t.extractResourcesByType(configResources, awsresources.S3Type, t.s3BucketByName, rscs, id)
 }
 
 func (t *Transformer) extractSNSBucketResources(rscs *[]resources.Resource, id *int) {
@@ -179,7 +182,7 @@ func (t *Transformer) extractSNSBucketResources(rscs *[]resources.Resource, id *
 			reflect.ValueOf(&t.yamlConfig.SNSs[i]).Interface().(config.Resource))
 	}
 
-	t.extractResourcesByType(configResources, resources.SNSType, t.snsByName, rscs, id)
+	t.extractResourcesByType(configResources, awsresources.SNSType, t.snsByName, rscs, id)
 }
 
 func (t *Transformer) extractSQSResources(rscs *[]resources.Resource, id *int) {
@@ -189,7 +192,7 @@ func (t *Transformer) extractSQSResources(rscs *[]resources.Resource, id *int) {
 			reflect.ValueOf(&t.yamlConfig.SQSs[i]).Interface().(config.Resource))
 	}
 
-	t.extractResourcesByType(configResources, resources.SQSType, t.sqsByName, rscs, id)
+	t.extractResourcesByType(configResources, awsresources.SQSType, t.sqsByName, rscs, id)
 }
 
 func (t *Transformer) transformAPIGateways(
@@ -200,7 +203,8 @@ func (t *Transformer) transformAPIGateways(
 
 		endpointRes, ok := t.endpointByName[endpointValue]
 		if !ok {
-			endpointRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), endpointValue, resources.EndpointType)
+			endpointRes = resources.NewGenericResource(
+				fmt.Sprintf("%d", *id), endpointValue, awsresources.EndpointType.String())
 			*rscs = append(*rscs, endpointRes)
 			*id++
 
@@ -214,14 +218,15 @@ func (t *Transformer) transformAPIGateways(
 			apigRes, ok := t.apigatewayByName[apigValue]
 
 			if !ok {
-				apigRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), apigValue, resources.APIGatewayType)
+				apigRes = resources.NewGenericResource(
+					fmt.Sprintf("%d", *id), apigValue, awsresources.APIGatewayType.String())
 				*rscs = append(*rscs, apigRes)
 				*id++
 
 				t.apigatewayByName[apigValue] = apigRes
 			}
 
-			lambdaName := resources.ToLambdaCase(l.Name)
+			lambdaName := awsresources.ToLambdaCase(l.Name)
 
 			t.transformLambda(&config.Lambda{Name: lambdaName, Envars: l.Envars}, rscs, relationships, id)
 
@@ -244,12 +249,12 @@ func (t *Transformer) transformLambda(
 		return
 	}
 
-	lambdaARN := resources.ParseResourceARN(res.Name, resources.LambdaType)
-	lambdaName := resources.ToLambdaCase(lambdaARN.Name)
+	lambdaARN := awsresources.ParseResourceARN(res.Name, awsresources.LambdaType)
+	lambdaName := awsresources.ToLambdaCase(lambdaARN.Name)
 
 	lambda, ok := t.lambdaByName[lambdaName]
 	if !ok {
-		lambda = resources.NewGenericResource(fmt.Sprintf("%d", *id), lambdaName, resources.LambdaType)
+		lambda = resources.NewGenericResource(fmt.Sprintf("%d", *id), lambdaName, awsresources.LambdaType.String())
 		*id++
 
 		*rscs = append(*rscs, lambda)
@@ -262,7 +267,7 @@ func (t *Transformer) transformLambda(
 
 		sourceRes, ok := t.cronByName[name]
 		if !ok {
-			sourceRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), name, resources.CronType)
+			sourceRes = resources.NewGenericResource(fmt.Sprintf("%d", *id), name, awsresources.CronType.String())
 			*id++
 
 			*rscs = append(*rscs, sourceRes)
@@ -276,12 +281,12 @@ func (t *Transformer) transformLambda(
 	t.transformLambdaEnvars(res, lambda, lambdaARN, rscs, relationships, id)
 
 	for _, r := range res.KinesisTriggers {
-		kinesisARN := resources.ParseResourceARN(r.SourceARN, resources.KinesisType)
+		kinesisARN := awsresources.ParseResourceARN(r.SourceARN, awsresources.KinesisType)
 		t.relationshipsMap[kinesisARN] = append(t.relationshipsMap[kinesisARN], lambdaARN)
 	}
 
 	for _, r := range res.SQSTriggers {
-		sqsARN := resources.ParseResourceARN(r.SourceARN, resources.SQSType)
+		sqsARN := awsresources.ParseResourceARN(r.SourceARN, awsresources.SQSType)
 		t.relationshipsMap[sqsARN] = append(t.relationshipsMap[sqsARN], lambdaARN)
 	}
 }
@@ -295,27 +300,27 @@ func (t *Transformer) transformLambdas(rscs *[]resources.Resource, relationships
 }
 
 func (t *Transformer) transformLambdaEnvars(
-	res *config.Lambda, lambda resources.Resource, lambdaARN resources.ResourceARN,
+	res *config.Lambda, lambda resources.Resource, lambdaARN awsresources.ResourceARN,
 	rscs *[]resources.Resource, relationships *[]resources.Relationship, id *int,
 ) {
 	for k, v := range res.Envars {
 		value, resType := t.getValueTypeFromEnvar(k)
 
 		switch resType {
-		case resources.DatabaseType:
+		case awsresources.DatabaseType:
 			t.fromLambdaToResource(value, lambda, t.databaseByName, id, resType, rscs, relationships)
-		case resources.GoogleBQType:
+		case awsresources.GoogleBQType:
 			t.fromLambdaToResource(value, lambda, t.googleBQByName, id, resType, rscs, relationships)
-		case resources.KinesisType:
-			targetARN := resources.ParseResourceARN(v, resType)
+		case awsresources.KinesisType:
+			targetARN := awsresources.ParseResourceARN(v, resType)
 			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-		case resources.S3Type:
-			targetARN := resources.ParseResourceARN(v, resType)
+		case awsresources.S3Type:
+			targetARN := awsresources.ParseResourceARN(v, resType)
 			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-		case resources.SQSType:
-			targetARN := resources.ParseResourceARN(v, resType)
+		case awsresources.SQSType:
+			targetARN := awsresources.ParseResourceARN(v, resType)
 			t.relationshipsMap[lambdaARN] = append(t.relationshipsMap[lambdaARN], targetARN)
-		case resources.RestfulAPIType:
+		case awsresources.RestfulAPIType:
 			t.fromLambdaToResource(value, lambda, t.restfulAPIByName, id, resType, rscs, relationships)
 		default:
 			fmtcolor.Yellow.Printf("yaml to resource: unidentified variable: %s=%s\n", k, v)
@@ -323,29 +328,29 @@ func (t *Transformer) transformLambdaEnvars(
 	}
 }
 
-func (*Transformer) getValueTypeFromEnvar(k string) (value string, resType resources.ResourceType) {
+func (*Transformer) getValueTypeFromEnvar(k string) (value string, resType awsresources.ResourceType) {
 	switch {
-	case strings.HasSuffix(k, resources.EnvarSuffixDBHost):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixDBHost, resources.ToDatabaseCase)
-		resType = resources.DatabaseType
-	case strings.HasSuffix(k, resources.EnvarSuffixGoogleBQ):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixGoogleBQ, resources.ToGoogleBQCase)
-		resType = resources.GoogleBQType
-	case strings.HasSuffix(k, resources.EnvarSuffixKinesisStreamURL):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixKinesisStreamURL, resources.ToKinesisCase)
-		resType = resources.KinesisType
-	case strings.HasSuffix(k, resources.EnvarSuffixS3BucketURL):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketURL, resources.ToS3BucketCase)
-		resType = resources.S3Type
-	case strings.HasSuffix(k, resources.EnvarSuffixS3BucketName):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixS3BucketName, resources.ToS3BucketCase)
-		resType = resources.S3Type
-	case strings.HasSuffix(k, resources.EnvarSuffixSQSQueueURL):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixSQSQueueURL, resources.ToSQSCase)
-		resType = resources.SQSType
-	case strings.HasSuffix(k, resources.EnvarSuffixRestfulAPI):
-		value = transformers.ReplaceSuffix(k, resources.EnvarSuffixRestfulAPI, resources.ToRestfulAPICase)
-		resType = resources.RestfulAPIType
+	case strings.HasSuffix(k, awsresources.EnvarSuffixDBHost):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixDBHost, awsresources.ToDatabaseCase)
+		resType = awsresources.DatabaseType
+	case strings.HasSuffix(k, awsresources.EnvarSuffixGoogleBQ):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixGoogleBQ, awsresources.ToGoogleBQCase)
+		resType = awsresources.GoogleBQType
+	case strings.HasSuffix(k, awsresources.EnvarSuffixKinesisStreamURL):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixKinesisStreamURL, awsresources.ToKinesisCase)
+		resType = awsresources.KinesisType
+	case strings.HasSuffix(k, awsresources.EnvarSuffixS3BucketURL):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixS3BucketURL, awsresources.ToS3BucketCase)
+		resType = awsresources.S3Type
+	case strings.HasSuffix(k, awsresources.EnvarSuffixS3BucketName):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixS3BucketName, awsresources.ToS3BucketCase)
+		resType = awsresources.S3Type
+	case strings.HasSuffix(k, awsresources.EnvarSuffixSQSQueueURL):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixSQSQueueURL, awsresources.ToSQSCase)
+		resType = awsresources.SQSType
+	case strings.HasSuffix(k, awsresources.EnvarSuffixRestfulAPI):
+		value = transformers.ReplaceSuffix(k, awsresources.EnvarSuffixRestfulAPI, awsresources.ToRestfulAPICase)
+		resType = awsresources.RestfulAPIType
 	}
 
 	return value, resType
@@ -353,11 +358,11 @@ func (*Transformer) getValueTypeFromEnvar(k string) (value string, resType resou
 
 func (t *Transformer) fromLambdaToResource(
 	value string, lambda resources.Resource, resourceMap map[string]resources.Resource,
-	id *int, resType resources.ResourceType, rscs *[]resources.Resource, relationships *[]resources.Relationship,
+	id *int, resType awsresources.ResourceType, rscs *[]resources.Resource, relationships *[]resources.Relationship,
 ) {
 	r, ok := resourceMap[value]
 	if !ok {
-		r = resources.NewGenericResource(fmt.Sprintf("%d", *id), value, resType)
+		r = resources.NewGenericResource(fmt.Sprintf("%d", *id), value, resType.String())
 		*id++
 
 		*rscs = append(*rscs, r)

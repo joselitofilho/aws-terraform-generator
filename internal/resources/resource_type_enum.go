@@ -1,8 +1,9 @@
 package resources
 
-import "strings"
+import (
+	"strings"
+)
 
-// ResourceType represents the type of a resource.
 type ResourceType string
 
 const (
@@ -43,9 +44,19 @@ const (
 	UnknownType ResourceType = "unknown"
 )
 
-var AvailableTypes = []ResourceType{
-	APIGatewayType, CronType, DatabaseType, EndpointType, GoogleBQType, KinesisType, LambdaType, RestfulAPIType,
-	S3Type, SQSType, SNSType}
+var AvailableTypes = []string{
+	APIGatewayType.String(),
+	CronType.String(),
+	DatabaseType.String(),
+	EndpointType.String(),
+	GoogleBQType.String(),
+	KinesisType.String(),
+	LambdaType.String(),
+	RestfulAPIType.String(),
+	S3Type.String(),
+	SQSType.String(),
+	SNSType.String(),
+}
 
 // String returns the string representation of a ResourceType.
 func (rt ResourceType) String() string {

@@ -14,6 +14,12 @@ github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/diagram-code-generator/resources v0.0.0-20240403111536-d3308dc177bb h1:l6ohFN3Ctw6gL7Sb1u6LtA+PFkX/hcqY33mh9MJ2by8=
+github.com/diagram-code-generator/resources v0.0.0-20240403111536-d3308dc177bb/go.mod h1:YEuE1C7Onbp2Ky2VZt68q37Cp/ym33BET/64jdeuaYo=
+github.com/diagram-code-generator/resources v1.0.0 h1:g2P5kTm1iC7XikLR/ZO860PZ41/S7tkWTbLAfxYzGkc=
+github.com/diagram-code-generator/resources v1.0.0/go.mod h1:1Qt2PuHd51iQHGWs4vwADP/c3C/DZjrjv0/EOK2FDik=
+github.com/diagram-code-generator/resources v1.0.1 h1:3XZp+IwBnvfIvjzicjE0Tmei24hGZKAeFjyBI7XP3gI=
+github.com/diagram-code-generator/resources v1.0.1/go.mod h1:1Qt2PuHd51iQHGWs4vwADP/c3C/DZjrjv0/EOK2FDik=
 github.com/emicklei/dot v1.6.1 h1:ujpDlBkkwgWUY+qPId5IwapRW/xEoligRSYjioR6DFI=
 github.com/emicklei/dot v1.6.1/go.mod h1:DeV7GvQtIw4h2u73RKBkkFdvVAz0D9fzeJrgPW6gy/s=
 github.com/ettle/strcase v0.2.0 h1:fGNiVF21fHXpX1niBgk0aROov1LagYsOwV/xqKDKR/Q=

@@ -1,12 +1,14 @@
 package resourcestoyaml
 
 import (
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildAPIGatewayRelationship(source, target resources.Resource) {
-	if source.ResourceType() == resources.EndpointType {
+	if awsresources.ParseResourceType(source.ResourceType()) == awsresources.EndpointType {
 		t.buildEndpointToAPIGateway(source, target)
 	}
 }

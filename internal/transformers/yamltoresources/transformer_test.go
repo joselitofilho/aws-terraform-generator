@@ -4,8 +4,10 @@ import (
 	_ "embed"
 	"testing"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -14,18 +16,18 @@ import (
 var diagramData []byte
 
 var (
-	endpointResource = resources.NewGenericResource("1", "mystack-api.domain-${var.environment}.com",
-		resources.EndpointType)
-	apiGateway       = resources.NewGenericResource("2", "POST /v1/examples", resources.APIGatewayType)
-	lambdaAPIGateway = resources.NewGenericResource("3", "exampleApiReceiver", resources.LambdaType)
-	kinesis          = resources.NewGenericResource("4", "MyKinesis", resources.KinesisType)
-	lambda           = resources.NewGenericResource("5", "exampleReceiver", resources.LambdaType)
-	cron             = resources.NewGenericResource("6", "cron(0 1 * * ? *)", resources.CronType)
-	restAPI          = resources.NewGenericResource("7", "MyApi", resources.RestfulAPIType)
-	s3Bucket         = resources.NewGenericResource("8", "my-bucket", resources.S3Type)
-	sns              = resources.NewGenericResource("9", "example", resources.SNSType)
-	targetSQS        = resources.NewGenericResource("10", "target", resources.SQSType)
-	sourceSQS        = resources.NewGenericResource("11", "source", resources.SQSType)
+	endpointResource = resources.NewGenericResource(
+		"1", "mystack-api.domain-${var.environment}.com", awsresources.EndpointType.String())
+	apiGateway       = resources.NewGenericResource("2", "POST /v1/examples", awsresources.APIGatewayType.String())
+	lambdaAPIGateway = resources.NewGenericResource("3", "exampleApiReceiver", awsresources.LambdaType.String())
+	kinesis          = resources.NewGenericResource("4", "MyKinesis", awsresources.KinesisType.String())
+	lambda           = resources.NewGenericResource("5", "exampleReceiver", awsresources.LambdaType.String())
+	cron             = resources.NewGenericResource("6", "cron(0 1 * * ? *)", awsresources.CronType.String())
+	restAPI          = resources.NewGenericResource("7", "MyApi", awsresources.RestfulAPIType.String())
+	s3Bucket         = resources.NewGenericResource("8", "my-bucket", awsresources.S3Type.String())
+	sns              = resources.NewGenericResource("9", "example", awsresources.SNSType.String())
+	targetSQS        = resources.NewGenericResource("10", "target", awsresources.SQSType.String())
+	sourceSQS        = resources.NewGenericResource("11", "source", awsresources.SQSType.String())
 
 	wantResourceCollection = &resources.ResourceCollection{
 		Resources: []resources.Resource{
@@ -145,13 +147,13 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 	type args struct {
 		res           *config.Lambda
 		lambda        *resources.GenericResource
-		lambdaARN     resources.ResourceARN
+		lambdaARN     awsresources.ResourceARN
 		resources     *[]resources.Resource
 		relationships *[]resources.Relationship
 		id            *int
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "myReceiver", resources.LambdaType)
+	lambdaResource := resources.NewGenericResource("1", "myReceiver", awsresources.LambdaType.String())
 
 	var (
 		id                int
@@ -178,7 +180,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "doc", resources.DatabaseType),
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "doc", awsresources.DatabaseType.String()),
 				&id, &wantResources, &wantRelationships),
 			wantID: 3,
 		},
@@ -194,7 +196,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "google", resources.GoogleBQType),
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "google", awsresources.GoogleBQType.String()),
 				&id, &wantResources, &wantRelationships),
 			wantID: 3,
 		},
@@ -255,7 +257,7 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "MyRest", resources.RestfulAPIType),
+			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "MyRest", awsresources.RestfulAPIType.String()),
 				&id, &wantResources, &wantRelationships),
 			wantID: 3,
 		},

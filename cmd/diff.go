@@ -6,10 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/draw"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/yamltoresources"
 )
 
@@ -38,7 +40,7 @@ var diffCmd = &cobra.Command{
 			printErrorAndExit(err)
 		}
 
-		resources.PrintDiff(leftRc, rightRc)
+		resources.PrintDiff(leftRc, rightRc, awsresources.AvailableTypes)
 
 		addedResourcesByType, removedResourcesByType, addedRelationships, removedRelationships :=
 			resources.FindDifferences(leftRc, rightRc)

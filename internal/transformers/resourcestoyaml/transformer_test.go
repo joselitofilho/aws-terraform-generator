@@ -3,8 +3,10 @@ package resourcestoyaml
 import (
 	"testing"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
 )
@@ -25,9 +27,9 @@ func TestTransformDrawIOToYAML_APIGateway(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	endpointResource := resources.NewGenericResource("id1", "https://my-domain.com", resources.EndpointType)
-	apiGatewayResource := resources.NewGenericResource("id2", "POST /examples", resources.APIGatewayType)
-	lambdaResource := resources.NewGenericResource("id3", "my-lambda", resources.LambdaType)
+	endpointResource := resources.NewGenericResource("id1", "https://my-domain.com", awsresources.EndpointType.String())
+	apiGatewayResource := resources.NewGenericResource("id2", "POST /examples", awsresources.APIGatewayType.String())
+	lambdaResource := resources.NewGenericResource("id3", "my-lambda", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string
@@ -112,8 +114,8 @@ func TestTransformDrawIOToYAML_Database(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	database := resources.NewGenericResource("id1", "my-database", resources.DatabaseType)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	database := resources.NewGenericResource("id1", "my-database", awsresources.DatabaseType.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string
@@ -178,8 +180,8 @@ func TestTransformDrawIOToYAML_GoogleBQ(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	googleBQ := resources.NewGenericResource("id1", "google", resources.GoogleBQType)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	googleBQ := resources.NewGenericResource("id1", "google", awsresources.GoogleBQType.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string
@@ -245,8 +247,8 @@ func TestTransformDrawIOToYAML_Kinesis(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	kinesis := resources.NewGenericResource("id1", "my-stream", resources.KinesisType)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	kinesis := resources.NewGenericResource("id1", "my-stream", awsresources.KinesisType.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string
@@ -314,12 +316,12 @@ func TestTransformDrawIOToYAML_Lambda(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	lambda := resources.NewGenericResource("id1", "myReceiver", resources.LambdaType)
-	cron := resources.NewGenericResource("id2", "cron(0 2 * * ? *)", resources.CronType)
-	sqs := resources.NewGenericResource("id3", "my-queue", resources.SQSType)
-	sns := resources.NewGenericResource("id4", "my-notification", resources.SNSType)
-	s3Bucket := resources.NewGenericResource("id5", "my-bucket", resources.S3Type)
-	kinesis := resources.NewGenericResource("id6", "my-stream", resources.KinesisType)
+	lambda := resources.NewGenericResource("id1", "myReceiver", awsresources.LambdaType.String())
+	cron := resources.NewGenericResource("id2", "cron(0 2 * * ? *)", awsresources.CronType.String())
+	sqs := resources.NewGenericResource("id3", "my-queue", awsresources.SQSType.String())
+	sns := resources.NewGenericResource("id4", "my-notification", awsresources.SNSType.String())
+	s3Bucket := resources.NewGenericResource("id5", "my-bucket", awsresources.S3Type.String())
+	kinesis := resources.NewGenericResource("id6", "my-stream", awsresources.KinesisType.String())
 
 	tests := []struct {
 		name      string
@@ -488,8 +490,8 @@ func TestTransformDrawIOToYAML_S3Bucket(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	s3Bucket := resources.NewGenericResource("id1", "my-bucket", resources.S3Type)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	s3Bucket := resources.NewGenericResource("id1", "my-bucket", awsresources.S3Type.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string
@@ -558,10 +560,10 @@ func TestTransformDrawIOToYAML_SQS(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	sqs := resources.NewGenericResource("id1", "my-queue", resources.SQSType)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
-	sns := resources.NewGenericResource("id3", "my-notification", resources.SNSType)
-	s3Bucket := resources.NewGenericResource("id4", "my-bucket", resources.S3Type)
+	sqs := resources.NewGenericResource("id1", "my-queue", awsresources.SQSType.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
+	sns := resources.NewGenericResource("id3", "my-notification", awsresources.SNSType.String())
+	s3Bucket := resources.NewGenericResource("id4", "my-bucket", awsresources.S3Type.String())
 
 	tests := []struct {
 		name      string
@@ -649,8 +651,8 @@ func TestTransformDrawIOToYAML_SNS(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	sns := resources.NewGenericResource("id1", "my-notification", resources.SNSType)
-	s3Bucket := resources.NewGenericResource("id1", "my-bucket", resources.S3Type)
+	sns := resources.NewGenericResource("id1", "my-notification", awsresources.SNSType.String())
+	s3Bucket := resources.NewGenericResource("id1", "my-bucket", awsresources.S3Type.String())
 
 	tests := []struct {
 		name      string
@@ -707,8 +709,8 @@ func TestTransformDrawIOToYAML_RestfulAPI(t *testing.T) {
 		resources  *resources.ResourceCollection
 	}
 
-	restfulAPI := resources.NewGenericResource("id1", "my-api", resources.RestfulAPIType)
-	lambda := resources.NewGenericResource("id2", "myReceiver", resources.LambdaType)
+	restfulAPI := resources.NewGenericResource("id1", "my-api", awsresources.RestfulAPIType.String())
+	lambda := resources.NewGenericResource("id2", "myReceiver", awsresources.LambdaType.String())
 
 	tests := []struct {
 		name      string

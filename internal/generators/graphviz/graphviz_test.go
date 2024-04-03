@@ -4,7 +4,10 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,14 +28,14 @@ var (
 func TestBuild(t *testing.T) {
 	type args struct {
 		resc             *resources.ResourceCollection
-		resourceImageMap map[resources.ResourceType]string
+		resourceImageMap map[awsresources.ResourceType]string
 		config           Config
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "MyLambda", resources.LambdaType)
-	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
+	lambdaResource := resources.NewGenericResource("1", "MyLambda", awsresources.LambdaType.String())
+	sqsResource := resources.NewGenericResource("2", "my-queue", awsresources.SQSType.String())
 
-	reourceImageMap := map[resources.ResourceType]string{
+	reourceImageMap := map[awsresources.ResourceType]string{
 		"lambda": "images/lambda.svg",
 		"sqs":    "images/sqs.svg",
 	}
@@ -76,7 +79,7 @@ func TestBuild(t *testing.T) {
 			name: "empty graph",
 			args: args{
 				resc:             resources.NewResourceCollection(),
-				resourceImageMap: map[resources.ResourceType]string{},
+				resourceImageMap: map[awsresources.ResourceType]string{},
 				config:           Config{},
 			},
 			want: "digraph  {\n\t\n\t\n}\n",
@@ -127,17 +130,17 @@ func TestBuild(t *testing.T) {
 func TestBuildWithStyle(t *testing.T) {
 	type args struct {
 		resc             *resources.ResourceCollection
-		resourceImageMap map[resources.ResourceType]string
+		resourceImageMap map[awsresources.ResourceType]string
 		config           Config
 		style            Style
 	}
 
-	lambdaResource := resources.NewGenericResource("1", "MyLambda", resources.LambdaType)
-	sqsResource := resources.NewGenericResource("2", "my-queue", resources.SQSType)
-	kinesisResource := resources.NewGenericResource("3", "MyStream", resources.KinesisType)
-	databaseResource := resources.NewGenericResource("4", "doc", resources.DatabaseType)
+	lambdaResource := resources.NewGenericResource("1", "MyLambda", awsresources.LambdaType.String())
+	sqsResource := resources.NewGenericResource("2", "my-queue", awsresources.SQSType.String())
+	kinesisResource := resources.NewGenericResource("3", "MyStream", awsresources.KinesisType.String())
+	databaseResource := resources.NewGenericResource("4", "doc", awsresources.DatabaseType.String())
 
-	reourceImageMap := map[resources.ResourceType]string{
+	reourceImageMap := map[awsresources.ResourceType]string{
 		"lambda": "images/lambda.svg",
 		"sqs":    "images/sqs.svg",
 	}

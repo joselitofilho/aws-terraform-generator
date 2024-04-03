@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func Parse(filename string) (*resources.ResourceCollection, error) {

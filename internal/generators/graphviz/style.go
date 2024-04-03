@@ -1,6 +1,6 @@
 package graphviz
 
-import "github.com/joselitofilho/aws-terraform-generator/internal/resources"
+import "github.com/diagram-code-generator/resources/pkg/resources"
 
 type Style struct {
 	Nodes  map[resources.Resource]string

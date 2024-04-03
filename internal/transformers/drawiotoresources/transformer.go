@@ -6,7 +6,8 @@ import (
 
 	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	"github.com/diagram-code-generator/resources/pkg/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 // Transform parses resources from the MxFile.
@@ -57,27 +58,27 @@ func createResource(id, value, style string) resources.Resource {
 
 	switch {
 	case reAPIGateway.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.APIGatewayType)
+		return resources.NewGenericResource(id, value, awsresources.APIGatewayType.String())
 	case strings.Contains(style, "mxgraph.aws4.event_time_based"):
-		return resources.NewGenericResource(id, value, resources.CronType)
+		return resources.NewGenericResource(id, value, awsresources.CronType.String())
 	case reDatabase.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.DatabaseType)
+		return resources.NewGenericResource(id, value, awsresources.DatabaseType.String())
 	case strings.Contains(style, "mxgraph.aws4.endpoint"):
-		return resources.NewGenericResource(id, value, resources.EndpointType)
+		return resources.NewGenericResource(id, value, awsresources.EndpointType.String())
 	case reGoogleBQ.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.GoogleBQType)
+		return resources.NewGenericResource(id, value, awsresources.GoogleBQType.String())
 	case reKinesis.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.KinesisType)
+		return resources.NewGenericResource(id, value, awsresources.KinesisType.String())
 	case resLambda.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.LambdaType)
+		return resources.NewGenericResource(id, value, awsresources.LambdaType.String())
 	case resRestfulAPI.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.RestfulAPIType)
+		return resources.NewGenericResource(id, value, awsresources.RestfulAPIType.String())
 	case reS3.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.S3Type)
+		return resources.NewGenericResource(id, value, awsresources.S3Type.String())
 	case reSQS.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.SQSType)
+		return resources.NewGenericResource(id, value, awsresources.SQSType.String())
 	case reSNS.MatchString(style):
-		return resources.NewGenericResource(id, value, resources.SNSType)
+		return resources.NewGenericResource(id, value, awsresources.SNSType.String())
 	default:
 		return nil
 	}

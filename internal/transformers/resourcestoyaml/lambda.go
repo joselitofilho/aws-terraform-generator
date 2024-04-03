@@ -6,19 +6,21 @@ import (
 
 	"github.com/ettle/strcase"
 
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildLambdaRelationships(source, target resources.Resource) {
-	switch source.ResourceType() {
-	case resources.CronType:
+	switch awsresources.ParseResourceType(source.ResourceType()) {
+	case awsresources.CronType:
 		t.buildCronToLambda(source, target)
-	case resources.KinesisType:
+	case awsresources.KinesisType:
 		t.buildKinesisToLambda(source, target)
-	case resources.SQSType:
+	case awsresources.SQSType:
 		t.buildSQSToLambda(source, target)
-	case resources.SNSType:
+	case awsresources.SNSType:
 		t.buildSNSToLambda(source, target)
 	}
 }
@@ -30,8 +32,8 @@ func (t *Transformer) buildLambdas() (
 	apiGatewayLambdaIDs := map[string]struct{}{}
 
 	for _, rel := range t.resc.Relationships {
-		isAPIGatewayLambda := rel.Target.ResourceType() == resources.LambdaType &&
-			rel.Source.ResourceType() == resources.APIGatewayType
+		isAPIGatewayLambda := awsresources.ParseResourceType(rel.Target.ResourceType()) == awsresources.LambdaType &&
+			awsresources.ParseResourceType(rel.Source.ResourceType()) == awsresources.APIGatewayType
 
 		if isAPIGatewayLambda {
 			lambda := rel.Target
@@ -53,7 +55,7 @@ func (t *Transformer) buildLambdas() (
 		}
 	}
 
-	for _, lambda := range t.resourcesByTypeMap[resources.LambdaType] {
+	for _, lambda := range t.resourcesByTypeMap[awsresources.LambdaType] {
 		if _, ok := apiGatewayLambdaIDs[lambda.ID()]; ok {
 			continue
 		}

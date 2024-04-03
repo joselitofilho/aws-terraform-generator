@@ -1,12 +1,14 @@
 package resourcestoyaml
 
 import (
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildS3Relationship(source, target resources.Resource) {
-	if source.ResourceType() == resources.LambdaType {
+	if awsresources.ParseResourceType(source.ResourceType()) == awsresources.LambdaType {
 		t.buildLambdaToS3(source, target)
 	}
 }
@@ -14,7 +16,7 @@ func (t *Transformer) buildS3Relationship(source, target resources.Resource) {
 func (t *Transformer) buildS3Buckets() []config.S3 {
 	var buckets []config.S3
 
-	for _, bucket := range t.resourcesByTypeMap[resources.S3Type] {
+	for _, bucket := range t.resourcesByTypeMap[awsresources.S3Type] {
 		buckets = append(buckets, config.S3{Name: bucket.Value(), ExpirationDays: 90})
 	}
 

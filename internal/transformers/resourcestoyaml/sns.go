@@ -1,12 +1,14 @@
 package resourcestoyaml
 
 import (
+	"github.com/diagram-code-generator/resources/pkg/resources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
+	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
 func (t *Transformer) buildSNSRelationship(source, target resources.Resource) {
-	if source.ResourceType() == resources.S3Type {
+	if awsresources.ParseResourceType(source.ResourceType()) == awsresources.S3Type {
 		t.buildS3ToSNS(source, target)
 	}
 }
