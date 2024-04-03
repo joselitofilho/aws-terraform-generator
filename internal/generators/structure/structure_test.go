@@ -62,7 +62,7 @@ func TestStructure_Build(t *testing.T) {
 				require.FileExists(tb, path.Join(modPath, "main.tf"))
 				require.FileExists(tb, path.Join(modPath, "vars.tf"))
 
-				require.DirExists(tb, teststackPath, "lambda")
+				require.DirExists(tb, path.Join(teststackPath, "lambda"))
 			},
 		},
 		{
