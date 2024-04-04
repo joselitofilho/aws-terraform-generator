@@ -5,10 +5,12 @@ go 1.21.6
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/aws/aws-lambda-go v1.46.0
+	github.com/diagram-code-generator/resources v1.0.2
 	github.com/emicklei/dot v1.6.1
 	github.com/ettle/strcase v0.2.0
 	github.com/fatih/color v1.16.0
 	github.com/hashicorp/hcl/v2 v2.20.0
+	github.com/joselitofilho/drawio-parser-go v0.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.14.3
@@ -20,10 +22,8 @@ require (
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/diagram-code-generator/resources v1.0.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/joselitofilho/drawio-parser-go v0.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

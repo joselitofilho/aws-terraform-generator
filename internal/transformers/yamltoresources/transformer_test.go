@@ -134,7 +134,11 @@ func TestTransformer_Transform(t *testing.T) {
 			got, err := tr.Transform()
 
 			require.ErrorIs(t, err, tc.targetErr)
-			require.Equal(t, tc.want, got)
+			if tc.want == nil {
+				require.Nil(t, got)
+			} else {
+				require.True(t, tc.want.Equal(got))
+			}
 		})
 	}
 }

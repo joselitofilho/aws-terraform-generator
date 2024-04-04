@@ -32,7 +32,11 @@ func TestParse(t *testing.T) {
 			got, err := Parse(tc.args.filename)
 
 			require.ErrorIs(t, err, tc.targetErr)
-			require.Equal(t, tc.want, got)
+			if tc.want == nil {
+				require.Nil(t, got)
+			} else {
+				require.True(t, tc.want.Equal(got))
+			}
 		})
 	}
 }

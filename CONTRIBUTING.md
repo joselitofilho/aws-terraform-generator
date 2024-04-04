@@ -38,11 +38,6 @@ To run the tests:
 $ task -d scripts tests
 ```
 
-> [!IMPORTANT]
-> There are some tests that verify the equality of a map. If they fail, run them again several times until they pass. This will soon be corrected by the testing library.
-
-If nothing complains, congratulations!
-
 ## Releasing a new version
 
 If you are the current maintainer of this gem:
