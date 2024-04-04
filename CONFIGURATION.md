@@ -92,46 +92,43 @@ diagram:
 
 ### structure
 
-Structure for stacks with multiple environments.
+Structure for managing stacks with multiple environments.
 
 ```yaml
 structure:
   # Stacks section. Each stack configuration includes folders for different environments (`dev`, `uat`, `prd`, etc.),
-  # default templates, and specific configurations for lambdas, API gateways, SQS, and so on.
+  # default templates, and specific configurations for lambdas, API gateways, SQS, and more.
   stacks:
     - name: mystack
-      # Folders for different environments Each environment folder contains the following Terraform files:
-      #  - `main.tf`: Main Terraform configuration.
-      #  - `terragrunt.hcl`: Terragrunt configuration.
-      #  - `vars.tf`: Variable definitions.
+      # Folders for different environments.
       folders:
         # Development environment
         - name: dev
-          # Terraform configuration files for dev environment
+          # Terraform configuration files for the development environment.
           files:
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # User Acceptance Testing environment
         - name: uat
-          # Terraform configuration files for uat environment
+          # Terraform configuration files for the User Acceptance Testing environment.
           files:
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # Production environment
         - name: prd
-          # Terraform configuration files for prd environment
+          # Terraform configuration files for the production environment.
           files:
             - name: main.tf
             - name: terragrunt.hcl
             - name: vars.tf
         # Common module
         - name: mod
-          # Terraform configuration files for module
+          # Terraform configuration files for the common module.
           files:
             - name: main.tf
-              # Template for generating stack_name based on environment
+              # Template for generating stack_name based on environment.
               tmpl: |-
                 locals {
                   stack_name = "{{$.StackName}}-${var.environment}"
@@ -139,6 +136,15 @@ structure:
             - name: vars.tf
         # Lambda functions
         - name: lambda
+        # Placeholder folder for any other configurations
+        - name: anyFolder
+          # Files within the arbitrary folder.
+          files: 
+            - name: anyFile.txt
+      # Files in the root folder.
+      files:
+        - name: anyRootFile.txt
+
   # Default templates are provided for creating stacks. These templates include backend configuration, provider
   # configuration, module instantiation, and variable definitions.
   default_templates:
