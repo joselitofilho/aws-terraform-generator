@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/aws-terraform-generator/main.go",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "--workdir",
                 "${workspaceFolder}/example"
@@ -20,7 +20,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/aws-terraform-generator/main.go",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "diagram",
                 "-d",
@@ -36,7 +36,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/aws-terraform-generator/main.go",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "lambda",
                 "-c",
@@ -50,7 +50,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/aws-terraform-generator/main.go",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "draw",
                 "--workdir",
@@ -66,7 +66,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/aws-terraform-generator/main.go",
+            "program": "${workspaceFolder}/main.go",
             "args": [
                 "diff",
                 "-l",
