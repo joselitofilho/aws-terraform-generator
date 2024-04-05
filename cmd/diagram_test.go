@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"os"
 	"path"
 	"testing"
@@ -9,11 +10,6 @@ import (
 )
 
 func TestDiagram_Run(t *testing.T) {
-	var (
-		testdataFolder = "./testdata"
-		testOutput     = "./testoutput"
-	)
-
 	type args struct {
 		diagram    string
 		configFile string
@@ -21,9 +17,10 @@ func TestDiagram_Run(t *testing.T) {
 	}
 
 	tests := []struct {
-		name  string
-		args  args
-		setup func() (tearDown func())
+		name             string
+		args             args
+		setup            func() (tearDown func())
+		extraValidations func(testing.TB)
 	}{
 		{
 			name: "happy path",
@@ -31,6 +28,9 @@ func TestDiagram_Run(t *testing.T) {
 				diagram:    path.Join(testdataFolder, "diagram.xml"),
 				configFile: path.Join(testdataFolder, "diagram.config.yaml"),
 				output:     path.Join(testOutput, "diagram.yaml"),
+			},
+			extraValidations: func(tb testing.TB) {
+				require.FileExists(tb, path.Join(testOutput, "diagram.yaml"))
 			},
 		},
 		{
@@ -73,18 +73,24 @@ func TestDiagram_Run(t *testing.T) {
 		_ = os.RemoveAll(testOutput)
 	}()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.setup != nil {
-				tearDown := tt.setup()
+	for i := range tests {
+		tc := tests[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tearDown := tc.setup()
 				defer tearDown()
 			}
 
-			_ = diagramCmd.Flags().Set(flagDiagram, tt.args.diagram)
-			_ = diagramCmd.Flags().Set(flagConfig, tt.args.configFile)
-			_ = diagramCmd.Flags().Set(flagOutput, tt.args.output)
+			_ = diagramCmd.Flags().Set(flagDiagram, tc.args.diagram)
+			_ = diagramCmd.Flags().Set(flagConfig, tc.args.configFile)
+			_ = diagramCmd.Flags().Set(flagOutput, tc.args.output)
 
 			diagramCmd.Run(diagramCmd, []string{})
+
+			if tc.extraValidations != nil {
+				tc.extraValidations(t)
+			}
 		})
 	}
 }

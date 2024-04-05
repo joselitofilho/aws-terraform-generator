@@ -1,6 +1,7 @@
 package diagram
 
 import (
+	_ "embed"
 	"os"
 	"path"
 	"testing"
@@ -8,10 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
+var (
 	testdataDir = "testdata"
 	testOutput  = "testoutput"
 )
+
+//go:embed testdata/diagram.yaml
+var diagramYAML []byte
 
 func TestDiagram_Build(t *testing.T) {
 	type fields struct {
@@ -21,16 +25,22 @@ func TestDiagram_Build(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		fields    fields
-		targetErr error
+		name             string
+		fields           fields
+		extraValidations func(testing.TB)
+		targetErr        error
 	}{
 		{
 			name: "happy path",
 			fields: fields{
 				diagramFilename: path.Join(testdataDir, "diagram.xml"),
 				configFilename:  path.Join(testdataDir, "diagram.config.yaml"),
-				output:          testOutput,
+				output:          path.Join(testOutput, "diagram.yaml"),
+			},
+			extraValidations: func(tb testing.TB) {
+				data, err := os.ReadFile(path.Join(testOutput, "diagram.yaml"))
+				require.NoError(tb, err)
+				require.Equal(tb, string(diagramYAML), string(data))
 			},
 		},
 	}
@@ -46,6 +56,10 @@ func TestDiagram_Build(t *testing.T) {
 			err := NewDiagram(tc.fields.diagramFilename, tc.fields.configFilename, tc.fields.output).Build()
 
 			require.ErrorIs(t, err, tc.targetErr)
+
+			if tc.extraValidations != nil {
+				tc.extraValidations(t)
+			}
 		})
 	}
 }

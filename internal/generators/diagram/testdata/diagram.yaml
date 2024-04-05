@@ -1,0 +1,6 @@
+lambdas:
+    - name: myReceiver
+      source: git@
+      role_name: execute_lambda
+      runtime: go1.x
+      description: myReceiver lambda
