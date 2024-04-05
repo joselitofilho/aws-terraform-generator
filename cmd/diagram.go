@@ -9,9 +9,11 @@ import (
 
 	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
 
+	"github.com/diagram-code-generator/resources/pkg/transformers/drawiotoresources"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/drawiotoresources"
+	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
 )
 
@@ -54,12 +56,12 @@ func build(diagram, configFile, output string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	resources, err := drawiotoresources.Transform(mxFile)
+	resc, err := drawiotoresources.Transform(mxFile, &resources.AWSResourceFactory{})
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resources).Transform()
+	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resc).Transform()
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
