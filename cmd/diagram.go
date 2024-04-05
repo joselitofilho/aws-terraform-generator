@@ -1,20 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-
-	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
-
-	"github.com/diagram-code-generator/resources/pkg/transformers/drawiotoresources"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/resources"
-	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
+	"github.com/joselitofilho/aws-terraform-generator/internal/generators/diagram"
 )
 
 // diagramCmd represents the structure command.
@@ -22,61 +12,16 @@ var diagramCmd = &cobra.Command{
 	Use:   "diagram",
 	Short: "Manage Diagram",
 	Run: func(cmd *cobra.Command, _ []string) {
-		diagram, err := cmd.Flags().GetString(flagDiagram)
-		if err != nil {
-			printErrorAndExit(err)
-		}
+		diagramFilename, _ := cmd.Flags().GetString(flagDiagram)
+		configFile, _ := cmd.Flags().GetString(flagConfig)
+		output, _ := cmd.Flags().GetString(flagOutput)
 
-		configFile, err := cmd.Flags().GetString(flagConfig)
-		if err != nil {
-			printErrorAndExit(err)
-		}
-
-		output, err := cmd.Flags().GetString(flagOutput)
-		if err != nil {
-			printErrorAndExit(err)
-		}
-
-		if err := build(diagram, configFile, output); err != nil {
+		if err := diagram.NewDiagram(diagramFilename, configFile, output).Build(); err != nil {
 			printErrorAndExit(err)
 		}
 
 		fmtcolor.White.Printf("Configuration file '%s' has been generated successfully\n", output)
 	},
-}
-
-func build(diagram, configFile, output string) error {
-	yamlConfig, err := config.NewYAML(configFile).Parse()
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	mxFile, err := drawioxml.Parse(diagram)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	resc, err := drawiotoresources.Transform(mxFile, &resources.AWSResourceFactory{})
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resc).Transform()
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	data, err := yaml.Marshal(yamlConfigOut)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	err = os.WriteFile(output, data, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	return nil
 }
 
 func init() {

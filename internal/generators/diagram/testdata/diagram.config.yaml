@@ -1,0 +1,6 @@
+diagram:
+  stack_name: teststack
+  lambda:
+    source: git@
+    role_name: execute_lambda
+    runtime: go1.x

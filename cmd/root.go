@@ -32,9 +32,9 @@ const (
 	optionExit                  = "Exit"
 )
 
-var (
-	ErrNoDiagramOrConfigFiles = errors.New("this directory does not contain any diagram or config files")
-)
+var ErrNoDiagramOrConfigFiles = errors.New("this directory does not contain any diagram or config files")
+
+var osExit = os.Exit
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -194,5 +194,5 @@ func init() {
 
 func printErrorAndExit(err error) {
 	fmtcolor.Red.Printf("🚨 %s\n", err)
-	os.Exit(1)
+	osExit(1)
 }
