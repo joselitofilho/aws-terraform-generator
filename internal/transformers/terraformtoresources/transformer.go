@@ -527,7 +527,9 @@ func (t *Transformer) processResourceFromEnvar(
 	return resource
 }
 
-func (t *Transformer) processResourceARNFromEnvar(v string, restType awsresources.ResourceType) awsresources.ResourceARN {
+func (t *Transformer) processResourceARNFromEnvar(
+	v string, restType awsresources.ResourceType,
+) awsresources.ResourceARN {
 	value := replaceVars(v, t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
 

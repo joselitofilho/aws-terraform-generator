@@ -134,6 +134,7 @@ func TestTransformer_Transform(t *testing.T) {
 			got, err := tr.Transform()
 
 			require.ErrorIs(t, err, tc.targetErr)
+
 			if tc.want == nil {
 				require.Nil(t, got)
 			} else {
@@ -200,7 +201,8 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "google", awsresources.GoogleBQType.String()),
+			setup: setupWithLambda(lambdaResource,
+				resources.NewGenericResource("2", "google", awsresources.GoogleBQType.String()),
 				&id, &wantResources, &wantRelationships),
 			wantID: 3,
 		},
@@ -261,7 +263,8 @@ func TestTransformer_transformLambdaEnvars(t *testing.T) {
 				relationships: &[]resources.Relationship{},
 				id:            &id,
 			},
-			setup: setupWithLambda(lambdaResource, resources.NewGenericResource("2", "MyRest", awsresources.RestfulAPIType.String()),
+			setup: setupWithLambda(lambdaResource,
+				resources.NewGenericResource("2", "MyRest", awsresources.RestfulAPIType.String()),
 				&id, &wantResources, &wantRelationships),
 			wantID: 3,
 		},

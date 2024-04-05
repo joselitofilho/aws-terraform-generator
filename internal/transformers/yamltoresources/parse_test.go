@@ -32,6 +32,7 @@ func TestParse(t *testing.T) {
 			got, err := Parse(tc.args.filename)
 
 			require.ErrorIs(t, err, tc.targetErr)
+
 			if tc.want == nil {
 				require.Nil(t, got)
 			} else {

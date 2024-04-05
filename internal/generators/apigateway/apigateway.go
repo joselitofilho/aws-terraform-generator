@@ -46,6 +46,8 @@ func (a *APIGateway) Build() error {
 
 	apigHasAlreadyGeneratedByStack := map[string]struct{}{}
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.APIGateways {
 		apiConf := yamlConfig.APIGateways[i]
 		stackName := apiConf.StackName
@@ -63,20 +65,14 @@ func (a *APIGateway) Build() error {
 				APIDomain: apiConf.APIDomain,
 			}
 
-			err = generators.GenerateFile(nil, filenameTfAPIG, apigTfTemplate, outputFile, data)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			generators.MustGenerateFile(tg, nil, filenameTfAPIG, apigTfTemplate, outputFile, data)
 
 			fmtcolor.White.Printf("Terraform '%s' has been generated successfully\n", filenameTfAPIG)
 		}
 
 		for j := range apiConf.Lambdas {
-			err := buildLambdaFiles(&apiConf.Lambdas[j], apiConf.StackName, lambdaTfTemplate, outputMod, a.output,
+			buildLambdaFiles(&apiConf.Lambdas[j], apiConf.StackName, lambdaTfTemplate, outputMod, a.output,
 				goTemplates)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
 		}
 	}
 
@@ -85,7 +81,9 @@ func (a *APIGateway) Build() error {
 
 func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTemplate, outputMod, output string,
 	goTemplates map[string]string,
-) error {
+) {
+	tg := generators.NewGenerator()
+
 	filesConf := generators.CreateFilesMap(lambdaConf.Files)
 
 	asModule := strings.Contains(lambdaConf.Source, "git@")
@@ -112,22 +110,14 @@ func buildLambdaFiles(lambdaConf *config.APIGatewayLambda, stackName, lambdaTfTe
 	fileName := fmt.Sprintf("%s.tf", lambdaConf.Name)
 	outputLambdaTfFile := path.Join(outputMod, fileName)
 
-	err := generators.GenerateFile(nil, fileName, lambdaTfTemplate, outputLambdaTfFile, lambdaData)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
+	generators.MustGenerateFile(tg, nil, fileName, lambdaTfTemplate, outputLambdaTfFile, lambdaData)
 
 	fmtcolor.White.Printf("Terraform '%s.tf' has been generated successfully\n", fileName)
 
 	outputLambda := path.Join(output, stackName, "lambda", lambdaConf.Name)
 	_ = os.MkdirAll(outputLambda, os.ModePerm)
 
-	err = generators.GenerateFiles(goTemplates, filesConf, lambdaData, outputLambda)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
+	generators.MustGenerateFiles(tg, goTemplates, filesConf, lambdaData, outputLambda)
 
 	fmtcolor.White.Printf("Lambda '%s' has been generated successfully\n", lambdaData.Name)
-
-	return nil
 }

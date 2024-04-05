@@ -127,7 +127,9 @@ func (t *Transformer) extractResourcesByType(
 
 		resARN := awsresources.ParseResourceARN(res.GetName(), resourceType)
 		if resARN.Label == "" &&
-			(resourceType == awsresources.KinesisType || resourceType == awsresources.S3Type || resourceType == awsresources.SQSType) {
+			(resourceType == awsresources.KinesisType ||
+				resourceType == awsresources.S3Type ||
+				resourceType == awsresources.SQSType) {
 			arnType := fmt.Sprintf("%s_%s", strcase.ToSnake(resARN.Name), awsresources.SuffixByResource[resourceType])
 			resARN.Label = arnType
 		}

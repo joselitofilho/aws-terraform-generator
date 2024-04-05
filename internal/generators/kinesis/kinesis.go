@@ -46,6 +46,8 @@ func (k *Kinesis) Build() error {
 	templates := utils.MergeStringMap(defaultTfTemplateFiles,
 		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Kinesis))
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.Kinesis {
 		conf := yamlConfig.Kinesis[i]
 
@@ -59,17 +61,14 @@ func (k *Kinesis) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(nil, filesConf, data, modPath)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			generators.MustGenerateFiles(tg, nil, filesConf, data, modPath)
 
 			fmtcolor.White.Printf("Kinesis '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
 
-		output, err := generators.Build(data, "kinesis-tf-template", templates[filenameKinesisTf])
+		output, err := tg.Build(data, "kinesis-tf-template", templates[filenameKinesisTf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -80,10 +79,7 @@ func (k *Kinesis) Build() error {
 	if len(result) > 0 {
 		outputFile := path.Join(modPath, filenameKinesisTf)
 
-		err := generators.GenerateFile(nil, filenameKinesisTf, strings.Join(result, "\n"), outputFile, Data{})
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
+		generators.MustGenerateFile(tg, nil, filenameKinesisTf, strings.Join(result, "\n"), outputFile, Data{})
 
 		fmtcolor.White.Println("Kinesis has been generated successfully")
 	}

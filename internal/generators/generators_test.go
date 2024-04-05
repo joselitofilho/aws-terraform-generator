@@ -6,152 +6,134 @@ import (
 	"path"
 	"testing"
 
+	templategenerators "github.com/diagram-code-generator/template/pkg/generators"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuild(t *testing.T) {
+func TestMustGenerateFile(t *testing.T) {
 	type args struct {
-		data            any
-		templateName    string
-		templateContent string
+		tg           *templategenerators.TemplateGenerator
+		templatesMap map[string]string
+		fileName     string
+		fileTmpl     string
+		outputFile   string
+		data         any
 	}
 
+	testOutput := "./testoutput"
+	_ = os.MkdirAll(testOutput, os.ModePerm)
+
 	tests := []struct {
-		name           string
-		args           args
-		want           string
-		expectedErrMsg string
+		name             string
+		args             args
+		extraValidations func(testing.TB, string)
 	}{
 		{
-			name: "valid case",
+			name: "successful go file generation and formatting",
 			args: args{
-				data:            map[string]any{"Name": "John", "Age": 30},
-				templateName:    "example",
-				templateContent: "Name: {{.Name}}, Age: {{.Age}}",
+				tg:           NewGenerator(),
+				templatesMap: map[string]string{"test.go": "type  My{{.Name}}Struct    struct   {}"},
+				fileName:     "test.go",
+				outputFile:   path.Join(testOutput, "output.go"),
+				data:         struct{ Name string }{Name: "World"},
 			},
-			want: "Name: John, Age: 30",
+			extraValidations: func(tb testing.TB, outputFile string) {
+				data, err := os.ReadFile(outputFile)
+				require.NoError(tb, err)
+				require.Equal(tb, "type MyWorldStruct struct{}", string(data))
+			},
 		},
 		{
-			name: "getFileByName func",
+			name: "successful go file generation using extra functions",
 			args: args{
-				data: map[string]any{"Files": map[string]File{"lambda.go": {
-					Imports: []string{"context"},
-					Tmpl:    "package main",
-				}}},
-				templateName:    "example",
-				templateContent: `{{getFileByName $.Files "lambda.go"}}`,
+				tg: NewGenerator(),
+				templatesMap: map[string]string{"lambda.go": "{{getFileByName $.Files \"lambda.go\"}} " +
+					"{{ range getFileImports $.Files \"lambda.go\" }}\"{{ . }}\"{{end}}"},
+				fileName:   "lambda.go",
+				outputFile: path.Join(testOutput, "lambda.go"),
+				data: struct{ Files map[string]config.File }{
+					Files: map[string]config.File{"lambda.go": {
+						Imports: []string{"context"},
+						Tmpl:    "tmpl",
+					}}},
 			},
-			want: "{package main [context]}",
+			extraValidations: func(tb testing.TB, outputFile string) {
+				data, err := os.ReadFile(outputFile)
+				require.NoError(tb, err)
+				require.Equal(tb, `{ tmpl [context]} "context"`, string(data))
+			},
 		},
 		{
-			name: "getFileImports func",
+			name: "when file ext is not supported should log a message and the file will not be generated",
 			args: args{
-				data: map[string]any{"Files": map[string]File{"lambda.go": {
-					Imports: []string{"context"},
-				}}},
-				templateName:    "example",
-				templateContent: `{{ range getFileImports $.Files "lambda.go" }}"{{ . }}"{{end}}`,
+				tg:           NewGenerator(),
+				templatesMap: map[string]string{"test.txt": "Hello, {{.Name}}!"},
+				fileName:     "test.txt",
+				outputFile:   path.Join(testOutput, "output.txt"),
+				data:         struct{ Name string }{Name: "World"},
 			},
-			want: `"context"`,
-		},
-		{
-			name: "ToCamel func",
-			args: args{
-				data:            map[string]any{"Name": "my-name"},
-				templateName:    "example",
-				templateContent: "Name: {{ToCamel .Name}}",
+			extraValidations: func(tb testing.TB, outputFile string) {
+				data, err := os.ReadFile(outputFile)
+				require.NoError(tb, err)
+				require.Equal(tb, "Hello, World!", string(data))
 			},
-			want: "Name: myName",
-		},
-		{
-			name: "ToKebab func",
-			args: args{
-				data:            map[string]any{"Name": "myName"},
-				templateName:    "example",
-				templateContent: "Name: {{ToKebab .Name}}",
-			},
-			want: "Name: my-name",
-		},
-		{
-			name: "ToLower func",
-			args: args{
-				data:            map[string]any{"Name": "MY-NAME"},
-				templateName:    "example",
-				templateContent: "Name: {{ToLower .Name}}",
-			},
-			want: "Name: my-name",
-		},
-		{
-			name: "ToPascal func",
-			args: args{
-				data:            map[string]any{"Name": "my-name"},
-				templateName:    "example",
-				templateContent: "Name: {{ToPascal .Name}}",
-			},
-			want: "Name: MyName",
-		},
-		{
-			name: "ToSpace func",
-			args: args{
-				data:            map[string]any{"Name": "my-name"},
-				templateName:    "example",
-				templateContent: "Name: {{ToSpace .Name}}",
-			},
-			want: "Name: my name",
-		},
-		{
-			name: "ToSnake func",
-			args: args{
-				data:            map[string]any{"Name": "my-name"},
-				templateName:    "example",
-				templateContent: "Name: {{ToSnake .Name}}",
-			},
-			want: "Name: my_name",
-		},
-		{
-			name: "ToUpper func",
-			args: args{
-				data:            map[string]any{"Name": "my-name"},
-				templateName:    "example",
-				templateContent: "Name: {{ToUpper .Name}}",
-			},
-			want: "Name: MY-NAME",
-		},
-		{
-			name: "missing field",
-			args: args{
-				data:            map[string]any{"Name": "John", "Age": 30},
-				templateName:    "invalid",
-				templateContent: "{{ .MissingField }}",
-			},
-			want: "<no value>",
-		},
-		{
-			name: "invalid template",
-			args: args{
-				data:            map[string]any{"Name": "John", "Age": 30},
-				templateName:    "invalid",
-				templateContent: "{{ InvalidFunction .Name }}",
-			},
-			want:           "",
-			expectedErrMsg: "template: invalid:1: function \"InvalidFunction\" not defined",
 		},
 	}
+
+	defer func() {
+		_ = os.RemoveAll(testOutput)
+	}()
 
 	for i := range tests {
 		tc := tests[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := Build(tc.args.data, tc.args.templateName, tc.args.templateContent)
+			MustGenerateFile(
+				tc.args.tg, tc.args.templatesMap, tc.args.fileName, tc.args.fileTmpl, tc.args.outputFile, tc.args.data)
 
-			if tc.expectedErrMsg == "" {
-				require.NoError(t, err)
-				require.Equal(t, tc.want, got)
-			} else {
-				require.Error(t, err)
-				require.Equal(t, tc.expectedErrMsg, err.Error())
-			}
+			tc.extraValidations(t, tc.args.outputFile)
+		})
+	}
+}
+
+func TestMustGenerateFiles(t *testing.T) {
+	type args struct {
+		tg                  *templategenerators.TemplateGenerator
+		defaultTemplatesMap map[string]string
+		filesMap            map[string]File
+		data                any
+		output              string
+	}
+
+	testOutput := "./testoutput"
+	_ = os.MkdirAll(testOutput, os.ModePerm)
+
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "generate single file",
+			args: args{
+				tg: NewGenerator(),
+				defaultTemplatesMap: map[string]string{
+					"template.txt": "Hello, {{.Name}}!",
+				},
+				filesMap: map[string]File{"test.go": {Tmpl: "type  My{{.Name}}Struct    struct   {}"}},
+				data:     struct{ Name string }{"World"},
+				output:   testOutput,
+			},
+		},
+	}
+
+	defer func() {
+		_ = os.RemoveAll(testOutput)
+	}()
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(_ *testing.T) {
+			MustGenerateFiles(tc.args.tg, tc.args.defaultTemplatesMap, tc.args.filesMap, tc.args.data, tc.args.output)
 		})
 	}
 }
@@ -364,144 +346,6 @@ func TestFilterTemplatesMap(t *testing.T) {
 			got := FilterTemplatesMap(tc.args.filter, tc.args.templatesMap)
 
 			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestGenerateFile(t *testing.T) {
-	type args struct {
-		templatesMap map[string]string
-		fileName     string
-		fileTmpl     string
-		outputFile   string
-		data         any
-	}
-
-	testOutput := "./testoutput"
-	_ = os.MkdirAll(testOutput, os.ModePerm)
-
-	tests := []struct {
-		name             string
-		args             args
-		extraValidations func(testing.TB, string, error)
-		targetErr        error
-	}{
-		{
-			name: "successful go file generation and formatting",
-			args: args{
-				templatesMap: map[string]string{"test.go": "type  My{{.Name}}Struct    struct   {}"},
-				fileName:     "test.go",
-				outputFile:   path.Join(testOutput, "output.go"),
-				data:         struct{ Name string }{Name: "World"},
-			},
-			extraValidations: func(tb testing.TB, outputFile string, err error) {
-				if err != nil {
-					return
-				}
-
-				data, err := os.ReadFile(outputFile)
-				require.NoError(tb, err)
-				require.Equal(tb, "type MyWorldStruct struct{}", string(data))
-			},
-		},
-		{
-			name: "successful tf file generation and formatting",
-			args: args{
-				templatesMap: map[string]string{"test.tf": `resource    "aws_s3_bucket"    "{{.Name}}_bucket"  {}`},
-				fileName:     "test.tf",
-				outputFile:   path.Join(testOutput, "output.tf"),
-				data:         struct{ Name string }{Name: "world"},
-			},
-			extraValidations: func(tb testing.TB, outputFile string, err error) {
-				if err != nil {
-					return
-				}
-
-				data, err := os.ReadFile(outputFile)
-				require.NoError(tb, err)
-				require.Equal(tb, `resource "aws_s3_bucket" "world_bucket" {}`, string(data))
-			},
-		},
-		{
-			name: "successful file generation without formatting for an unsuported ext",
-			args: args{
-				templatesMap: map[string]string{"test.txt": "Hello, {{.Name}}!"},
-				fileName:     "test.txt",
-				outputFile:   path.Join(testOutput, "output.txt"),
-				data:         struct{ Name string }{Name: "World"},
-			},
-			extraValidations: func(tb testing.TB, outputFile string, err error) {
-				if err != nil {
-					return
-				}
-
-				data, err := os.ReadFile(outputFile)
-				require.NoError(tb, err)
-				require.Equal(tb, "Hello, World!", string(data))
-			},
-		},
-	}
-
-	defer func() {
-		_ = os.RemoveAll(testOutput)
-	}()
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			err := GenerateFile(tc.args.templatesMap, tc.args.fileName, tc.args.fileTmpl, tc.args.outputFile, tc.args.data)
-
-			require.ErrorIs(t, err, tc.targetErr)
-
-			if tc.extraValidations != nil {
-				tc.extraValidations(t, tc.args.outputFile, err)
-			}
-		})
-	}
-}
-
-func TestGenerateFiles(t *testing.T) {
-	type args struct {
-		templatesMap map[string]string
-		filesMap     map[string]File
-		data         any
-		output       string
-	}
-
-	testOutput := "./testoutput"
-	_ = os.MkdirAll(testOutput, os.ModePerm)
-
-	tests := []struct {
-		name      string
-		args      args
-		targetErr error
-	}{
-		{
-			name: "generate single file",
-			args: args{
-				templatesMap: map[string]string{
-					"template.txt": "Hello, {{.Name}}!",
-				},
-				filesMap: nil,
-				data:     struct{ Name string }{"John"},
-				output:   testOutput,
-			},
-			targetErr: nil,
-		},
-	}
-
-	defer func() {
-		_ = os.RemoveAll(testOutput)
-	}()
-
-	for i := range tests {
-		tc := tests[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			err := GenerateFiles(tc.args.templatesMap, tc.args.filesMap, tc.args.data, tc.args.output)
-
-			require.ErrorIs(t, err, tc.targetErr)
 		})
 	}
 }

@@ -44,6 +44,8 @@ func (s *S3) Build() error {
 	templates := utils.MergeStringMap(defaultTfTemplateFiles,
 		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.S3Bucket))
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.Buckets {
 		conf := yamlConfig.Buckets[i]
 
@@ -55,17 +57,14 @@ func (s *S3) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(nil, filesConf, data, modPath)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			generators.MustGenerateFiles(tg, nil, filesConf, data, modPath)
 
 			fmtcolor.White.Printf("S3 '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
 
-		output, err := generators.Build(data, "s3-tf-template", templates[filenameS3tf])
+		output, err := tg.Build(data, "s3-tf-template", templates[filenameS3tf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -76,10 +75,7 @@ func (s *S3) Build() error {
 	if len(result) > 0 {
 		outputFile := path.Join(modPath, filenameS3tf)
 
-		err := generators.GenerateFile(nil, filenameS3tf, strings.Join(result, "\n"), outputFile, Data{})
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
+		generators.MustGenerateFile(tg, nil, filenameS3tf, strings.Join(result, "\n"), outputFile, Data{})
 
 		fmtcolor.White.Println("S3 has been generated successfully")
 	}

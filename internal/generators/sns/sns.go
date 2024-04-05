@@ -53,6 +53,8 @@ func (s *SNS) Build() error {
 	templates := utils.MergeStringMap(defaultTfTemplateFiles,
 		generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.SNS))
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.SNSs {
 		conf := yamlConfig.SNSs[i]
 
@@ -67,17 +69,14 @@ func (s *SNS) Build() error {
 		if len(conf.Files) > 0 {
 			filesConf := generators.CreateFilesMap(conf.Files)
 
-			err = generators.GenerateFiles(nil, filesConf, data, modPath)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			generators.MustGenerateFiles(tg, nil, filesConf, data, modPath)
 
 			fmtcolor.White.Printf("SNS '%s' has been generated successfully\n", conf.Name)
 
 			continue
 		}
 
-		output, err := generators.Build(data, "sns-tf-template", templates[filenameSNStf])
+		output, err := tg.Build(data, "sns-tf-template", templates[filenameSNStf])
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -88,10 +87,7 @@ func (s *SNS) Build() error {
 	if len(result) > 0 {
 		outputFile := path.Join(modPath, filenameSNStf)
 
-		err := generators.GenerateFile(nil, filenameSNStf, strings.Join(result, "\n"), outputFile, Data{})
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
+		generators.MustGenerateFile(tg, nil, filenameSNStf, strings.Join(result, "\n"), outputFile, Data{})
 
 		fmtcolor.White.Println("SNS has been generated successfully")
 	}

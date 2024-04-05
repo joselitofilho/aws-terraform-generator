@@ -6,6 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/aws/aws-lambda-go v1.46.0
 	github.com/diagram-code-generator/resources v1.0.2
+	github.com/diagram-code-generator/template v1.0.0
 	github.com/emicklei/dot v1.6.1
 	github.com/ettle/strcase v0.2.0
 	github.com/fatih/color v1.16.0

@@ -31,6 +31,8 @@ func (s *Structure) Build() error {
 
 	defaultTemplatesMap := generators.CreateTemplatesMap(yamlConfig.Structure.DefaultTemplates)
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.Structure.Stacks {
 		conf := yamlConfig.Structure.Stacks[i]
 
@@ -45,10 +47,7 @@ func (s *Structure) Build() error {
 			for _, file := range folder.Files {
 				outputFile := fmt.Sprintf("%s/%s", output, file.Name)
 
-				err = generators.GenerateFile(defaultTemplatesMap, file.Name, file.Tmpl, outputFile, data)
-				if err != nil {
-					return fmt.Errorf("%w", err)
-				}
+				generators.MustGenerateFile(tg, defaultTemplatesMap, file.Name, file.Tmpl, outputFile, data)
 			}
 		}
 

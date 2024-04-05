@@ -37,6 +37,8 @@ func (l *Lambda) Build() error {
 	goTemplates := utils.MergeStringMap(defaultGoTemplatesMap,
 		generators.FilterTemplatesMap(".go", generators.CreateTemplatesMap(yamlConfig.OverrideDefaultTemplates.Lambda)))
 
+	tg := generators.NewGenerator()
+
 	for i := range yamlConfig.Lambdas {
 		lambdaConf := yamlConfig.Lambdas[i]
 
@@ -72,20 +74,14 @@ func (l *Lambda) Build() error {
 
 		outputFile := path.Join(output, lambdaConf.Name+".tf")
 
-		err = generators.GenerateFile(tfTemplates, filenameTfLambda, "", outputFile, data)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
+		generators.MustGenerateFile(tg, tfTemplates, filenameTfLambda, "", outputFile, data)
 
 		fmtcolor.White.Printf("Terraform '%s' has been generated successfully\n", lambdaConf.Name)
 
 		output = fmt.Sprintf("%s/lambda/%s", l.output, lambdaConf.Name)
 		_ = os.MkdirAll(output, os.ModePerm)
 
-		err = generators.GenerateFiles(goTemplates, filesConf, data, output)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
+		generators.MustGenerateFiles(tg, goTemplates, filesConf, data, output)
 
 		fmtcolor.White.Printf("Lambda '%s' has been generated successfully\n", lambdaConf.Name)
 	}
