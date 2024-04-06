@@ -28,7 +28,7 @@ func (a *APIGateway) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %s", generatorerrs.ErrYAMLParser, err)
 	}
 
 	apigTfTemplate := utils.MergeStringMap(map[string]string{filenameTfAPIG: string(tmplAPIGtf)},

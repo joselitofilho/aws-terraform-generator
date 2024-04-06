@@ -49,7 +49,7 @@ func (d *Draw) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %s", generatorerrs.ErrYAMLParser, err)
 	}
 
 	tfConfig, err := terraform.Parse(d.workdirs, d.files)

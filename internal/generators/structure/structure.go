@@ -26,7 +26,7 @@ func (s *Structure) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParser, err)
 	}
 
 	defaultTemplatesMap := generators.CreateTemplatesMap(yamlConfig.Structure.DefaultTemplates)

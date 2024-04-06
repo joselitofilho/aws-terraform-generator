@@ -6,6 +6,8 @@ import (
 	"path"
 	"testing"
 
+	generatorserrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,6 +44,33 @@ func TestDiagram_Build(t *testing.T) {
 				require.NoError(tb, err)
 				require.Equal(tb, string(diagramYAML), string(data))
 			},
+		},
+		{
+			name: "when drawio parser fails should return an error",
+			fields: fields{
+				diagramFilename: "fileDoesNotExist.xml",
+				configFilename:  path.Join(testdataDir, "diagram.config.yaml"),
+				output:          path.Join(testOutput, "diagram.yaml"),
+			},
+			targetErr: generatorserrs.ErrDrawIOParser,
+		},
+		{
+			name: "when yaml parser fails should return an error",
+			fields: fields{
+				diagramFilename: path.Join(testdataDir, "diagram.xml"),
+				configFilename:  "fileDoesNotExist.yaml",
+				output:          path.Join(testOutput, "diagram.yaml"),
+			},
+			targetErr: generatorserrs.ErrYAMLParser,
+		},
+		{
+			name: "happy path",
+			fields: fields{
+				diagramFilename: path.Join(testdataDir, "diagram.xml"),
+				configFilename:  path.Join(testdataDir, "diagram.config.yaml"),
+				output:          path.Join(testOutput, "diagram.yaml"),
+			},
+			targetErr: generatorserrs.ErrDrawIOToResourcesTransformer,
 		},
 	}
 

@@ -33,7 +33,7 @@ func (s *SQS) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParse, err)
+		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParser, err)
 	}
 
 	modPath := path.Join(s.output, "mod")

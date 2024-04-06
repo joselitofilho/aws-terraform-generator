@@ -95,7 +95,7 @@ func TestSNS_Build(t *testing.T) {
 				configFileName: "",
 				output:         "",
 			},
-			targetErr: generatorserrs.ErrYAMLParse,
+			targetErr: generatorserrs.ErrYAMLParser,
 		},
 	}
 
