@@ -3,6 +3,8 @@ version: "3"
 vars:
   LINT_TIMEOUT: 5m
   GOTEST_ARGS: -count=1 -v -failfast
+  COVER_OUT: coverage.out
+  COVER_NOMOCKS_OUT: coverage.nomocks.out
 
 tasks:
   install:
@@ -33,23 +35,30 @@ tasks:
   tests:
     desc: "Run all tests"
     cmds:
-      - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile=coverage.out -cover {{.USER_WORKING_DIR}}/...
+      - go test {{.GOTEST_ARGS}} -cover {{.USER_WORKING_DIR}}/...
 
   cov:
     desc: "Run code coverage"
-    deps:
-      - tests
     cmds:
-      - cat coverage.out | grep -v "mock" > coverage.nomocks.out
-      - go tool cover -html=coverage.nomocks.out
-      - go tool cover -func coverage.nomocks.out > coverage.out
-
-  cov-badge:
-    desc: "Update coverage badge in the README"
-    deps:
+      - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile={{.COVER_OUT}} -cover ../...
+      - cat {{.COVER_OUT}} | grep -v "mock" > {{.COVER_NOMOCKS_OUT}}
+      - go tool cover -func {{.COVER_NOMOCKS_OUT}} > {{.COVER_OUT}}
+      - echo "Coverage overall:"
+      - cat {{.COVER_OUT}} | tail -n 1
+  
+  cov-html:
+    desc: "Run code coverage and open html"
+    deps: 
       - cov
     cmds:
-      - ./update_coverage.sh ./coverage.out {{.USER_WORKING_DIR}}/README.md
+      - go tool cover -html={{.COVER_NOMOCKS_OUT}}
+  
+  cov-badge:
+    desc: "Update coverage badge in the README"
+    deps: 
+      - cov
+    cmds:
+      - ./update_coverage.sh {{.COVER_OUT}} {{.USER_WORKING_DIR}}/README.md
 
   clean-mocks:
     desc: "Remove all generated mocks"
