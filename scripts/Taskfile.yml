@@ -24,7 +24,7 @@ tasks:
     desc: "Format code"
     cmds:
       - goimports -w . && gofumpt -l -w .
-  
+
   mocks:
     desc: "Generate mocks"
     cmds:
@@ -37,16 +37,21 @@ tasks:
 
   cov:
     desc: "Run code coverage"
-    deps: 
+    deps:
       - tests
     cmds:
       - cat coverage.out | grep -v "mock" > coverage.nomocks.out
       - go tool cover -html=coverage.nomocks.out
       - go tool cover -func coverage.nomocks.out > coverage.out
-  
+
   cov-badge:
     desc: "Update coverage badge in the README"
-    deps: 
+    deps:
       - cov
     cmds:
       - ./update_coverage.sh ./coverage.out {{.USER_WORKING_DIR}}/README.md
+
+  clean-mocks:
+    desc: "Remove all generated mocks"
+    cmds:
+      - find . -iname '*mock.go' -exec rm {} \;
