@@ -30,17 +30,17 @@ func NewDiagram(diagramFilename, configFilename, output string) *Diagram {
 func (d *Diagram) Build() error {
 	yamlConfig, err := config.NewYAML(d.configFilename).Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParser, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParser, err)
 	}
 
 	mxFile, err := drawioxml.Parse(d.diagramFilename)
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrDrawIOParser, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrDrawIOParser, err)
 	}
 
-	resources, _ := drawiotoresources.NewTransformer(mxFile, &resources.AWSResourceFactory{}).Transform()
+	rscs, _ := drawiotoresources.NewTransformer(mxFile, &resources.AWSResourceFactory{}).Transform()
 
-	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resources).Transform()
+	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, rscs).Transform()
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

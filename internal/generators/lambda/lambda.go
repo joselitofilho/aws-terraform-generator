@@ -28,7 +28,7 @@ func (l *Lambda) Build() error {
 
 	yamlConfig, err := yamlParser.Parse()
 	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrYAMLParser, err)
+		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParser, err)
 	}
 
 	tfTemplates := utils.MergeStringMap(defaultTfTemplatesMap,
