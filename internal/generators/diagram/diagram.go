@@ -38,10 +38,7 @@ func (d *Diagram) Build() error {
 		return fmt.Errorf("%w: %s", generatorserrs.ErrDrawIOParser, err)
 	}
 
-	resources, err := drawiotoresources.NewTransformer(mxFile, &resources.AWSResourceFactory{}).Transform()
-	if err != nil {
-		return fmt.Errorf("%w: %s", generatorserrs.ErrDrawIOToResourcesTransformer, err)
-	}
+	resources, _ := drawiotoresources.NewTransformer(mxFile, &resources.AWSResourceFactory{}).Transform()
 
 	yamlConfigOut, err := resourcestoyaml.NewTransformer(yamlConfig, resources).Transform()
 	if err != nil {

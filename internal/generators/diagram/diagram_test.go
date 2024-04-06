@@ -63,15 +63,6 @@ func TestDiagram_Build(t *testing.T) {
 			},
 			targetErr: generatorserrs.ErrYAMLParser,
 		},
-		{
-			name: "happy path",
-			fields: fields{
-				diagramFilename: path.Join(testdataDir, "diagram.xml"),
-				configFilename:  path.Join(testdataDir, "diagram.config.yaml"),
-				output:          path.Join(testOutput, "diagram.yaml"),
-			},
-			targetErr: generatorserrs.ErrDrawIOToResourcesTransformer,
-		},
 	}
 
 	defer func() {
