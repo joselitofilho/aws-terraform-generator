@@ -83,7 +83,7 @@ tasks:
   
   clean-out:
     cmds:
-      - find . -iname '*out' -exec rm {} \;
+      - find . -iname '*.out' -exec rm {} \;
   
   clean:
     deps: [clean-mocks, clean-out]
