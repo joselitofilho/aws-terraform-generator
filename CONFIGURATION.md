@@ -457,10 +457,6 @@ restfulapis:
   - name: MyAPI
 ```
 
-## Full example with comments
-
-[fullexample.config.yaml](fullexample.config.yaml)
-
 ### draw
 
 Draw configurations includes graph orientation, images and filters.
@@ -546,3 +542,7 @@ Default images:
 
 - Available resources: [internal/resources/resource_type_enum.go](internal/resources/resource_type_enum.go)
 - Recommend image size: 48px x 48px
+
+## Full example with comments
+
+[fullexample.config.yaml](fullexample.config.yaml)
