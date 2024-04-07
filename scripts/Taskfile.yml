@@ -7,40 +7,58 @@ vars:
   COVER_NOMOCKS_OUT: coverage.nomocks.out
 
 tasks:
-  install:
-    desc: "Install all project tools"
+  install-fmt:
     cmds:
-      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - go install go.uber.org/mock/mockgen@latest
       - go install golang.org/x/tools/cmd/goimports@latest
       - go install mvdan.cc/gofumpt@v0.4.0
-      - echo "==> To format terraform files, please install terraform"
+  
+  install-lint:
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+  
+  install-mock:
+    cmds:
+      - go install go.uber.org/mock/mockgen@latest
 
+  install:
+    desc: "Install all project tools"
+    deps: [install-fmt, install-lint, install-mock]
+    cmds:
+      - echo "==> To draw diagram, please install graphviz."
+      - echo "==> To format terraform files, please install terraform."
+
+  fmt:
+    desc: "Format code"
+    deps: [install-fmt]
+    cmds:
+      - goimports -w . && gofumpt -l -w .
+  
   lint:
     desc: "Run golangci-lint"
+    deps: [install-lint]
     cmds:
       - golangci-lint version
       - golangci-lint run -v --timeout="{{.LINT_TIMEOUT}}" {{.USER_WORKING_DIR}}/...
 
-  fmt:
-    desc: "Format code"
-    cmds:
-      - goimports -w . && gofumpt -l -w .
-
   mocks:
     desc: "Generate mocks"
+    deps: [install-mock]
     cmds:
       - go generate -v ../...
 
   tests:
     desc: "Run all tests"
+    deps: [mocks]
     cmds:
-      - go test {{.GOTEST_ARGS}} -cover {{.USER_WORKING_DIR}}/...
+      - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile={{.COVER_OUT}} -cover ../...
+
+  check:
+    deps: [clean, fmt, lint, tests]
 
   cov:
     desc: "Run code coverage"
+    deps: [tests]
     cmds:
-      - go test {{.GOTEST_ARGS}} -covermode=count -coverpkg=../... -coverprofile={{.COVER_OUT}} -cover ../...
       - cat {{.COVER_OUT}} | grep -v "mock" > {{.COVER_NOMOCKS_OUT}}
       - go tool cover -func {{.COVER_NOMOCKS_OUT}} > {{.COVER_OUT}}
       - echo "Coverage overall:"
@@ -48,15 +66,13 @@ tasks:
   
   cov-html:
     desc: "Run code coverage and open html"
-    deps: 
-      - cov
+    deps: [cov]
     cmds:
       - go tool cover -html={{.COVER_NOMOCKS_OUT}}
   
   cov-badge:
     desc: "Update coverage badge in the README"
-    deps: 
-      - cov
+    deps: [cov]
     cmds:
       - ./update_coverage.sh {{.COVER_OUT}} {{.USER_WORKING_DIR}}/README.md
 
@@ -64,3 +80,10 @@ tasks:
     desc: "Remove all generated mocks"
     cmds:
       - find . -iname '*mock.go' -exec rm {} \;
+  
+  clean-out:
+    cmds:
+      - find . -iname '*out' -exec rm {} \;
+  
+  clean:
+    deps: [clean-mocks, clean-out]
