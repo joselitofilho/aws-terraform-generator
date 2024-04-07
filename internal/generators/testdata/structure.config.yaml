@@ -2,6 +2,9 @@ structure:
   stacks:
     - name: teststack
       folders:
+        - name: anyFolder
+          files:
+            - name: anyFile.txt
         - name: dev
           files:
             - name: main.tf
@@ -24,6 +27,8 @@ structure:
                 locals { stack_name = "{{$.StackName}}-${var.environment}" }
             - name: vars.tf
         - name: lambda
+      files:
+        - name: anyRootFile.txt
   
   default_templates:
     - main.tf: |-

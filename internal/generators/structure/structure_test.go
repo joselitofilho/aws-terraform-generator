@@ -43,6 +43,8 @@ func TestStructure_Build(t *testing.T) {
 
 				teststackPath := path.Join(happypathPath, "teststack")
 
+				require.FileExists(tb, path.Join(teststackPath, "anyFolder", "anyFile.txt"))
+
 				devPath := path.Join(teststackPath, "dev")
 				require.FileExists(tb, path.Join(devPath, "main.tf"))
 				require.FileExists(tb, path.Join(devPath, "terragrunt.hcl"))
@@ -63,6 +65,8 @@ func TestStructure_Build(t *testing.T) {
 				require.FileExists(tb, path.Join(modPath, "vars.tf"))
 
 				require.DirExists(tb, path.Join(teststackPath, "lambda"))
+
+				require.FileExists(tb, path.Join(teststackPath, "anyRootFile.txt"))
 			},
 		},
 		{

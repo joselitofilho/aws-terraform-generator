@@ -148,6 +148,10 @@ func TestYAML_Parse(t *testing.T) {
 					Name: "teststack",
 					Folders: []Folder{
 						{
+							Name:  "anyFolder",
+							Files: []File{{Name: "anyFile.txt"}},
+						},
+						{
 							Name:  "dev",
 							Files: []File{{Name: "main.tf"}, {Name: "terragrunt.hcl"}, {Name: "vars.tf"}},
 						},
@@ -169,6 +173,9 @@ func TestYAML_Parse(t *testing.T) {
 						{
 							Name: "lambda",
 						},
+					},
+					Files: []File{
+						{Name: "anyRootFile.txt"},
 					},
 				}},
 				DefaultTemplates: []FilenameTemplateMap{{"main.tf": `# Terraform backend and required providers configuration`}},

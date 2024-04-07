@@ -45,10 +45,16 @@ func (s *Structure) Build() error {
 			_ = os.MkdirAll(output, os.ModePerm)
 
 			for _, file := range folder.Files {
-				outputFile := fmt.Sprintf("%s/%s", output, file.Name)
+				outputFile := path.Join(output, file.Name)
 
 				generators.MustGenerateFile(tg, defaultTemplatesMap, file.Name, file.Tmpl, outputFile, data)
 			}
+		}
+
+		for _, file := range conf.Files {
+			outputFile := path.Join(s.output, conf.Name, file.Name)
+
+			generators.MustGenerateFile(tg, defaultTemplatesMap, file.Name, file.Tmpl, outputFile, data)
 		}
 
 		fmtcolor.White.Printf("Structure '%s' has been generated successfully\n", conf.Name)
