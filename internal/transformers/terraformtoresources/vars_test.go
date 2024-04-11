@@ -3,7 +3,7 @@ package terraformtoresources
 import (
 	"testing"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
+	hcl "github.com/joselitofilho/hcl-parser-go/pkg/parser/hcl"
 
 	"github.com/stretchr/testify/require"
 )
@@ -11,8 +11,8 @@ import (
 func Test_replaceVars(t *testing.T) {
 	type args struct {
 		str             string
-		tfVariables     []*terraform.Variable
-		tfLocals        []*terraform.Local
+		tfVariables     []*hcl.Variable
+		tfLocals        []*hcl.Local
 		replaceableStrs map[string]string
 	}
 
@@ -25,7 +25,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local string",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": "dev",
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -36,7 +36,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local string array",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": []string{"dev", "prd"},
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -47,7 +47,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local empty string array",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": []string{},
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -58,7 +58,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local string map",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": map[string]any{"dev": struct{}{}, "prd": struct{}{}},
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -69,7 +69,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local empty string map",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": map[string]any{},
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -80,7 +80,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "local other types",
 			args: args{
 				str: "local.api_domain",
-				tfLocals: []*terraform.Local{{Attributes: map[string]any{
+				tfLocals: []*hcl.Local{{Attributes: map[string]any{
 					"environment": 1,
 					"api_domain":  "stack-api.domain-local.environment.com",
 				}}},
@@ -91,7 +91,7 @@ func Test_replaceVars(t *testing.T) {
 			name: "var string",
 			args: args{
 				str: "var.api_domain",
-				tfVariables: []*terraform.Variable{{Attributes: map[string]any{
+				tfVariables: []*hcl.Variable{{Attributes: map[string]any{
 					"environment": "dev",
 					"api_domain":  "stack-api.domain-var.environment.com",
 				}}},

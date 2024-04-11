@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/diagram-code-generator/resources/pkg/resources"
+	hcl "github.com/joselitofilho/hcl-parser-go/pkg/parser/hcl"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 )
 
@@ -17,7 +17,7 @@ const suffixLambda = "_lambda"
 
 type Transformer struct {
 	yamlConfig *config.Config
-	tfConfig   *terraform.Config
+	tfConfig   *hcl.Config
 
 	resources     []resources.Resource
 	relationships []resources.Relationship
@@ -46,7 +46,7 @@ type Transformer struct {
 	id int
 }
 
-func NewTransformer(yamlConfig *config.Config, tfConfig *terraform.Config) *Transformer {
+func NewTransformer(yamlConfig *config.Config, tfConfig *hcl.Config) *Transformer {
 	return &Transformer{
 		yamlConfig: yamlConfig,
 		tfConfig:   tfConfig,
@@ -264,7 +264,7 @@ func (t *Transformer) processTerraformResources() {
 	}
 }
 
-func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
+func (t *Transformer) processAPIGatewayRoute(conf *hcl.Resource) {
 	routeKeyValue := replaceVars(conf.Attributes["route_key"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
 		t.yamlConfig.Draw.ReplaceableTexts)
 
@@ -296,7 +296,7 @@ func (t *Transformer) processAPIGatewayRoute(conf *terraform.Resource) {
 	t.apigIntegrationRouteMap[targetARN] = append(t.apigIntegrationRouteMap[targetARN], routeKeyARN)
 }
 
-func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
+func (t *Transformer) processAPIGatewayIntegration(conf *hcl.Resource) {
 	integrationARN := awsresources.ResourceARN{Type: conf.Labels[0], Label: conf.Labels[1]}
 
 	apiIDValue := replaceVars(conf.Attributes["api_id"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
@@ -311,11 +311,11 @@ func (t *Transformer) processAPIGatewayIntegration(conf *terraform.Resource) {
 	t.resourceAPIGIntegration[integrationURIARN] = integrationARN
 }
 
-func (t *Transformer) processCloudwatchEventTarget(conf *terraform.Resource) {
+func (t *Transformer) processCloudwatchEventTarget(conf *hcl.Resource) {
 	t.processResourceRelationships(conf, "rule", "arn", awsresources.CronType, awsresources.LambdaType)
 }
 
-func (t *Transformer) processCronResource(conf *terraform.Resource) {
+func (t *Transformer) processCronResource(conf *hcl.Resource) {
 	value, ok := conf.Attributes["schedule_expression"]
 	if !ok {
 		fmtcolor.Yellow.Printf("it is not cron: %s\n", conf.Labels)
@@ -340,7 +340,7 @@ func (t *Transformer) processDBResourceFromEnvar(
 	return t.processResourceFromEnvar(v, awsresources.DatabaseType, resourcesByName)
 }
 
-func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
+func (t *Transformer) processEndpointResource(conf *hcl.Resource) {
 	label := conf.Labels[1]
 	if _, ok := t.endpointResourcesByLabel[label]; !ok {
 		value := replaceVars(conf.Attributes["domain_name"].(string), t.tfConfig.Variables, t.tfConfig.Locals,
@@ -355,7 +355,7 @@ func (t *Transformer) processEndpointResource(conf *terraform.Resource) {
 	}
 }
 
-func (t *Transformer) processEventSourceMapping(conf *terraform.Resource) {
+func (t *Transformer) processEventSourceMapping(conf *hcl.Resource) {
 	t.processResourceRelationships(conf, "event_source_arn", "function_name",
 		awsresources.UnknownType, awsresources.LambdaType)
 }
@@ -366,7 +366,7 @@ func (t *Transformer) processGoogleBQResourceFromEnvar(
 	return t.processResourceFromEnvar(v, awsresources.GoogleBQType, resourcesByName)
 }
 
-func (t *Transformer) processKinesisResource(conf *terraform.Resource) {
+func (t *Transformer) processKinesisResource(conf *hcl.Resource) {
 	t.processResource(conf, awsresources.KinesisType, "name", t.kinesisResourcesByName, t.kinesisResourcesByLabel)
 }
 
@@ -433,7 +433,7 @@ func (t *Transformer) processLambda(attributes, envars map[string]any, label str
 	}
 }
 
-func (t *Transformer) processLambdaModule(conf *terraform.Module) {
+func (t *Transformer) processLambdaModule(conf *hcl.Module) {
 	envars := map[string]any{}
 	if vars, ok := conf.Attributes["lambda_function_env_vars"]; ok {
 		envars = vars.(map[string]any)
@@ -442,7 +442,7 @@ func (t *Transformer) processLambdaModule(conf *terraform.Module) {
 	t.processLambda(conf.Attributes, envars, conf.Labels[0])
 }
 
-func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
+func (t *Transformer) processLambdaResource(conf *hcl.Resource) {
 	envars := map[string]any{}
 
 	if environment, ok := conf.Attributes["environment"]; ok {
@@ -457,7 +457,7 @@ func (t *Transformer) processLambdaResource(conf *terraform.Resource) {
 }
 
 func (t *Transformer) processResource(
-	conf *terraform.Resource, resourceType awsresources.ResourceType, attributeName string,
+	conf *hcl.Resource, resourceType awsresources.ResourceType, attributeName string,
 	resourcesByName, resourcesByLabel map[string]resources.Resource,
 ) {
 	label := conf.Labels[1]
@@ -479,7 +479,7 @@ func (t *Transformer) processResource(
 }
 
 func (t *Transformer) processResourceRelationships(
-	conf *terraform.Resource, sourceAttribute string, targetAttribute string,
+	conf *hcl.Resource, sourceAttribute string, targetAttribute string,
 	sourceType awsresources.ResourceType, targetType awsresources.ResourceType,
 ) {
 	sourceValue := replaceVars(conf.Attributes[sourceAttribute].(string), t.tfConfig.Variables, t.tfConfig.Locals,
@@ -493,11 +493,11 @@ func (t *Transformer) processResourceRelationships(
 	t.relationshipsMap[sourceARN] = append(t.relationshipsMap[sourceARN], targetARN)
 }
 
-func (t *Transformer) processS3BucketResource(conf *terraform.Resource) {
+func (t *Transformer) processS3BucketResource(conf *hcl.Resource) {
 	t.processResource(conf, awsresources.S3Type, "bucket", t.s3BucketResourcesByName, t.s3BucketResourcesByLabel)
 }
 
-func (t *Transformer) processSQSResource(conf *terraform.Resource) {
+func (t *Transformer) processSQSResource(conf *hcl.Resource) {
 	t.processResource(conf, awsresources.SQSType, "name", t.sqsResourcesByName, t.sqsResourcesByLabel)
 }
 

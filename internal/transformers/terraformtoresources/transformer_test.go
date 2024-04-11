@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/diagram-code-generator/resources/pkg/resources"
+	hcl "github.com/joselitofilho/hcl-parser-go/pkg/parser/hcl"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ import (
 func TestTransformer_Transform(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
-		tfConfig   *terraform.Config
+		tfConfig   *hcl.Config
 	}
 
 	lambdaResource := resources.NewGenericResource("1", "exampleReceiver", awsresources.LambdaType.String())
@@ -29,7 +29,7 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "empty",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig:   &terraform.Config{},
+				tfConfig:   &hcl.Config{},
 			},
 			want: &resources.ResourceCollection{
 				Resources:     []resources.Resource{},
@@ -40,8 +40,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "API Gateway route",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_apigatewayv2_route",
 							Name:   "apigw_route_example_api_receiver",
@@ -65,8 +65,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "API Gateway integration",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_apigatewayv2_integration",
 							Name:   "example_api_receiver",
@@ -88,8 +88,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "cloudwatch event rune",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_cloudwatch_event_rule",
 							Name:   "example_receiver_cron_rule",
@@ -111,8 +111,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "cron",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_cloudwatch_event_target",
 							Name:   "example_receiver_cron_target",
@@ -134,8 +134,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "endpoint",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_apigatewayv2_domain_name",
 							Name:   "my_restful_api",
@@ -157,8 +157,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_kinesis_stream",
 							Name:   "my_stream",
@@ -180,8 +180,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "lambda event source mapping with kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_event_source_mapping",
 							Name:   "example_checker_lambda_sqs_trigger",
@@ -212,8 +212,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "lambda as resource",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "example_receiver_lambda",
@@ -234,8 +234,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "lambda as module",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{{
 						Labels: []string{"example_receiver_lambda"},
 						Attributes: map[string]any{
 							"lambda_function_name": "exampleReceiver",
@@ -252,8 +252,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "s3 bucket",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_s3_bucket",
 							Name:   "my_bucket",
@@ -276,8 +276,8 @@ func TestTransformer_Transform(t *testing.T) {
 			name: "sqs",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_sqs_queue",
 							Name:   "my_sqs",
@@ -311,7 +311,7 @@ func TestTransformer_Transform(t *testing.T) {
 func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
-		tfConfig   *terraform.Config
+		tfConfig   *hcl.Config
 	}
 
 	lambdaResource := resources.NewGenericResource("1", "myReceiver", awsresources.LambdaType.String())
@@ -322,7 +322,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 	s3BucketResource := resources.NewGenericResource("2", "my-bucket", awsresources.S3Type.String())
 	sqsResource := resources.NewGenericResource("2", "var.variable1-my-queue", awsresources.SQSType.String())
 
-	kinesisStreamTerraform := &terraform.Resource{
+	kinesisStreamTerraform := &hcl.Resource{
 		Type:   "aws_kinesis_stream",
 		Name:   "my_stream_kinesis",
 		Labels: []string{"aws_kinesis_stream", "my_stream_kinesis"},
@@ -331,7 +331,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 		},
 	}
 
-	s3BucketTerraform := &terraform.Resource{
+	s3BucketTerraform := &hcl.Resource{
 		Type:   "aws_s3_bucket",
 		Name:   "my_bucket",
 		Labels: []string{"aws_s3_bucket", "my_bucket"},
@@ -340,7 +340,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 		},
 	}
 
-	sqsTerraform := &terraform.Resource{
+	sqsTerraform := &hcl.Resource{
 		Type:   "aws_sqs_queue",
 		Name:   "my_queue",
 		Labels: []string{"aws_sqs_queue", "my_queue"},
@@ -359,8 +359,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with google BQ",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -386,8 +386,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with google BQ",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -409,8 +409,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with database",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -436,8 +436,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with database",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -459,8 +459,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -487,8 +487,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with kinesis",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -499,7 +499,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							},
 						},
 					},
-					Resources: []*terraform.Resource{kinesisStreamTerraform},
+					Resources: []*hcl.Resource{kinesisStreamTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -511,8 +511,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with restful API",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -538,8 +538,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with restful API",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -561,8 +561,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with S3 Bucket",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -589,8 +589,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with S3 Bucket",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -601,7 +601,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							},
 						},
 					},
-					Resources: []*terraform.Resource{s3BucketTerraform},
+					Resources: []*hcl.Resource{s3BucketTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -613,8 +613,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as resource with SQS",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_lambda_function",
 							Name:   "my_receiver_lambda",
@@ -641,8 +641,8 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 			name: "lambda as module with SQS",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiver_lambda"},
 							Attributes: map[string]any{
@@ -653,7 +653,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 							},
 						},
 					},
-					Resources: []*terraform.Resource{sqsTerraform},
+					Resources: []*hcl.Resource{sqsTerraform},
 				},
 			},
 			want: &resources.ResourceCollection{
@@ -682,7 +682,7 @@ func TestTransformer_TransformFromLambdaToResourceFromEnvar(t *testing.T) {
 func TestTransformer_TransformFromCronToResource(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
-		tfConfig   *terraform.Config
+		tfConfig   *hcl.Config
 	}
 
 	lambdaResource := resources.NewGenericResource("1", "myReceiver", awsresources.LambdaType.String())
@@ -697,8 +697,8 @@ func TestTransformer_TransformFromCronToResource(t *testing.T) {
 			name: "from cron to lambda",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Modules: []*terraform.Module{
+				tfConfig: &hcl.Config{
+					Modules: []*hcl.Module{
 						{
 							Labels: []string{"my_receiving_lambda"},
 							Attributes: map[string]any{
@@ -706,7 +706,7 @@ func TestTransformer_TransformFromCronToResource(t *testing.T) {
 							},
 						},
 					},
-					Resources: []*terraform.Resource{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_cloudwatch_event_rule",
 							Name:   "cron",
@@ -753,7 +753,7 @@ func TestTransformer_TransformFromCronToResource(t *testing.T) {
 func TestTransformer_TransformEndpointAPIGatewayLambda(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
-		tfConfig   *terraform.Config
+		tfConfig   *hcl.Config
 	}
 
 	endpointResource := resources.NewGenericResource("1", "local.api_domain", awsresources.EndpointType.String())
@@ -769,8 +769,8 @@ func TestTransformer_TransformEndpointAPIGatewayLambda(t *testing.T) {
 			name: "happy path",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig: &terraform.Config{
-					Resources: []*terraform.Resource{
+				tfConfig: &hcl.Config{
+					Resources: []*hcl.Resource{
 						{
 							Type:   "aws_apigatewayv2_domain_name",
 							Name:   "my_restful_api",
@@ -838,7 +838,7 @@ func TestTransformer_TransformEndpointAPIGatewayLambda(t *testing.T) {
 func TestTransformer_hasResourceMatched(t *testing.T) {
 	type fields struct {
 		yamlConfig *config.Config
-		tfConfig   *terraform.Config
+		tfConfig   *hcl.Config
 	}
 
 	type args struct {
@@ -858,7 +858,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 			name: "match",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig:   &terraform.Config{},
+				tfConfig:   &hcl.Config{},
 			},
 			args: args{
 				res: lambdaResource,
@@ -872,7 +872,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 			name: "not match",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig:   &terraform.Config{},
+				tfConfig:   &hcl.Config{},
 			},
 			args: args{
 				res: lambdaResource,
@@ -886,7 +886,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 			name: "nil resource",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig:   &terraform.Config{},
+				tfConfig:   &hcl.Config{},
 			},
 			args: args{
 				res: nil,
@@ -900,7 +900,7 @@ func TestTransformer_hasResourceMatched(t *testing.T) {
 			name: "no filter",
 			fields: fields{
 				yamlConfig: &config.Config{},
-				tfConfig:   &terraform.Config{},
+				tfConfig:   &hcl.Config{},
 			},
 			args: args{
 				res:     lambdaResource,

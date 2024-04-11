@@ -8,11 +8,11 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/diagram-code-generator/resources/pkg/parser/graphviz"
+	hcl "github.com/joselitofilho/hcl-parser-go/pkg/parser/hcl"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/terraformtoresources"
@@ -53,12 +53,12 @@ func (d *Draw) Build() error {
 		return fmt.Errorf("%w: %w", generatorerrs.ErrYAMLParser, err)
 	}
 
-	tfConfig, err := terraform.Parse(d.workdirs, d.files)
+	tfConfig, err := hcl.Parse(d.workdirs, d.files)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	resc := terraformtoresources.NewTransformer(yamlConfig, &tfConfig).Transform()
+	resc := terraformtoresources.NewTransformer(yamlConfig, tfConfig).Transform()
 
 	_ = os.Mkdir(d.output, os.ModePerm)
 

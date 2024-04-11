@@ -5,10 +5,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
+	hcl "github.com/joselitofilho/hcl-parser-go/pkg/parser/hcl"
 )
 
-func buildKeyValueFromLocals(tfLocals []*terraform.Local) map[string]string {
+func buildKeyValueFromLocals(tfLocals []*hcl.Local) map[string]string {
 	keyValue := map[string]string{}
 
 	for i := range tfLocals {
@@ -31,7 +31,7 @@ func buildKeyValueFromLocals(tfLocals []*terraform.Local) map[string]string {
 	return keyValue
 }
 
-func buildKeyValueFromVariables(tfVariables []*terraform.Variable) map[string]string {
+func buildKeyValueFromVariables(tfVariables []*hcl.Variable) map[string]string {
 	keyValue := map[string]string{}
 
 	for i := range tfVariables {
@@ -77,7 +77,7 @@ func buildStringAnyMapVars(varName string, values map[string]any, keyValue map[s
 }
 
 func replaceVars(
-	str string, tfVars []*terraform.Variable, tfLocals []*terraform.Local, replaceableStrs map[string]string,
+	str string, tfVars []*hcl.Variable, tfLocals []*hcl.Local, replaceableStrs map[string]string,
 ) string {
 	keyValue := buildKeyValueFromVariables(tfVars)
 	str = replaceVariables(str, keyValue)
