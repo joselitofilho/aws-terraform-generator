@@ -20,6 +20,8 @@ github.com/diagram-code-generator/resources v1.1.0 h1:J27EDM1FugMdmZJv5VtweNbsfL
 github.com/diagram-code-generator/resources v1.1.0/go.mod h1:BpDq0kTfg5cpSNhKe0Ha+Xa4fofeFPVcYJ79/Tl9QDE=
 github.com/diagram-code-generator/resources v1.1.1 h1:zbR7s8w6AO74h0GGyXynWLSuJ0+z/bWJUZ0nizXwb6c=
 github.com/diagram-code-generator/resources v1.1.1/go.mod h1:BpDq0kTfg5cpSNhKe0Ha+Xa4fofeFPVcYJ79/Tl9QDE=
+github.com/diagram-code-generator/resources v1.2.0 h1:fURMjGQCqzgWhk97JNPB5IP8HZA2i9sMKl/vQHoLk64=
+github.com/diagram-code-generator/resources v1.2.0/go.mod h1:uq1o5wnXcCqdxQLeF5m4fkBOQ2hFFN9UI9678NqCkJA=
 github.com/diagram-code-generator/template v1.0.0 h1:Pp9dEGYX2RAWeZUJPArJYHOAtUS41ktKY4tczfGc2Mc=
 github.com/diagram-code-generator/template v1.0.0/go.mod h1:1h58uySDQdX43fYbAnhGZ75nsifWynJk1Ief01S74i4=
 github.com/emicklei/dot v1.6.1 h1:ujpDlBkkwgWUY+qPId5IwapRW/xEoligRSYjioR6DFI=

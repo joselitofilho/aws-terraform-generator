@@ -3,6 +3,17 @@ package config
 import awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 
 type Images map[awsresources.ResourceType]string
+
+func (m Images) ToStringMap() map[string]string {
+	result := map[string]string{}
+
+	for k, v := range m {
+		result[k.String()] = v
+	}
+
+	return result
+}
+
 type ReplaceableTexts map[string]string
 
 type Draw struct {

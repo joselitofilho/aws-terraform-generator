@@ -10,7 +10,7 @@ tasks:
   install-fmt:
     cmds:
       - go install golang.org/x/tools/cmd/goimports@latest
-      - go install mvdan.cc/gofumpt@v0.4.0
+      - go install mvdan.cc/gofumpt@latest
   
   install-lint:
     cmds:

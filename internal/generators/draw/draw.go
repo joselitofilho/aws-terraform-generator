@@ -7,10 +7,11 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/diagram-code-generator/resources/pkg/parser/graphviz"
+
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 	generatorerrs "github.com/joselitofilho/aws-terraform-generator/internal/generators/errors"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/graphviz"
 	"github.com/joselitofilho/aws-terraform-generator/internal/generators/terraform"
 	awsresources "github.com/joselitofilho/aws-terraform-generator/internal/resources"
 	"github.com/joselitofilho/aws-terraform-generator/internal/transformers/resourcestoyaml"
@@ -94,7 +95,7 @@ func (d *Draw) Build() error {
 
 	resourceImageMap := mergeImages(DefaultResourceImageMap, yamlConfig.Draw.Images)
 
-	dotContent := graphviz.Build(resc, resourceImageMap, dotConfig)
+	dotContent := graphviz.Build(resc, resourceImageMap.ToStringMap(), dotConfig)
 
 	dotFilename := "diagram"
 	if yamlConfig.Draw.Name != "" {
