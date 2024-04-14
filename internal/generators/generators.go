@@ -15,8 +15,8 @@ import (
 func NewGenerator() *templategenerators.TemplateGenerator {
 	return templategenerators.NewTemplateGenerator(
 		templategenerators.WithExtraFuncs(template.FuncMap{
-			"getFileByName":  func(files map[string]config.File, name string) config.File { return files[name] },
-			"getFileImports": func(files map[string]config.File, name string) []string { return files[name].Imports },
+			"getFileByName":  func(files map[string]File, name string) File { return files[name] },
+			"getFileImports": func(files map[string]File, name string) []string { return files[name].Imports },
 		}),
 	)
 }

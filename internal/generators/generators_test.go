@@ -52,8 +52,8 @@ func TestMustGenerateFile(t *testing.T) {
 					"{{ range getFileImports $.Files \"lambda.go\" }}\"{{ . }}\"{{end}}"},
 				fileName:   "lambda.go",
 				outputFile: path.Join(testOutput, "lambda.go"),
-				data: struct{ Files map[string]config.File }{
-					Files: map[string]config.File{"lambda.go": {
+				data: struct{ Files map[string]File }{
+					Files: map[string]File{"lambda.go": {
 						Imports: []string{"context"},
 						Tmpl:    "tmpl",
 					}}},
@@ -61,7 +61,7 @@ func TestMustGenerateFile(t *testing.T) {
 			extraValidations: func(tb testing.TB, outputFile string) {
 				data, err := os.ReadFile(outputFile)
 				require.NoError(tb, err)
-				require.Equal(tb, `{ tmpl [context]} "context"`, string(data))
+				require.Equal(tb, `{tmpl [context]} "context"`, string(data))
 			},
 		},
 		{
