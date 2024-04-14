@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg class="w-6 h-6" height="40" width="40" xmlns="http://www.w3.org/2000/svg">
+<svg height="40" width="40" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="Arch_Amazon-S3-Standard_32_svg__a">
             <stop stop-color="#1B660F" offset="0%"></stop>

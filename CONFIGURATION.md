@@ -524,24 +524,62 @@ draw:
       not_match:
 ```
 
-Default images:
+- Available resources: [internal/resources/resource_type_enum.go](internal/resources/resource_type_enum.go)
+- Recommend image size: 40px x 40px
+
+Image list of AWS provider:
+
+#### analytics
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/kinesis_data_stream.svg) | kinesis    | assets/diagram/kinesis_data_stream.svg |
+
+#### compute
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/lambda.svg)              | lambda     | assets/diagram/lambda.svg |
+
+#### database
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/database_dynamo_db.svg)  | database   | assets/diagram/database_dynamo_db.svg |
+
+#### integration
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/sns.svg)                 | sns        | assets/diagram/sns.svg |
+| ![](assets/diagram/sqs.svg)                 | sqs        | assets/diagram/sqs.svg |
+
+#### management
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/cron.svg)                | cron       | assets/diagram/cron.svg |
+
+#### network
 
 | Image                                       | Resource   | Path              |
 | :-----------------------------------------: | :--------- | :---------------- |
 | ![](assets/diagram/api_gateway.svg)         | apigateway | assets/diagram/api_gateway.svg |
-| ![](assets/diagram/cron.svg)                | cron       | assets/diagram/cron.svg |
-| ![](assets/diagram/database_dynamo_db.svg)  | database   | assets/diagram/database_dynamo_db.svg |
 | ![](assets/diagram/endpoint.svg)            | endpoint   | assets/diagram/endpoint.svg |
-| ![](assets/diagram/google_bigquery.svg)     | googlebq   | assets/diagram/google_bigquery.svg |
-| ![](assets/diagram/kinesis_data_stream.svg) | kinesis    | assets/diagram/kinesis_data_stream.svg |
-| ![](assets/diagram/lambda.svg)              | lambda     | assets/diagram/lambda.svg |
-| ![](assets/diagram/restful_api.svg)         | restfulapi | assets/diagram/restful_api.svg |
-| ![](assets/diagram/s3_bucket.svg)           | s3         | assets/diagram/s3_bucket.svg |
-| ![](assets/diagram/sns.svg)                 | sns        | assets/diagram/sns.svg |
-| ![](assets/diagram/sqs.svg)                 | sqs        | assets/diagram/sqs.svg |
 
-- Available resources: [internal/resources/resource_type_enum.go](internal/resources/resource_type_enum.go)
-- Recommend image size: 48px x 48px
+#### storage
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/s3_bucket.svg)           | s3         | assets/diagram/s3_bucket.svg |
+
+#### others
+
+| Image                                       | Resource   | Path              |
+| :-----------------------------------------: | :--------- | :---------------- |
+| ![](assets/diagram/google_bigquery.svg)     | googlebq   | assets/diagram/google_bigquery.svg |
+| ![](assets/diagram/restful_api.svg)         | restfulapi | assets/diagram/restful_api.svg |
+| ![](assets/diagram/restful_api2.svg)        | restfulapi | assets/diagram/restful_api2.svg |
 
 ## Full example with comments
 
