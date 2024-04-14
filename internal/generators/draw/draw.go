@@ -91,7 +91,14 @@ func (d *Draw) Build() error {
 
 	fmtcolor.White.Println("The diagram yaml file has been generated successfully.")
 
-	dotConfig := graphviz.Config{Orientation: yamlConfig.Draw.Orientation}
+	nodeAttrs := make(map[string]any)
+	for k, v := range graphviz.DefaultNodeAttrs {
+		nodeAttrs[k] = v
+	}
+
+	delete(nodeAttrs, "height")
+
+	dotConfig := graphviz.Config{Orientation: yamlConfig.Draw.Orientation, NodeAttrs: nodeAttrs}
 
 	resourceImageMap := mergeImages(DefaultResourceImageMap, yamlConfig.Draw.Images)
 
