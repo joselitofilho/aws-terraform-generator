@@ -7,7 +7,6 @@ import (
 	"github.com/ettle/strcase"
 
 	"github.com/diagram-code-generator/resources/pkg/resources"
-	"github.com/joselitofilho/aws-terraform-generator/internal/generators/config"
 )
 
 func (t *Transformer) buildCronToLambda(cron, lambda resources.Resource) {
@@ -72,27 +71,15 @@ func (t *Transformer) buildLambdaToSQS(lambda, sqs resources.Resource) {
 }
 
 func (t *Transformer) buildS3ToSNS(s3Bucket, sns resources.Resource) {
-	snsConfig := t.snsMap[sns.ID()]
-	snsConfig.BucketName = s3Bucket.Value()
-	t.snsMap[sns.ID()] = snsConfig
+	t.s3BucketsBySNSID[sns.ID()] = s3Bucket
 }
 
 func (t *Transformer) buildSNSToLambda(sns, lambda resources.Resource) {
-	snsConfig := t.snsMap[sns.ID()]
-	snsConfig.Lambdas = append(snsConfig.Lambdas, config.SNSResource{
-		Name:   lambda.Value(),
-		Events: []string{"s3:ObjectCreated:*"},
-	})
-	t.snsMap[sns.ID()] = snsConfig
+	t.lambdasBySNSID[sns.ID()] = append(t.lambdasBySNSID[sns.ID()], lambda)
 }
 
 func (t *Transformer) buildSNSToSQS(sns, sqs resources.Resource) {
-	snsConfig := t.snsMap[sns.ID()]
-	snsConfig.SQSs = append(snsConfig.SQSs, config.SNSResource{
-		Name:   sqs.Value(),
-		Events: []string{"s3:ObjectCreated:*"},
-	})
-	t.snsMap[sns.ID()] = snsConfig
+	t.sqssBySNSID[sns.ID()] = append(t.sqssBySNSID[sns.ID()], sqs)
 }
 
 func (t *Transformer) buildSQSToLambda(sqs, lambda resources.Resource) {

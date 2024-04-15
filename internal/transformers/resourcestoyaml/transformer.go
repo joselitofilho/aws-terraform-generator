@@ -15,9 +15,10 @@ type Transformer struct {
 	cronsByLambdaID           map[string]resources.Resource
 	endpointsByAPIGatewayID   map[string]resources.Resource
 	kinesisTriggersByLambdaID map[string][]resources.Resource
+	lambdasBySNSID            map[string][]resources.Resource
+	s3BucketsBySNSID          map[string]resources.Resource
+	sqssBySNSID               map[string][]resources.Resource
 	sqsTriggersByLambdaID     map[string][]resources.Resource
-
-	snsMap map[string]config.SNS
 
 	envars map[string]map[string]string
 
@@ -33,9 +34,10 @@ func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollectio
 		cronsByLambdaID:           map[string]resources.Resource{},
 		endpointsByAPIGatewayID:   map[string]resources.Resource{},
 		kinesisTriggersByLambdaID: map[string][]resources.Resource{},
+		lambdasBySNSID:            map[string][]resources.Resource{},
+		s3BucketsBySNSID:          map[string]resources.Resource{},
 		sqsTriggersByLambdaID:     map[string][]resources.Resource{},
-
-		snsMap: map[string]config.SNS{},
+		sqssBySNSID:               map[string][]resources.Resource{},
 
 		envars: map[string]map[string]string{},
 
@@ -45,10 +47,6 @@ func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollectio
 
 func (t *Transformer) Transform() (*config.Config, error) {
 	t.buildResourcesByTypeMap()
-
-	for _, sns := range t.resourcesByTypeMap[awsresources.SNSType] {
-		t.snsMap[sns.ID()] = config.SNS{Name: sns.Value()}
-	}
 
 	for i := range t.resourcesByTypeMap[awsresources.APIGatewayType] {
 		apiGateway := t.resourcesByTypeMap[awsresources.APIGatewayType][i]
