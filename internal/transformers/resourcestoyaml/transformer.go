@@ -11,7 +11,6 @@ type Transformer struct {
 	yamlConfig *config.Config
 	resc       *resources.ResourceCollection
 
-	apiGatewaysByID           map[string]resources.Resource
 	cronsByLambdaID           map[string]resources.Resource
 	endpointsByAPIGatewayID   map[string]resources.Resource
 	kinesisTriggersByLambdaID map[string][]resources.Resource
@@ -30,7 +29,6 @@ func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollectio
 		yamlConfig: yamlConfig,
 		resc:       resc,
 
-		apiGatewaysByID:           map[string]resources.Resource{},
 		cronsByLambdaID:           map[string]resources.Resource{},
 		endpointsByAPIGatewayID:   map[string]resources.Resource{},
 		kinesisTriggersByLambdaID: map[string][]resources.Resource{},
@@ -47,11 +45,6 @@ func NewTransformer(yamlConfig *config.Config, resc *resources.ResourceCollectio
 
 func (t *Transformer) Transform() (*config.Config, error) {
 	t.buildResourcesByTypeMap()
-
-	for i := range t.resourcesByTypeMap[awsresources.APIGatewayType] {
-		apiGateway := t.resourcesByTypeMap[awsresources.APIGatewayType][i]
-		t.apiGatewaysByID[apiGateway.ID()] = apiGateway
-	}
 
 	t.buildResourceRelationships()
 

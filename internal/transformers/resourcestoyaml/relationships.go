@@ -15,7 +15,6 @@ func (t *Transformer) buildCronToLambda(cron, lambda resources.Resource) {
 
 func (t *Transformer) buildEndpointToAPIGateway(endpoint, apiGateway resources.Resource) {
 	apiGatewayID := apiGateway.ID()
-	t.apiGatewaysByID[apiGatewayID] = apiGateway
 	t.endpointsByAPIGatewayID[apiGatewayID] = endpoint
 }
 

@@ -16,9 +16,11 @@ func (t *Transformer) buildAPIGatewayRelationship(source, target resources.Resou
 func (t *Transformer) buildAPIGateways(
 	apiGatewayLambdasByAPIGatewayID map[string][]config.APIGatewayLambda,
 ) (apiGateways []config.APIGateway) {
-	for id := range t.apiGatewaysByID {
+	for _, apig := range t.resourcesByTypeMap[awsresources.APIGatewayType] {
+		apigID := apig.ID()
+
 		var apiDomainValue string
-		if rsc, ok := t.endpointsByAPIGatewayID[id]; ok {
+		if rsc, ok := t.endpointsByAPIGatewayID[apigID]; ok {
 			apiDomainValue = rsc.Value()
 		}
 
@@ -26,7 +28,7 @@ func (t *Transformer) buildAPIGateways(
 			StackName: t.yamlConfig.Diagram.StackName,
 			APIG:      true,
 			APIDomain: apiDomainValue,
-			Lambdas:   apiGatewayLambdasByAPIGatewayID[id],
+			Lambdas:   apiGatewayLambdasByAPIGatewayID[apigID],
 		})
 	}
 
