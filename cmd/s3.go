@@ -11,17 +11,10 @@ var s3Cmd = &cobra.Command{
 	Use:   "s3",
 	Short: "Manage S3",
 	Run: func(cmd *cobra.Command, _ []string) {
-		config, err := cmd.Flags().GetString(flagConfig)
-		if err != nil {
-			printErrorAndExit(err)
-		}
+		config, _ := cmd.Flags().GetString(flagConfig)
+		output, _ := cmd.Flags().GetString(flagOutput)
 
-		output, err := cmd.Flags().GetString(flagOutput)
-		if err != nil {
-			printErrorAndExit(err)
-		}
-
-		err = s3.NewS3(config, output).Build()
+		err := s3.NewS3(config, output).Build()
 		if err != nil {
 			printErrorAndExit(err)
 		}

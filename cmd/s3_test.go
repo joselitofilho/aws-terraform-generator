@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKinesis_Run(t *testing.T) {
+func TestS3_Run(t *testing.T) {
 	type args struct {
 		configFile string
 		output     string
@@ -23,18 +23,18 @@ func TestKinesis_Run(t *testing.T) {
 		{
 			name: "happy path",
 			args: args{
-				configFile: path.Join(testdataFolder, "kinesis.config.yaml"),
+				configFile: path.Join(testdataFolder, "s3.config.yaml"),
 				output:     path.Join(testOutput),
 			},
 			extraValidations: func(tb testing.TB) {
-				require.FileExists(tb, path.Join(testOutput, "mod/custom.tf"))
+				require.FileExists(tb, path.Join(testOutput, "mod/my-test-bucket-s3.tf"))
 			},
 		},
 		{
-			name: "kinesis config file does not exist",
+			name: "s3 config file does not exist",
 			args: args{
 				configFile: "fileDoesNotExist.yaml",
-				output:     path.Join(testOutput, "mod/custom.tf"),
+				output:     path.Join(testOutput, "mod/my-test-bucket-s3.tf"),
 			},
 			setup: func() (tearDown func()) {
 				osExit = func(code int) {
@@ -61,10 +61,10 @@ func TestKinesis_Run(t *testing.T) {
 				defer tearDown()
 			}
 
-			_ = kinesisCmd.Flags().Set(flagConfig, tc.args.configFile)
-			_ = kinesisCmd.Flags().Set(flagOutput, tc.args.output)
+			_ = s3Cmd.Flags().Set(flagConfig, tc.args.configFile)
+			_ = s3Cmd.Flags().Set(flagOutput, tc.args.output)
 
-			kinesisCmd.Run(kinesisCmd, []string{})
+			s3Cmd.Run(s3Cmd, []string{})
 
 			if tc.extraValidations != nil {
 				tc.extraValidations(t)

@@ -11,17 +11,10 @@ var snsCmd = &cobra.Command{
 	Use:   "sns",
 	Short: "Manage SNS",
 	Run: func(cmd *cobra.Command, _ []string) {
-		config, err := cmd.Flags().GetString(flagConfig)
-		if err != nil {
-			printErrorAndExit(err)
-		}
+		config, _ := cmd.Flags().GetString(flagConfig)
+		output, _ := cmd.Flags().GetString(flagOutput)
 
-		output, err := cmd.Flags().GetString(flagOutput)
-		if err != nil {
-			printErrorAndExit(err)
-		}
-
-		err = sns.NewSNS(config, output).Build()
+		err := sns.NewSNS(config, output).Build()
 		if err != nil {
 			printErrorAndExit(err)
 		}

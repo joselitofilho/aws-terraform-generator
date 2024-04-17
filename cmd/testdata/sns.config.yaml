@@ -1,0 +1,6 @@
+sns:
+  - name: my-test-sns
+    files:
+      - name: "my-test-sns.tf"
+        tmpl: |-
+          resource "aws_sns" "{{ToSnake $.Name}}_bucket" {}
