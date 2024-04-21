@@ -87,3 +87,10 @@ tasks:
   
   clean:
     deps: [clean-mocks, clean-out]
+
+  rnotes:
+    cmds:
+      - go-conventional-commits 
+        --latestVersion $(git tag --sort=-creatordate | head -n 2 | tail -n 1) 
+        --newVersion $(git tag --sort=-creatordate | head -n 1) 
+        --commitsURL https://github.com/joselitofilho/aws-terraform-generator/commit/
