@@ -5,11 +5,11 @@ go 1.21.6
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/aws/aws-lambda-go v1.46.0
-	github.com/diagram-code-generator/resources v1.3.0
+	github.com/diagram-code-generator/resources v1.4.1
 	github.com/diagram-code-generator/template v1.0.0
 	github.com/ettle/strcase v0.2.0
 	github.com/fatih/color v1.16.0
-	github.com/joselitofilho/drawio-parser-go v0.1.0
+	github.com/joselitofilho/drawio-parser-go v0.3.2
 	github.com/joselitofilho/hcl-parser-go v0.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0

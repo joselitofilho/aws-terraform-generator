@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/diagram-code-generator/resources/pkg/parser/graphviz"
+	"github.com/diagram-code-generator/resources/pkg/parser/graphviz/dot"
 	"github.com/diagram-code-generator/resources/pkg/resources"
 
 	"github.com/joselitofilho/aws-terraform-generator/internal/fmtcolor"
@@ -45,8 +45,11 @@ var diffCmd = &cobra.Command{
 		addedResourcesByType, removedResourcesByType, addedRelationships, removedRelationships :=
 			resources.FindDifferences(leftRc, rightRc)
 
-		dotConfig := graphviz.Config{}
-		style := graphviz.Style{Nodes: map[resources.Resource]string{}, Arrows: map[string][]map[string]string{}}
+		style := &dot.Style{Nodes: map[resources.Resource]string{}, Arrows: map[string][]map[string]string{}}
+		dotConfig := &dot.Config{
+			Style:            style,
+			ResourceImageMap: draw.DefaultResourceImageMap.ToStringMap(),
+		}
 
 		for _, rscs := range addedResourcesByType {
 			for i := range rscs {
@@ -74,7 +77,7 @@ var diffCmd = &cobra.Command{
 			style.Arrows[removedRelationships[i].Source.Value()] = arrowTarget
 		}
 
-		dotContent := graphviz.BuildWithStyle(leftRc, draw.DefaultResourceImageMap.ToStringMap(), dotConfig, style)
+		dotContent := dot.Build(leftRc, dotConfig)
 
 		dotFilename := "diff.dot"
 

@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	drawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
+	pdrawioxml "github.com/joselitofilho/drawio-parser-go/pkg/parser/xml"
 
 	"github.com/diagram-code-generator/resources/pkg/transformers/drawiotoresources"
 
@@ -33,7 +33,7 @@ func (d *Diagram) Build() error {
 		return fmt.Errorf("%w: %w", generatorserrs.ErrYAMLParser, err)
 	}
 
-	mxFile, err := drawioxml.Parse(d.diagramFilename)
+	mxFile, err := pdrawioxml.Parse(d.diagramFilename)
 	if err != nil {
 		return fmt.Errorf("%w: %w", generatorserrs.ErrDrawIOParser, err)
 	}

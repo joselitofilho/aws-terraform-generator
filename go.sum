@@ -14,10 +14,8 @@ github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/diagram-code-generator/resources v1.2.0 h1:fURMjGQCqzgWhk97JNPB5IP8HZA2i9sMKl/vQHoLk64=
-github.com/diagram-code-generator/resources v1.2.0/go.mod h1:uq1o5wnXcCqdxQLeF5m4fkBOQ2hFFN9UI9678NqCkJA=
-github.com/diagram-code-generator/resources v1.3.0 h1:Q9zuiFC6+luNq4bw6Y+iHGpjklQbWDVKilfmwKuHL5A=
-github.com/diagram-code-generator/resources v1.3.0/go.mod h1:uq1o5wnXcCqdxQLeF5m4fkBOQ2hFFN9UI9678NqCkJA=
+github.com/diagram-code-generator/resources v1.4.1 h1:C1si6yJh6YJWXCoA6L8WOXwB9G9ZyreC2FWc7Y/ilEA=
+github.com/diagram-code-generator/resources v1.4.1/go.mod h1:htfizhZgU7//tre3sH/Ompgo4q6r9ULoEoyLM/LVlMk=
 github.com/diagram-code-generator/template v1.0.0 h1:Pp9dEGYX2RAWeZUJPArJYHOAtUS41ktKY4tczfGc2Mc=
 github.com/diagram-code-generator/template v1.0.0/go.mod h1:1h58uySDQdX43fYbAnhGZ75nsifWynJk1Ief01S74i4=
 github.com/emicklei/dot v1.6.1 h1:ujpDlBkkwgWUY+qPId5IwapRW/xEoligRSYjioR6DFI=
@@ -36,8 +34,8 @@ github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec h1:qv2VnGeEQHchGaZ/u
 github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec/go.mod h1:Q48J4R4DvxnHolD5P8pOtXigYlRuPLGl6moFx3ulM68=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/joselitofilho/drawio-parser-go v0.1.0 h1:cWbF+q330kz6B3yJqycCCDQ1Nn2s3CgAbcv2m0jFRBI=
-github.com/joselitofilho/drawio-parser-go v0.1.0/go.mod h1:zUjTGv39xACAEOCriA/tAqCVTFBwqUR/mHVowaziNXk=
+github.com/joselitofilho/drawio-parser-go v0.3.2 h1:2qBOUIVdPmNRWdKNhs+V8V6OzSFj9TnkR+d0XyhfyYs=
+github.com/joselitofilho/drawio-parser-go v0.3.2/go.mod h1:zUjTGv39xACAEOCriA/tAqCVTFBwqUR/mHVowaziNXk=
 github.com/joselitofilho/hcl-parser-go v0.1.0 h1:N+UEj5kTIA3BAhgzHSThCke2NI/eEq87m4z5IT6nJw8=
 github.com/joselitofilho/hcl-parser-go v0.1.0/go.mod h1:Bo8du9GpU07HNXTwmkwoNqdpNx6BmFmKz/aR3GaoxUo=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
