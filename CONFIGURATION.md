@@ -459,12 +459,12 @@ restfulapis:
 
 ### draw
 
-Draw configurations includes graph orientation, images and filters.
+Draw configurations includes graph direction, images and filters.
 
 ```yaml
 draw:
   # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
-  orientation: LR
+  direction: LR
   # Definitions of images for the available resources
   images:
     apigateway: "assets/diagram/api_gateway.svg"

@@ -77,7 +77,7 @@ var diffCmd = &cobra.Command{
 			style.Arrows[removedRelationships[i].Source.Value()] = arrowTarget
 		}
 
-		dotContent := dot.Build(leftRc, dotConfig)
+		dotContent := dot.NewDotDiagram(dotConfig).Build(leftRc)
 
 		dotFilename := "diff.dot"
 

@@ -16,6 +16,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diagram-code-generator/resources v1.4.1 h1:C1si6yJh6YJWXCoA6L8WOXwB9G9ZyreC2FWc7Y/ilEA=
 github.com/diagram-code-generator/resources v1.4.1/go.mod h1:htfizhZgU7//tre3sH/Ompgo4q6r9ULoEoyLM/LVlMk=
+github.com/diagram-code-generator/resources v1.4.2 h1:6fSYejj/JGzaIVHxuMOK4F+nKrJsTb9GGLaXSppCJyk=
+github.com/diagram-code-generator/resources v1.4.2/go.mod h1:htfizhZgU7//tre3sH/Ompgo4q6r9ULoEoyLM/LVlMk=
 github.com/diagram-code-generator/template v1.0.0 h1:Pp9dEGYX2RAWeZUJPArJYHOAtUS41ktKY4tczfGc2Mc=
 github.com/diagram-code-generator/template v1.0.0/go.mod h1:1h58uySDQdX43fYbAnhGZ75nsifWynJk1Ief01S74i4=
 github.com/emicklei/dot v1.6.1 h1:ujpDlBkkwgWUY+qPId5IwapRW/xEoligRSYjioR6DFI=

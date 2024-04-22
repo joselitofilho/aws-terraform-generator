@@ -96,16 +96,14 @@ func (d *Draw) Build() error {
 		nodeAttrs[k] = v
 	}
 
-	delete(nodeAttrs, "height")
-
 	resourceImageMap := mergeImages(DefaultResourceImageMap, yamlConfig.Draw.Images)
 	dotConfig := &dot.Config{
-		Orientation:      yamlConfig.Draw.Orientation,
+		Direction:        yamlConfig.Draw.Direction,
 		NodeAttrs:        nodeAttrs,
 		ResourceImageMap: resourceImageMap.ToStringMap(),
 	}
 
-	dotContent := dot.Build(resc, dotConfig)
+	dotContent := dot.NewDotDiagram(dotConfig).Build(resc)
 
 	dotFilename := "diagram"
 	if yamlConfig.Draw.Name != "" {
