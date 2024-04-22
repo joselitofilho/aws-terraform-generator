@@ -1,6 +1,8 @@
 draw:
   # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
   # direction: LR
+  # Controls how, and if, edges are represented. See: https://graphviz.org/docs/attrs/splines/
+  # splines: spline
   replaceable_texts:
     "var.client-var.environment-": ""
   # Filters for matching and excluding resources by name.

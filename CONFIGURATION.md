@@ -465,6 +465,8 @@ Draw configurations includes graph direction, images and filters.
 draw:
   # Defines the direction of graph layout. See: https://graphviz.org/docs/attrs/rankdir/
   direction: LR
+  # Controls how, and if, edges are represented. See: https://graphviz.org/docs/attrs/splines/
+  splines: spline
   # Definitions of images for the available resources
   images:
     apigateway: "assets/diagram/api_gateway.svg"

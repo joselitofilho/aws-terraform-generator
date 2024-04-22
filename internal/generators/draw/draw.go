@@ -99,6 +99,7 @@ func (d *Draw) Build() error {
 	resourceImageMap := mergeImages(DefaultResourceImageMap, yamlConfig.Draw.Images)
 	dotConfig := &dot.Config{
 		Direction:        yamlConfig.Draw.Direction,
+		Splines:          yamlConfig.Draw.Splines,
 		NodeAttrs:        nodeAttrs,
 		ResourceImageMap: resourceImageMap.ToStringMap(),
 	}

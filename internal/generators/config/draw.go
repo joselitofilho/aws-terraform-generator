@@ -22,6 +22,7 @@ type ReplaceableTexts map[string]string
 type Draw struct {
 	Name             string               `yaml:"name,omitempty"`
 	Direction        dot.DiagramDirection `yaml:"direction,omitempty"`
+	Splines          dot.DiagramSpline    `yaml:"splines,omitempty"`
 	ReplaceableTexts ReplaceableTexts     `yaml:"replaceable_texts,omitempty"`
 	Images           Images               `yaml:"images,omitempty"`
 	Filters          Filters              `yaml:"filters,omitempty"`
