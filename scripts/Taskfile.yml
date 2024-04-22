@@ -14,7 +14,7 @@ tasks:
   
   install-lint:
     cmds:
-      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.57.2
   
   install-mock:
     cmds:
