@@ -1,0 +1,6 @@
+sqs:
+  - name: my-test
+    files:
+      - name: "my-test-sqs.tf"
+        tmpl: |-
+          resource "aws_sqs_queue" "{{ToSnake $.Name}}_sqs" {}
